@@ -64,10 +64,10 @@ class TJEClient(BizHawkClient):
     async def validate_rom(self, ctx: "BizHawkClientContext") -> bool:
         try:
             rom_name = ((await bizhawk.read(ctx.bizhawk_ctx, [(0x150, 13, "MD CART")]))[0]).decode("ascii")
-            version = ((await bizhawk.read(ctx.bizhawk_ctx, [(0x18c, 3, "MD CART")]))[0]).decode("ascii")
+            version = ((await bizhawk.read(ctx.bizhawk_ctx, [(0x18c, 2, "MD CART")]))[0]).decode("ascii")
         except (UnicodeDecodeError, bizhawk.RequestFailedError):
             return False
-        if rom_name != "TOEJAM & EARL" or version != "02A":
+        if rom_name != "TOEJAM & EARL" or version != "02":
             return False
 
         ctx.game = self.game
