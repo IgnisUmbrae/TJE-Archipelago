@@ -3,7 +3,6 @@ from enum import Enum
 from typing import NamedTuple
 import itertools
 
-
 from .constants import BASE_TJE_ID, RANK_NAMES
 from .generators import item_totals
 

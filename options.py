@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from enum import IntEnum
 
-from discord import Game
 from Options import PerGameCommonOptions, Toggle, DefaultOnToggle, Range, Choice, OptionGroup, NamedRange
 
 class ShipPieceOption(IntEnum):

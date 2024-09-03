@@ -1,6 +1,5 @@
 import bsdiff4
 import copy
-import pkgutil
 from pathlib import Path
 
 # The extended ROM is split as follows:
