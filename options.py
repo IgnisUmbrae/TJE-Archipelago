@@ -4,46 +4,83 @@ from enum import IntEnum
 from Options import PerGameCommonOptions, Toggle, Choice, OptionGroup, NamedRange
 
 class ShipPieceOption(IntEnum):
-    level_25 = 0
-    anywhere = 1
+    LEVEL_25 = 0
+    ANYWHERE = 1
 
 class GameOverOption(IntEnum):
-    disable = 0
-    drop_down = 1
-    reset = 2
+    DISABLE = 0
+    DROP_DOWN = 1
+    RESET = 2
 
 class TrapOption(IntEnum):
-    none = 0
-    items_only = 1
-    presents_only = 2
-    all = 3
+    NONE = 0
+    ITEMS_ONLY = 1
+    PRESENTS_ONLY = 2
+    ALL = 3
 
-class StartingPresentOptions(IntEnum):
-    none = 0
-    hitops = 1
-    mix = 2
-    any_good = 3
-    any = 4
+class StartingPresentOption(IntEnum):
+    NONE = 0
+    HITOPS = 1
+    MIX = 2
+    ANY_GOOD = 3
+    ANY = 4
 
-class ElevatorKeys(NamedRange):
+class ElevatorKeyTypeOption(IntEnum):
+    NONE = 0
+    PROGRESSIVE = 1
+    STATIC = 2
+
+class ElevatorKeyType(Choice):
     """
-    Adds elevator keys, new progression items that lock certain elevators until found.
+    Adds elevator keys, new progression items that lock certain elevators until found. These come in two flavours:
 
-    The number determines the spacing between levels with locked elevators.
+    - None: No elevator keys.
+    - Progressive: Each elevator key found unlocks an elevator one floor higher.
+    - Static: Each elevator key is for a specific elevator.
+    """
+
+    display_name = "Elevator Key Type"
+
+    option_none = ElevatorKeyTypeOption.NONE
+    option_progressive = ElevatorKeyTypeOption.PROGRESSIVE
+    option_static = ElevatorKeyTypeOption.STATIC
+
+    default = ElevatorKeyTypeOption.PROGRESSIVE
+
+class ProgElevatorKeyCount(NamedRange):
+    """
+    Progressive elevator keys only: determines how many keys will appear in the game.
+    A maximum of 23 levels (2–24) can have locked elevators.
+    This can be set to more than 23 for smoother progression.
+    """
+
+    display_name = "Progressive Elevator Key Count"
+
+    range_start = 1
+    range_end = 23
+
+    special_range_names = {
+        "single": 1,
+        "max": 23
+    }
+
+    default = 23
+
+class StaticElevatorKeyGap(NamedRange):
+    """
+    Static elevator keys only: determines the spacing between levels with locked elevators.
     For example, setting this to 4 will add keys for the elevators on levels 4, 8, 12, 16, 20 and 24.
 
     Level 1 will never have an elevator key, even if this is set to 1.
     Any number greater than 12 will result in a single key on that level only.
-    Set to 0 to disable.
     """
 
-    display_name = "Elevator Key Spacing"
+    display_name = "Static Elevator Key Spacing"
 
-    range_start = 0
+    range_start = 1
     range_end = 24
 
     special_range_names = {
-        "off": 0,
         "extreme": 1,
         "regular": 5,
         "light": 8,
@@ -72,10 +109,10 @@ class FinalShipPieceLocation(Choice):
 
     display_name = "Location of Final Ship Piece"
 
-    option_level_25 = ShipPieceOption.level_25
-    option_anywhere = ShipPieceOption.anywhere
+    option_level_25 = ShipPieceOption.LEVEL_25
+    option_anywhere = ShipPieceOption.ANYWHERE
 
-    default = ShipPieceOption.level_25
+    default = ShipPieceOption.LEVEL_25
 
 class MaxRankCheck(NamedRange):
     """
@@ -83,6 +120,9 @@ class MaxRankCheck(NamedRange):
     The number means the highest rank that can have a progression item. Later ranks are guaranteed not to.
     Set to 0 to disable.
     """
+
+    display_name = "Highest Big Rank Check"
+
     range_start: 0
     range_end: 8
 
@@ -120,11 +160,11 @@ class GameOvers(Choice):
 
     display_name = "Game Over Handling"
 
-    option_disable = GameOverOption.disable
-    option_drop_down = GameOverOption.drop_down
-    option_reset = GameOverOption.reset
+    option_disable = GameOverOption.DISABLE
+    option_drop_down = GameOverOption.DROP_DOWN
+    option_reset = GameOverOption.RESET
 
-    default = GameOverOption.drop_down
+    default = GameOverOption.DROP_DOWN
 
 class IncludeTraps(Choice):
     """
@@ -138,10 +178,10 @@ class IncludeTraps(Choice):
 
     display_name = "Include Traps in Item Pool"
 
-    option_none = TrapOption.none
-    option_items_only = TrapOption.items_only
-    option_presents_only = TrapOption.presents_only
-    option_all = TrapOption.all
+    option_none = TrapOption.NONE
+    option_items_only = TrapOption.ITEMS_ONLY
+    option_presents_only = TrapOption.PRESENTS_ONLY
+    option_all = TrapOption.ALL
 
     default = option_all
 
@@ -158,11 +198,11 @@ class StartingPresents(Choice):
 
     display_name = "Starting Presents"
 
-    option_none = StartingPresentOptions.none
-    option_hitops = StartingPresentOptions.hitops
-    option_mobility_mix = StartingPresentOptions.mix
-    option_any_good = StartingPresentOptions.any_good
-    option_any = StartingPresentOptions.any
+    option_none = StartingPresentOption.NONE
+    option_hitops = StartingPresentOption.HITOPS
+    option_mobility_mix = StartingPresentOption.MIX
+    option_any_good = StartingPresentOption.ANY_GOOD
+    option_any = StartingPresentOption.ANY
 
     default = option_hitops
     
@@ -173,7 +213,9 @@ tje_option_groups = [
         ExcludeItemsFromProgression,
     ]),
     OptionGroup("Extra Items/Locations", [
-        ElevatorKeys,
+        ElevatorKeyType,
+        StaticElevatorKeyGap,
+        ProgElevatorKeyCount,
         MaxRankCheck
     ]),
     OptionGroup("Mutators", [
@@ -190,6 +232,8 @@ class TJEOptions(PerGameCommonOptions):
     game_overs: GameOvers
     starting_presents: StartingPresents
     restrict_prog_items: ExcludeItemsFromProgression
-    elevator_key_gap: ElevatorKeys
+    key_type: ElevatorKeyType
+    static_key_gap: StaticElevatorKeyGap
+    prog_key_count: ProgElevatorKeyCount
     max_major_rank: MaxRankCheck
     upwarp_present: UpwarpPresent
