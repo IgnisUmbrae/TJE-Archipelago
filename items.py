@@ -5,7 +5,6 @@ from BaseClasses import Item, ItemClassification, MultiWorld
 
 from .constants import BASE_TJE_ID
 from .generators import item_totals
-from .locations import TJELocation
 from .options import StartingPresentOptions, TJEOptions, TrapOption, ShipPieceOption
 
 # TO DO: lots of redundancy here; needs a big clean-up

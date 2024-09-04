@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import IntEnum
 
-from Options import PerGameCommonOptions, Toggle, DefaultOnToggle, Range, Choice, OptionGroup, NamedRange
+from Options import PerGameCommonOptions, Toggle, Choice, OptionGroup, NamedRange
 
 class ShipPieceOption(IntEnum):
     level_25 = 0

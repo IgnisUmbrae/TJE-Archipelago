@@ -7,7 +7,7 @@ from .items import TJEItem
 from .options import TJEOptions
 from .generators import expected_map_points_on_level
 from .locations import TJELocation, TJELocationType, \
-                       FLOOR_ITEM_LOCATIONS, SHIP_PIECE_LOCATIONS, RANK_LOCATIONS,RANK_LOC_TEMPLATE
+                       FLOOR_ITEM_LOCATIONS, SHIP_PIECE_LOCATIONS, RANK_LOCATIONS, RANK_LOC_TEMPLATE
 
 class TJERegion(NamedTuple):
     name: str
