@@ -9,7 +9,7 @@ from worlds.Files import APProcedurePatch, APTokenMixin, APTokenTypes
 
 from .constants import EMPTY_PRESENT, INITIAL_PRESENT_ADDRS
 from .items import ITEM_ID_TO_CODE
-from .options import StartingPresentOptions
+from .options import StartingPresentOption
 
 if TYPE_CHECKING:
     from . import TJEWorld
@@ -54,7 +54,7 @@ class TJEProcedurePatch(APProcedurePatch, APTokenMixin):
         
 def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
     # Add starting presents
-    if world.options.starting_presents == StartingPresentOptions.none:
+    if world.options.starting_presents == StartingPresentOption.NONE:
         presents = [EMPTY_PRESENT]*8
     else:
         presents = [struct.pack(">B", ITEM_ID_TO_CODE[p]) for p in world.starting_presents]
