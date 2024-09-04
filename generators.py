@@ -1,4 +1,6 @@
 import itertools
+from math import floor
+from typing import Optional
 
 PRESENT_LIST = range(0, 0x1B)
 PRESENT_WEIGHTS = [4, 5, 3, 4, 3, 4, 4, 3, 4, 4, 4, 1, 5, 4, 4, 4, 3, 1, 2, 2, 2, 1, 2, 2, 2, 2, 5]
@@ -121,23 +123,29 @@ def num_trees_on_level(level : int) -> int:
         return [3, 0][level]
     return 4
 
-def get_key_levels(gap: int) -> list[int]:
+def get_static_key_levels(gap: int) -> Optional[list[int]]:
     match gap:
         case 0:
-            return []
+            return None
         case 1:
             return list(range(2,25))
         case _:
             return list(range(gap, 25, gap))
 
+def get_prog_key_levels(num_keys: int) -> list[int]:
+    if num_keys == 23:
+        return list(range(2, 25))
+    return [floor(2+k*(24-2)/(num_keys+1)) for k in range(1, num_keys+1)]
+
 # How many points we reasonably expect to be able to get on each level from map exploration alone
-# Values are tentative
+# Values are tentative (lower than what's technically possible, just so logic is a bit nicer)
 def expected_map_points_on_level(level : int) -> int:
     match level:
         case 0: return 0
         case 1: return 7
-        case 2: return 21
-        case 3: return 35
+        case 2: return 14
+        case 3: return 21
+        case 4: return 35
         case _: return 42
 
 # Half the items on a level are presents on average and they're worth 2 points each
@@ -150,3 +158,7 @@ def expected_point_totals(cumulative=False) -> list[float]:
     if not cumulative:
         return totals
     return [round(n) for n in itertools.accumulate(iterable=totals)]
+
+if __name__ == "__main__":
+    for k in range(1, 24):
+        print(k, "keys → levels", ", ".join([str(l) for l in get_prog_key_levels(k)]))
