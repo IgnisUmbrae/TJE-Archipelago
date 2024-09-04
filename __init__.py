@@ -56,7 +56,7 @@ class TJEWorld(World):
         create_regions(self.multiworld, self.player, self.options)
 
     def create_item(self, identifier: str | int, new_classification: Optional[ItemClassification] = None) -> TJEItem:
-        name = identifier if type(identifier) == str else self.item_id_to_name[identifier]
+        name = identifier if isinstance(identifier, str) else self.item_id_to_name[identifier]
 
         data = ITEM_NAME_TO_DATA[name]
         classification = new_classification if new_classification else data.classification
