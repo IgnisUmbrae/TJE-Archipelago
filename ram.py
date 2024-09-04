@@ -1,15 +1,18 @@
 import struct
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, Optional
 from enum import Enum
 
 import worlds._bizhawk as bizhawk
 from worlds._bizhawk.client import BizHawkClient
+
+from .constants import DEBUG, EMPTY_SHIP_PIECE, EMPTY_ITEM, SHIP_PIECE, RANK_NAMES, RAM_ADDRS, \
+                       TJ_GHOST_SPRITES, TJ_SWIMMING_SPRITES, TOEJAM_STATE_LOAD_DOWN, ELEVATOR_LOCKED, \
+                       ELEVATOR_UNLOCKED, END_ELEVATOR_UNLOCKED_STATES
+from .items import PRESENT_IDS, EDIBLE_IDS, SHIP_PIECE_IDS, KEY_IDS, ITEM_ID_TO_CODE
+from .locations import FLOOR_ITEM_LOC_TEMPLATE, RANK_LOC_TEMPLATE, SHIP_PIECE_LOC_TEMPLATE
+
 if TYPE_CHECKING:
     from worlds._bizhawk.context import BizHawkClientContext
-
-from .constants import *
-from .items import *
-from .locations import FLOOR_ITEM_LOC_TEMPLATE, RANK_LOC_TEMPLATE, SHIP_PIECE_LOC_TEMPLATE
 
 #region State constants
 
@@ -26,7 +29,8 @@ class TJEGameState(Enum):
     GHOST = 9
 
 LOADING_STATES = [TJEGameState.IN_ELEVATOR, TJEGameState.TRAVELLING_DOWN, TJEGameState.UNFALLING]
-SPAWN_BLOCKING_STATES = LOADING_STATES + [TJEGameState.IN_AIR, TJEGameState.IN_WATER, TJEGameState.GHOST, TJEGameState.MAIN_MENU]
+SPAWN_BLOCKING_STATES = LOADING_STATES + [TJEGameState.IN_AIR, TJEGameState.IN_WATER,
+                                          TJEGameState.GHOST, TJEGameState.MAIN_MENU]
 
 #endregion
 
@@ -38,6 +42,8 @@ class AddressMonitor():
         self.on_trigger = on_trigger_fn
         self.ctx = ctx
 
+        self.old_data, self.new_data = None, None
+
         self.enable_test = enable_test_fn
         self.enabled = enabled
         if DEBUG: print("{} monitoring {}".format(self.name, "enabled" if self.enabled else "disabled"))
@@ -45,8 +51,6 @@ class AddressMonitor():
         self.address = None
         self.address_fn = address_fn
         self.size = size
-
-        self.reset_data()
 
     def reset_data(self):
         self.old_data, self.new_data = None, None
@@ -66,10 +70,7 @@ class AddressMonitor():
             self.address = self.address_fn()
             self.old_data = self.new_data
 
-            try:
-                self.new_data = await self.parent.peek_ram(self.ctx, self.address, self.size)
-            except:
-                self.new_data = None
+            self.new_data = await self.parent.peek_ram(self.ctx, self.address, self.size)
 
             if self.old_data is not None and self.new_data is not None and self.old_data != self.new_data:
                 await self.trigger()
@@ -312,14 +313,13 @@ class TJEGameController():
 
     # Spawns any standard floor item at TJ's current position
     # Normally only used to spawn edibles; presents go directly into inventory
-    async def spawn_on_floor(self, ctx: "BizHawkClientContext", id: int) -> bool:
+    async def spawn_on_floor(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
         if self.game_state not in SPAWN_BLOCKING_STATES:
             slot = await self.get_empty_floor_item_slot(ctx)
             if slot is not None and self.current_level is not None:
-                print(ITEM_ID_TO_NAME[id], ITEM_ID_TO_CODE[id])
                 toejam_position = await self.peek_ram(ctx, RAM_ADDRS.TJ_POSITION, 4)
                 await self.poke_ram(ctx, self.floor_item_slot_to_ram_address(slot),
-                    struct.pack(">BBBB", ITEM_ID_TO_CODE[id], self.current_level, 0, 0) + toejam_position)
+                    struct.pack(">BBBB", ITEM_ID_TO_CODE[item_id], self.current_level, 0, 0) + toejam_position)
                 return True
             else:
                 return False
@@ -327,21 +327,21 @@ class TJEGameController():
             return False
 
     # Spawns a present in TJ's inventory
-    async def spawn_in_inventory(self, ctx: "BizHawkClientContext", id: int) -> bool:
+    async def spawn_in_inventory(self, ctx: "BizHawkClientContext", pres_id: int) -> bool:
         slot = await self.get_first_empty_inv_slot(ctx)
         if slot is not None:
-            await self.poke_ram(ctx, self.inventory_slot_to_ram_address(slot), ITEM_ID_TO_CODE[id].to_bytes(1))
+            await self.poke_ram(ctx, self.inventory_slot_to_ram_address(slot), ITEM_ID_TO_CODE[pres_id].to_bytes(1))
             return True
         else:
-            return (await self.spawn_present_as_dropped(ctx, id))
+            return (await self.spawn_present_as_dropped(ctx, pres_id))
 
-    async def spawn_present_as_dropped(self, ctx: "BizHawkClientContext", id: int) -> bool:
+    async def spawn_present_as_dropped(self, ctx: "BizHawkClientContext", pres_id: int) -> bool:
         if self.game_state not in SPAWN_BLOCKING_STATES:
             slot = await self.get_first_empty_dropped_present_slot(ctx)
             if slot is not None and self.current_level is not None:
                 toejam_position = await self.peek_ram(ctx, RAM_ADDRS.TJ_POSITION, 4)
                 success = await self.poke_ram(ctx, self.dropped_present_slot_to_ram_address(slot),
-                    struct.pack(">BBBB", ITEM_ID_TO_CODE[id], self.current_level, 0, 0) + toejam_position)
+                    struct.pack(">BBBB", ITEM_ID_TO_CODE[pres_id], self.current_level, 0, 0) + toejam_position)
                 return success
             else:
                 return False
@@ -473,5 +473,5 @@ class TJEGameController():
 
         # if DEBUG:
         #     print(f"Game state: {self.game_state}")
-    
+
     #endregion

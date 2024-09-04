@@ -5,19 +5,20 @@ import worlds._bizhawk as bizhawk
 from worlds._bizhawk.client import BizHawkClient
 from NetUtils import ClientStatus, NetworkItem
 
-if TYPE_CHECKING:
-    from worlds._bizhawk.context import BizHawkClientContext
-
 from .constants import DEBUG
 from .ram import TJEGameController
 from .items import EDIBLE_IDS, ITEM_ID_TO_NAME, KEY_IDS, PRESENT_IDS, SHIP_PIECE_IDS
 from .locations import LOCATION_NAME_TO_ID
+
+if TYPE_CHECKING:
+    from worlds._bizhawk.context import BizHawkClientContext
 
 logger = logging.getLogger("Client")
 
 class SpawnQueue():
     def __init__(self, cooldown : int = 5):
         self.queue : list[NetworkItem] = []
+        self.counter = cooldown
         self.cooldown = cooldown
         self.reset_cooldown()
     
@@ -42,7 +43,7 @@ class SpawnQueue():
 
     def empty(self) -> None:
         self.queue.clear()
-    
+
 class TJEClient(BizHawkClient):
     game = "ToeJam and Earl"
     system = "GEN"
@@ -104,19 +105,19 @@ class TJEClient(BizHawkClient):
     async def trigger_location(self, ctx: "BizHawkClientContext", name : str) -> bool:
         try:
             loc_id = LOCATION_NAME_TO_ID[name]
-            if DEBUG: logger.debug(f"Triggering location: {name}")
+            if DEBUG: logger.debug("Triggering location: %s", name)
             await ctx.send_msgs([{
                 "cmd": "LocationChecks",
                 "locations": [loc_id]
             }])
             return True
         except (KeyError, IndexError):
-            logger.warning(f"WARNING: Attempted to trigger nonexistent location: '{name}'!")
+            logger.warning("WARNING: Attempted to trigger nonexistent location: %s!", name)
             return False
 
     async def handle_items(self, ctx: "BizHawkClientContext") -> None:
         await self.handle_new_items(ctx)
-        
+
         if DEBUG:
             edibles_waiting = len(self.edible_queue.queue)
             presents_waiting = len(self.present_queue.queue)
@@ -144,13 +145,13 @@ class TJEClient(BizHawkClient):
     async def handle_queue(self, ctx: "BizHawkClientContext", queue: SpawnQueue) -> None:
         queue.tick()
         if queue.can_spawn():
-            next = queue.oldest()
-            success = await self.game_controller.spawn_item(ctx, next.item)
+            oldest = queue.oldest()
+            success = await self.game_controller.spawn_item(ctx, oldest.item)
             if DEBUG:
                 if success:
-                    print(f"Successfully spawned queued item {ITEM_ID_TO_NAME[next.item]}")
+                    print(f"Successfully spawned queued item {ITEM_ID_TO_NAME[oldest.item]}")
             if success:
-                queue.mark_spawned(next)
+                queue.mark_spawned(oldest)
 
     async def game_watcher(self, ctx: "BizHawkClientContext") -> None:
         self.ticks += 1

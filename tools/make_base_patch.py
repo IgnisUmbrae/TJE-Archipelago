@@ -1,14 +1,15 @@
-import bsdiff4
-import copy
 from pathlib import Path
+import copy
+
+import bsdiff4
 
 # The extended ROM is split as follows:
 
 SPRITE_PATH = Path("../data/sprites")
 
 def read_bin(filename: Path) -> bytes:
-    with filename.open("rb") as f:
-        return f.read()
+    with filename.open("rb") as file:
+        return file.read()
 
 STATIC_ROM_PATCHES: list[tuple[int, bytes]] = [
     # Expand cartridge to 2 MB
@@ -118,7 +119,7 @@ STATIC_ROM_PATCHES: list[tuple[int, bytes]] = [
                  read_bin(SPRITE_PATH / "shippiece0tile1.bin") +
                  read_bin(SPRITE_PATH / "shippiece1tile0.bin") +
                  read_bin(SPRITE_PATH / "shippiece1tile1.bin")),
-     
+
     # Patch miscellaneous strings
 
     (0x0000b732, b"\x20\x61\x74\x00"),

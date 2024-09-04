@@ -80,14 +80,14 @@ class TJEGenerator():
 
     def generate_items_for_level(self, level : int, singleplayer : bool = True) -> list[int]:
         if level <= 0: return []
-        num_items = self.num_items_on_level(level, singleplayer=singleplayer)
+        num_items = num_items_on_level(level, singleplayer=singleplayer)
         return [self.get_random_item(level_one=(level == 1)) for _ in range(num_items)]
 
     def generate_all_level_items(self, singleplayer : bool = True) -> list[list[int]]:
         return [self.generate_items_for_level(level, singleplayer=singleplayer) for level in range(0,26)]
 
     def generate_item_blob(self, number: int, include_bad: bool = True) -> list[int]:
-        return [self.get_random_item() for _ in range(number)]
+        return [self.get_random_item(level_one=False, include_bad=include_bad) for _ in range(number)]
 
     def generate_initial_inventory(self, include_bad=False) -> list[int]:
         present_list, present_distro = self.get_present_distribution(level_one=False, include_bad=include_bad)
