@@ -290,8 +290,9 @@ class TJEGameController():
             print(f"Unlocked levels: {self.unlocked_levels}")
         if self.prog_keys:
             num_keys = len(self.unlocked_levels)
-            print(f"Unlocking level {self.key_levels[num_keys]}")
             try:
+                if DEBUG:
+                    print(f"Unlocking level {self.key_levels[num_keys]}")
                 level = self.key_levels[num_keys]
             except KeyError:
                 level = None

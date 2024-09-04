@@ -51,17 +51,18 @@ class ProgElevatorKeyCount(NamedRange):
     """
     Progressive elevator keys only: determines how many keys will appear in the game.
     A maximum of 23 levels (2–24) can have locked elevators.
-    This can be set to more than 23 for smoother progression.
+    This can be set to more than 23 (up to 46) for smoother progression.
     """
 
     display_name = "Progressive Elevator Key Count"
 
     range_start = 1
-    range_end = 23
+    range_end = 46
 
     special_range_names = {
         "single": 1,
-        "max": 23
+        "full": 23,
+        "extra": 30
     }
 
     default = 23
@@ -72,7 +73,7 @@ class StaticElevatorKeyGap(NamedRange):
     For example, setting this to 4 will add keys for the elevators on levels 4, 8, 12, 16, 20 and 24.
 
     Level 1 will never have an elevator key, even if this is set to 1.
-    Any number greater than 12 will result in a single key on that level only.
+    Any number greater than 12 will result in a single key only for that level's elevator.
     """
 
     display_name = "Static Elevator Key Spacing"

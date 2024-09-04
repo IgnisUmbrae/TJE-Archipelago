@@ -190,7 +190,7 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
         extra_added += len(key_levels)
     elif options.key_type == ElevatorKeyTypeOption.PROGRESSIVE:
         item_list.extend([world.create_item("Progressive Elevator Key", ItemClassification.progression) for _ in range(options.prog_key_count.value)])
-        extra_added += len(key_levels)
+        extra_added += options.prog_key_count
 
     # Add an extra promotion if rank check is 7, two if 8; this helps avoid fill errors from impossible seeds
     extra_promos = max(options.max_major_rank - 6, 0)

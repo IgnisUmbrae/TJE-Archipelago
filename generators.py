@@ -133,7 +133,7 @@ def get_static_key_levels(gap: int) -> Optional[list[int]]:
             return list(range(gap, 25, gap))
 
 def get_prog_key_levels(num_keys: int) -> list[int]:
-    if num_keys == 23:
+    if num_keys >= 23:
         return list(range(2, 25))
     return [floor(2+k*(24-2)/(num_keys+1)) for k in range(1, num_keys+1)]
 
