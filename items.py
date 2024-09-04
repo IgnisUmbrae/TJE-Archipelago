@@ -5,7 +5,7 @@ from BaseClasses import Item, ItemClassification, MultiWorld
 
 from .constants import BASE_TJE_ID
 from .generators import item_totals
-from .options import StartingPresentOptions, TJEOptions, TrapOption, ShipPieceOption
+from .options import ElevatorKeyTypeOption, StartingPresentOption, TJEOptions, TrapOption, ShipPieceOption
 
 # TO DO: lots of redundancy here; needs a big clean-up
 
@@ -116,13 +116,14 @@ ELEVATOR_KEY_ITEMS : list[TJEItemData] = [
     TJEItemData(None, "Level 21 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
     TJEItemData(None, "Level 22 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
     TJEItemData(None, "Level 23 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(None, "Level 24 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0)
+    TJEItemData(None, "Level 24 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
+    TJEItemData(None, "Progressive Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0)
+
 ]
 
 MISC_ITEMS : list[TJEItemData] = [
     # Logically represents uncovering 1/8 of the map tiles for 7 points
     TJEItemData(None, "Uncover 7 Map Tiles", TJEItemType.ETHEREAL, ItemClassification.progression_skip_balancing, 7),
-    TJEItemData(None, "Rank", TJEItemType.ETHEREAL, ItemClassification.progression_skip_balancing, 0)
 ]
 
 MASTER_ITEM_LIST = BASE_ITEM_LIST + ELEVATOR_KEY_ITEMS + MISC_ITEMS
@@ -158,21 +159,21 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
 
     forbidden_combos : list[tuple[TJEItemType, ItemClassification]] = []
     match options.include_traps:
-        case TrapOption.none:
+        case TrapOption.NONE:
             forbidden_combos += [(TJEItemType.EDIBLE, ItemClassification.trap),
                                 (TJEItemType.PRESENT, ItemClassification.trap)]
-        case TrapOption.items_only:
+        case TrapOption.ITEMS_ONLY:
             forbidden_combos += [(TJEItemType.EDIBLE, ItemClassification.trap)]
-        case TrapOption.presents_only:
+        case TrapOption.PRESENTS_ONLY:
             forbidden_combos += [(TJEItemType.PRESENT, ItemClassification.trap)]
-        case TrapOption.all:
+        case TrapOption.ALL:
             pass
 
     # Create ship pieces
 
     ship_pieces_total = 10
     
-    if options.final_ship_piece == ShipPieceOption.level_25:
+    if options.final_ship_piece == ShipPieceOption.LEVEL_25:
         multiworld.get_location("Level 25 - Ship Piece", player).place_locked_item(
             world.create_item("Hyperfunk Thruster", ItemClassification.progression)
         )
@@ -182,11 +183,13 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
         item_list.append(world.create_item(item.name, item.classification))
 
     # Add elevator keys if needed
-
-    if options.elevator_key_gap:
-        key_levels = world.key_levels
+    key_levels = world.key_levels
+    if options.key_type == ElevatorKeyTypeOption.STATIC:
         for lvl in key_levels:
             item_list.append(world.create_item(f"Level {lvl} Elevator Key", ItemClassification.progression))
+        extra_added += len(key_levels)
+    elif options.key_type == ElevatorKeyTypeOption.PROGRESSIVE:
+        item_list.extend([world.create_item("Progressive Elevator Key", ItemClassification.progression) for _ in range(options.prog_key_count.value)])
         extra_added += len(key_levels)
 
     # Add an extra promotion if rank check is 7, two if 8; this helps avoid fill errors from impossible seeds
@@ -217,7 +220,7 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
     if extra_added < 0:
         item_list.extend([
             world.create_item(ITEM_CODE_TO_ID[code])
-            for code in world.generator.generate_item_blob(extra_added, include_bad=False if TrapOption.none else True)
+            for code in world.generator.generate_item_blob(extra_added, include_bad=False if TrapOption.NONE else True)
         ])
 
 
@@ -225,17 +228,17 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
 
 def create_starting_presents(world, multiworld : MultiWorld, options: TJEOptions) -> None:
     match options.starting_presents:
-        case StartingPresentOptions.none:
+        case StartingPresentOption.NONE:
             world.starting_presents = []
-        case StartingPresentOptions.hitops:
+        case StartingPresentOption.HITOPS:
             world.starting_presents = [ITEM_NAME_TO_ID["Super Hitops"]]*8
-        case StartingPresentOptions.mix:
+        case StartingPresentOption.MIX:
             world.starting_presents = [ITEM_NAME_TO_ID["Icarus Wings"], ITEM_NAME_TO_ID["Super Hitops"],
                                        ITEM_NAME_TO_ID["Spring Shoes"], ITEM_NAME_TO_ID["Rocket Skates"]]*2
-        case StartingPresentOptions.any_good:
+        case StartingPresentOption.ANY_GOOD:
             world.starting_presents = [ITEM_CODE_TO_ID[p]
                                        for p in world.generator.generate_initial_inventory(include_bad=False)]*2
-        case StartingPresentOptions.any:
+        case StartingPresentOption.ANY:
             world.starting_presents = [ITEM_CODE_TO_ID[p]
                                        for p in world.generator.generate_initial_inventory(include_bad=True)]*2
     for item in world.starting_presents:
