@@ -70,7 +70,7 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
 
     # Add Upwarp Present if desired
     if world.options.upwarp_present:
-        patch.write_token(APTokenTypes.WRITE, 0x000046b8, b"\x13\xfc\x00\x19\x00\xff\x91\x32")
+        patch.write_token(APTokenTypes.WRITE, 0x00010b0c, b"\x30\x03\x48\xC0\xD0\xBC\x00\x00\x00\x01\x2F\x00\x2F\x0A")
         patch.write_token(APTokenTypes.WRITE, 0x00017be6, b"\x4e\x71\x4e\x71")
         patch.write_token(APTokenTypes.WRITE, 0x000abc34, b"\x15\x10\x22\x17\x01\x12\x10")
 
