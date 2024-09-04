@@ -1,7 +1,5 @@
 from typing import NamedTuple
 
-from pytest import Item
-
 from BaseClasses import Region, MultiWorld, LocationProgressType, ItemClassification
 
 from .constants import RANK_NAMES, RANK_THRESHOLDS
