@@ -2,3 +2,4 @@
 /tools/*.bin
 __pycache__
 .vscode
+.pylintrc
