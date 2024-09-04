@@ -99,6 +99,7 @@ class TJEClient(BizHawkClient):
             "cmd": "StatusUpdate",
             "status": ClientStatus.CLIENT_GOAL
         }])
+        self.game_controller.game_complete = True
 
     # Ship pieces are always the last in the list of locations for each level,
     # so pass index = -1 to trigger one for a particular level
@@ -112,21 +113,22 @@ class TJEClient(BizHawkClient):
             }])
             return True
         except (KeyError, IndexError):
-            logger.warning("WARNING: Attempted to trigger nonexistent location: %s!", name)
+            logger.warning("WARNING: Attempted to trigger nonexistent location: '%s'!", name)
             return False
 
     async def handle_items(self, ctx: "BizHawkClientContext") -> None:
-        await self.handle_new_items(ctx)
+        if not ctx.finished_game:
+            await self.handle_new_items(ctx)
 
-        if DEBUG:
-            edibles_waiting = len(self.edible_queue.queue)
-            presents_waiting = len(self.present_queue.queue)
-            if edibles_waiting > 0:
-                print(f"{edibles_waiting} edibles waiting to spawn")
-            if presents_waiting > 0:
-                print(f"{presents_waiting} presents waiting to spawn")
-        await self.handle_queue(ctx, self.present_queue)
-        await self.handle_queue(ctx, self.edible_queue)
+            if DEBUG:
+                edibles_waiting = len(self.edible_queue.queue)
+                presents_waiting = len(self.present_queue.queue)
+                if edibles_waiting > 0:
+                    print(f"{edibles_waiting} edibles waiting to spawn")
+                if presents_waiting > 0:
+                    print(f"{presents_waiting} presents waiting to spawn")
+            await self.handle_queue(ctx, self.present_queue)
+            await self.handle_queue(ctx, self.edible_queue)
 
     async def handle_new_items(self, ctx: "BizHawkClientContext") -> None:
         num_new = len(ctx.items_received) - self.num_items_received
@@ -138,7 +140,7 @@ class TJEClient(BizHawkClient):
                 if nwi.item in PRESENT_IDS: self.present_queue.add(nwi)
                 elif nwi.item in EDIBLE_IDS: self.edible_queue.add(nwi)
                 elif nwi.item in SHIP_PIECE_IDS: await self.game_controller.spawn_item(ctx, nwi.item)
-                elif nwi.item in KEY_IDS: await self.game_controller.receive_key(ctx, nwi.item)
+                elif nwi.item in KEY_IDS: self.game_controller.receive_key(nwi.item)
 
             self.num_items_received = len(ctx.items_received)
 
