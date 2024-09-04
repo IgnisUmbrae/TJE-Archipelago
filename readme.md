@@ -22,6 +22,7 @@ Additions over the base game include:
 
 ## Caveats
 
+- Game overs are not currently handled and will reset your progress. It's recommended to play with infinite lives for the time being.
 - Item handling is (currently) entirely remote except for starting presents. In particular this means that every item in the game appears as an AP logo.
 - Neither Earl nor 2-player mode is currently supported.
 - Hints are yet to be implemented and locations are generically-named, so in multiworlds it's recommended to play with `restrict_prog_items: yes` to avoid having to scour the map for a singular progression item.
@@ -38,6 +39,8 @@ Additions over the base game include:
 ### Instructions
 
 Place the downloaded `.apworld` file into the `worlds` subfolder of your Archipelago installation. Now you're ready to generate a world.
+
+Generating a world will also generate a patch. You can use the Patch function in the launcher to apply the patch to the ROM and automatically launch BizHawk along with the client. BizHawk will also pop up its Lua scripting window, in which you'll need to enable the connector script by double clicking it.
 
 ## Configuration
 
