@@ -148,14 +148,65 @@ KEY_IDS = [ITEM_NAME_TO_ID[item.name] for item in ELEVATOR_KEY_ITEMS]
 
 def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions) -> None:
     item_list: list[TJEItem] = []
+    differential = 0
 
-    extra_added = 0
+    differential += create_rank_items(world, options, item_list)
+    differential += create_ship_pieces(multiworld, world, player, options, item_list)
+    differential += create_elevator_keys(world, options, item_list)
+    differential += create_map_reveals(world, options, item_list)
+    differential += create_main_items(world, options, item_list, differential)#
+    
+    create_padding_items(world, options, item_list, differential)
 
+    multiworld.itempool.extend(item_list)
+
+def create_ship_pieces(multiworld, world, player, options, item_list) -> int:
+    ship_pieces_total = 10
+
+    if options.final_ship_piece == ShipPieceOption.LEVEL_25:
+        multiworld.get_location("Level 25 - Ship Piece", player).place_locked_item(
+            world.create_item("Hyperfunk Thruster", ItemClassification.progression)
+        )
+        ship_pieces_total -= 1
+
+    for item in MASTER_ITEM_LIST[:ship_pieces_total]:
+        item_list.append(world.create_item(item.name, item.classification))
+
+    return 0
+
+def create_elevator_keys(world, options, item_list) -> int:
+    if options.key_type == ElevatorKeyTypeOption.STATIC:
+        item_list.extend([world.create_item(f"Level {lvl} Elevator Key", ItemClassification.progression)
+                          for lvl in world.key_levels])
+    elif options.key_type == ElevatorKeyTypeOption.PROGRESSIVE:
+        item_list.extend([world.create_item("Progressive Elevator Key", ItemClassification.progression)
+                          for _ in range(len(world.key_levels))])
+    return len(world.key_levels)
+
+def create_rank_items(world, options, item_list) -> int:
+    differential = 0
     if options.max_major_rank > 0:
-        extra_added -= 8
+        differential -= 8
+
+    # Add an extra promotion if rank check is 7, two if 8; this helps avoid fill errors from impossible seeds
+    extra_promos = max(options.max_major_rank - 6, 0)
+    if extra_promos > 0:
+        item_list.extend([world.create_item("Promotion") for _ in range(extra_promos)])
+        differential += extra_promos
+    return differential
+
+def create_map_reveals(world, options, item_list) -> int:
+    if options.map_reveals:
+        item_list.extend([world.create_item("Progressive Map Reveal", ItemClassification.useful) for _ in range(5)])
+        return 5
+
+def create_main_items(world, options, item_list, differential) -> int:
+    differential = 0
+
+    total_locations = sum(item_totals())
+    item_pool_raw = world.generator.generate_item_blob(total_locations - differential)
 
     # Handle trap options
-
     forbidden_combos : list[tuple[TJEItemType, ItemClassification]] = []
     match options.include_traps:
         case TrapOption.NONE:
@@ -168,43 +219,6 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
         case TrapOption.ALL:
             pass
 
-    # Create ship pieces
-
-    ship_pieces_total = 10
-
-    if options.final_ship_piece == ShipPieceOption.LEVEL_25:
-        multiworld.get_location("Level 25 - Ship Piece", player).place_locked_item(
-            world.create_item("Hyperfunk Thruster", ItemClassification.progression)
-        )
-        ship_pieces_total -= 1
-
-    for item in MASTER_ITEM_LIST[:ship_pieces_total]:
-        item_list.append(world.create_item(item.name, item.classification))
-
-    # Add elevator keys if needed
-    if options.key_type == ElevatorKeyTypeOption.STATIC:
-        item_list.extend([world.create_item(f"Level {lvl} Elevator Key", ItemClassification.progression)
-                          for lvl in world.key_levels])
-        extra_added += len(world.key_levels)
-    elif options.key_type == ElevatorKeyTypeOption.PROGRESSIVE:
-        item_list.extend([world.create_item("Progressive Elevator Key", ItemClassification.progression)
-                          for _ in range(len(world.key_levels))])
-        extra_added += len(world.key_levels)
-
-    # Add an extra promotion if rank check is 7, two if 8; this helps avoid fill errors from impossible seeds
-    extra_promos = max(options.max_major_rank - 6, 0)
-    if extra_promos > 0:
-        item_list.extend([world.create_item("Promotion") for _ in range(extra_promos)])
-        extra_added += extra_promos
-
-    if options.map_reveals:
-        item_list.extend([world.create_item("Progressive Map Reveal", ItemClassification.useful) for _ in range(5)])
-        extra_added += 5
-
-    # Generate the main chunk of items
-    total_locations = sum(item_totals())
-    item_pool_raw = world.generator.generate_item_blob(total_locations - extra_added)
-
     for item in item_pool_raw:
         item_id = ITEM_CODE_TO_ID[item]
         item_name = ITEM_ID_TO_NAME[item_id]
@@ -214,19 +228,18 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
         if (item_data.type, item_classification) not in forbidden_combos:
             item_list.append(world.create_item(item_name, item_classification))
         else:
-            extra_added -= 1
+            differential -= 1
 
-    # Finally, pad out item pool if needed
-    # Currently only partially honours trap rules
+    return differential
 
-    if extra_added < 0:
+def create_padding_items(world, options, item_list, differential) -> None:
+    if differential < 0:
         item_list.extend([
             world.create_item(ITEM_CODE_TO_ID[code])
-            for code in world.generator.generate_item_blob(extra_added, include_bad=False if TrapOption.NONE else True)
+            for code in world.generator.generate_item_blob(
+                abs(differential), include_bad=(options.include_traps == TrapOption.NONE)
+            )
         ])
-
-
-    multiworld.itempool.extend(item_list)
 
 def create_starting_presents(world, multiworld : MultiWorld, options: TJEOptions) -> None:
     match options.starting_presents:

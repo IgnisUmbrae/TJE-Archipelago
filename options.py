@@ -172,8 +172,8 @@ class IncludeTraps(Choice):
     display_name = "Include Traps in Item Pool"
 
     option_none = TrapOption.NONE
-    option_items_only = TrapOption.ITEMS_ONLY
-    option_presents_only = TrapOption.PRESENTS_ONLY
+    option_items = TrapOption.ITEMS_ONLY
+    option_presents = TrapOption.PRESENTS_ONLY
     option_all = TrapOption.ALL
 
     default = option_all
