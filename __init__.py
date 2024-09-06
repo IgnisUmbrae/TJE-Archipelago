@@ -7,7 +7,7 @@ from worlds.AutoWorld import World, WebWorld
 
 from .rom import TJEProcedurePatch, write_tokens
 from .client import TJEClient # required to register with BizHawkClient
-from .generators import TJEGenerator, get_static_key_levels, get_prog_key_levels
+from .generators import TJEGenerator, get_key_levels
 from .items import TJEItem, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, create_items, create_starting_presents
 from .locations import LOCATION_NAME_TO_ID
 from .options import ShipPieceOption, ElevatorKeyTypeOption, TJEOptions
@@ -46,10 +46,7 @@ class TJEWorld(World):
     def generate_early(self) -> None:
         self.seeds = [self.random.getrandbits(16) for _ in range(26)]
         self.generator = TJEGenerator(self)
-        if self.options.key_type == ElevatorKeyTypeOption.STATIC:
-            self.key_levels = get_static_key_levels(self.options.static_key_gap.value)
-        elif self.options.key_type == ElevatorKeyTypeOption.PROGRESSIVE:
-            self.key_levels = get_prog_key_levels(self.options.prog_key_count.value)
+        self.key_levels = get_key_levels(self.options.key_gap.value)
         self.ship_piece_levels = self.generator.generate_ship_piece_levels()
 
     def create_regions(self) -> None:
