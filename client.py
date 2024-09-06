@@ -7,7 +7,7 @@ from NetUtils import ClientStatus, NetworkItem
 
 from .constants import DEBUG
 from .ram import TJEGameController
-from .items import EDIBLE_IDS, ITEM_ID_TO_NAME, KEY_IDS, PRESENT_IDS, SHIP_PIECE_IDS
+from .items import EDIBLE_IDS, ITEM_ID_TO_NAME, PRESENT_IDS
 from .locations import LOCATION_NAME_TO_ID
 
 if TYPE_CHECKING:
@@ -59,6 +59,7 @@ class TJEClient(BizHawkClient):
 
         self.edible_queue = SpawnQueue(cooldown=1)
         self.present_queue = SpawnQueue(cooldown=1)
+        self.misc_queue = SpawnQueue(cooldown=1)
 
         self.ticks = 0
 
@@ -66,7 +67,7 @@ class TJEClient(BizHawkClient):
         try:
             rom_name = ((await bizhawk.read(ctx.bizhawk_ctx, [(0x150, 13, "MD CART")]))[0]).decode("ascii")
             version = ((await bizhawk.read(ctx.bizhawk_ctx, [(0x18c, 2, "MD CART")]))[0]).decode("ascii")
-        except (UnicodeDecodeError, bizhawk.RequestFailedError):
+        except (UnicodeDecodeError, bizhawk.RequestFailedError, bizhawk.NotConnectedError):
             return False
         if rom_name != "TOEJAM & EARL" or version != "02":
             return False
@@ -76,7 +77,6 @@ class TJEClient(BizHawkClient):
         ctx.want_slot_data = True
 
         self.game_controller.add_monitors(ctx)
-        await self.game_controller.load_saved_game_state(ctx)
 
         return True
 
@@ -129,6 +129,7 @@ class TJEClient(BizHawkClient):
                     print(f"{presents_waiting} presents waiting to spawn")
             await self.handle_queue(ctx, self.present_queue)
             await self.handle_queue(ctx, self.edible_queue)
+            await self.handle_queue(ctx, self.misc_queue)
 
     async def handle_new_items(self, ctx: "BizHawkClientContext") -> None:
         num_new = len(ctx.items_received) - self.num_items_received
@@ -139,8 +140,7 @@ class TJEClient(BizHawkClient):
                 #if DEBUG: print(f"Sorting item: {ITEM_ID_TO_NAME[nwi.item]}")
                 if nwi.item in PRESENT_IDS: self.present_queue.add(nwi)
                 elif nwi.item in EDIBLE_IDS: self.edible_queue.add(nwi)
-                elif nwi.item in SHIP_PIECE_IDS: await self.game_controller.spawn_item(ctx, nwi.item)
-                elif nwi.item in KEY_IDS: self.game_controller.receive_key(nwi.item)
+                else: self.misc_queue.add(nwi)
 
             self.num_items_received = len(ctx.items_received)
 
