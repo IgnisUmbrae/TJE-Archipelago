@@ -30,6 +30,17 @@ class ElevatorKeyTypeOption(IntEnum):
     PROGRESSIVE = 1
     STATIC = 2
 
+class MapReveals(Toggle):
+    """
+    Adds five Progressive Map Reveal items, which reveal maps five levels at a time (1–5, 6–10, etc).
+    Revealed squares are "glass" as if revealed by a telephone, so still give points when fully uncovered.
+    
+    Note that because the game isn't able to(? or isn't programmed to) render an entire map full of glass tiles,
+    the outer border of each map will be left as is.
+    """
+
+    display_name = "Map Reveal Items"
+
 class ElevatorKeyType(Choice):
     """
     Adds elevator keys, new progression items that lock certain elevators until found. These come in two flavours:
@@ -47,48 +58,28 @@ class ElevatorKeyType(Choice):
 
     default = ElevatorKeyTypeOption.PROGRESSIVE
 
-class ProgElevatorKeyCount(NamedRange):
+class ElevatorKeyGap(NamedRange):
     """
-    Progressive elevator keys only: determines how many keys will appear in the game.
-    A maximum of 23 levels (2–24) can have locked elevators.
-    This can be set to more than 23 (up to 46) for smoother progression.
-    """
+    Determines the spacing between levels with locked elevators.
+    For example, setting this to 4 will lock the elevators on levels 4, 8, 12, 16, 20 and 24.
 
-    display_name = "Progressive Elevator Key Count"
-
-    range_start = 1
-    range_end = 46
-
-    special_range_names = {
-        "single": 1,
-        "full": 23,
-        "extra": 30
-    }
-
-    default = 23
-
-class StaticElevatorKeyGap(NamedRange):
-    """
-    Static elevator keys only: determines the spacing between levels with locked elevators.
-    For example, setting this to 4 will add keys for the elevators on levels 4, 8, 12, 16, 20 and 24.
-
-    Level 1 will never have an elevator key, even if this is set to 1.
+    Level 1 will never require an elevator key, even if this is set to 1.
     Any number greater than 12 will result in a single key only for that level's elevator.
     """
 
-    display_name = "Static Elevator Key Spacing"
+    display_name = "Elevator Key Spacing"
 
     range_start = 1
     range_end = 24
 
     special_range_names = {
-        "extreme": 1,
-        "regular": 5,
+        "all": 1,
+        "regular": 4,
         "light": 8,
         "lightest" : 13
     }
 
-    default = 5
+    default = 4
 
 class ExcludeItemsFromProgression(Toggle):
     """
@@ -104,6 +95,7 @@ class FinalShipPieceLocation(Choice):
     Determines the location of the final ship piece.
 
     - Level 25: The final ship piece will always appear on Level 25 in its usual, non-randomized location.
+                Selecting this will lock the Level 24 elevator until the other 9 have been found.
     - Anywhere: The final ship piece can appear anywhere, including in other worlds.
                 If this option is chosen, the ending must be manually triggered from the ship piece screen.
     """
@@ -118,7 +110,7 @@ class FinalShipPieceLocation(Choice):
 class MaxRankCheck(NamedRange):
     """
     Enabling this (value > 0) adds eight additional checks, one for each rank.
-    The number means the highest rank that can have a progression item. Later ranks are guaranteed not to.
+    The number means the highest rank that *can* have a progression item. Later ranks are guaranteed not to.
     Set to 0 to disable.
     """
 
@@ -143,7 +135,7 @@ class MaxRankCheck(NamedRange):
 
 class UpwarpPresent(Toggle):
     """
-    Mutator that changes the Un-fall present into an Up-warp present that always sends you up one level,
+    Mutator that changes the Un-Fall present into an Up-Warp present that always sends you up one level,
     even if you haven't yet made it that far by elevator. Poof!
     NB: Not currently accounted for in logic.
     """
@@ -215,8 +207,8 @@ tje_option_groups = [
     ]),
     OptionGroup("Extra Items/Locations", [
         ElevatorKeyType,
-        StaticElevatorKeyGap,
-        ProgElevatorKeyCount,
+        ElevatorKeyGap,
+        # ProgElevatorKeyCount,
         MaxRankCheck
     ]),
     OptionGroup("Mutators", [
@@ -234,7 +226,7 @@ class TJEOptions(PerGameCommonOptions):
     starting_presents: StartingPresents
     restrict_prog_items: ExcludeItemsFromProgression
     key_type: ElevatorKeyType
-    static_key_gap: StaticElevatorKeyGap
-    prog_key_count: ProgElevatorKeyCount
+    key_gap: ElevatorKeyGap
     max_major_rank: MaxRankCheck
     upwarp_present: UpwarpPresent
+    map_reveals: MapReveals
