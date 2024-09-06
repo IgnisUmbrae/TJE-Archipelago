@@ -1,12 +1,12 @@
 from typing import NamedTuple
 
 from BaseClasses import Region, MultiWorld, LocationProgressType, ItemClassification
-from worlds.generic.Rules import forbid_item
+from worlds.generic.Rules import forbid_item, add_rule
 
 from .constants import RANK_NAMES, RANK_THRESHOLDS
 from .items import TJEItem
-from .options import ShipPieceOption, ElevatorKeyTypeOption, TJEOptions
 from .generators import expected_map_points_on_level
+from .options import ShipPieceOption, ElevatorKeyTypeOption, TJEOptions
 from .locations import TJELocation, FLOOR_ITEM_LOCATIONS, SHIP_PIECE_LOCATIONS, RANK_LOC_TEMPLATE
 
 class TJERegion(NamedTuple):
@@ -49,63 +49,85 @@ def create_regions(multiworld: MultiWorld, player: int, options: TJEOptions):
     multiworld.regions.append(menu_region)
 
     level_regions = [Region(level.name, player, multiworld) for level in TJE_LEVEL_LIST]
-
     menu_region.connect(level_regions[1], "Start game")
 
-    # Connect all levels upwards, via exit elevator (except 0, 25 and 26)
+    connect_regions_basic(level_regions)
+
+    add_floor_items(world, player, options, level_regions)
+    add_ship_pieces(world, player, level_regions)
+
+    handle_key_options(multiworld, world, player, options)
+    handle_ship_piece_options(multiworld, player, options)
+    handle_rank_options(multiworld, world, player, options, level_regions)
+
+    multiworld.regions.extend(level_regions)
+
+def connect_regions_basic(level_regions):
     for i in range(1, 25):
-        if i in world.key_levels:
-            if i == 24 and options.final_ship_piece == ShipPieceOption.LEVEL_25:
-                if options.key_type == ElevatorKeyTypeOption.STATIC:
-                    rule = lambda state: \
-                        state.has("Level 24 Elevator Key", player) and state.has_group("Ship Pieces", player, 9)
-                elif options.key_type == ElevatorKeyTypeOption.PROGRESSIVE:
-                    rule = lambda state: \
-                        state.has("Progressive Elevator Key", player, world.key_levels.index(24)+1) and state.has_group("Ship Pieces", player, 9)
-            else:
-                if options.key_type == ElevatorKeyTypeOption.STATIC:
-                    rule = (lambda state, level=i: state.has(f"Level {level} Elevator Key", player))
-                elif options.key_type == ElevatorKeyTypeOption.PROGRESSIVE:
-                    rule = lambda state, level=i: state.has("Progressive Elevator Key", player, world.key_levels.index(level)+1)
-        else:
-            rule = None
+        level_regions[i].connect(level_regions[i+1], f"Level {i} Elevator")
 
-        level_regions[i].connect(level_regions[i+1], f"Level {i} Elevator", rule)
-
-    # Connect all levels downwards, via falling off edge (except 0 and 26)
     for i in range(1, 26):
         level_regions[i].connect(level_regions[i-1], f"Level {i} Bummer", None)
 
-    # Add floor item locations to all levels (except 0 and 26)
-    for i in range(1, 26):
-        locs_to_add: list[TJELocation] = []
-        for loc_data in FLOOR_ITEM_LOCATIONS[i-1]:
-            new_loc = TJELocation(player, loc_data.name, world.location_name_to_id[loc_data.name], level_regions[loc_data.level])
-            if loc_data.level == 1 or options.restrict_prog_items:
-                new_loc.progress_type = LocationProgressType.EXCLUDED
-            locs_to_add.append(new_loc)
-        level_regions[i].locations.extend(locs_to_add)
+#region Options handling routines
 
-    # Add ship piece checks to relevant levels
+def handle_key_options(multiworld, world, player, options):
+    for i in world.key_levels:
+        if options.key_type == ElevatorKeyTypeOption.STATIC:
+            add_rule(multiworld.get_entrance(f"Level {i} Elevator", player),
+                     lambda state, lvl=i: state.has(f"Level {lvl} Elevator Key", player))
+        elif options.key_type == ElevatorKeyTypeOption.PROGRESSIVE:
+            add_rule(multiworld.get_entrance(f"Level {i} Elevator", player),
+                     lambda state, lvl=i: state.has("Progressive Elevator Key", player, world.key_levels.index(lvl)+1))
 
-    for loc_data in SHIP_PIECE_LOCATIONS:
-        if loc_data.level in world.ship_piece_levels:
-            new_loc = TJELocation(player, loc_data.name, world.location_name_to_id[loc_data.name], level_regions[loc_data.level])
-            new_loc.progress_type = LocationProgressType.PRIORITY
-            level_regions[loc_data.level].locations.append(new_loc)
+def handle_ship_piece_options(multiworld, player, options):
+    if options.final_ship_piece == ShipPieceOption.LEVEL_25:
+        add_rule(multiworld.get_entrance("Level 24 Elevator", player),
+                 lambda state: state.has_group("Ship Pieces", player, 9))
 
-    # Add checks and logic for points and ranks
-
+def handle_rank_options(multiworld, world, player, options, level_regions):
     if options.max_major_rank > 0:
+        menu_region = multiworld.get_region("Menu", player)
         add_rank_events(menu_region, player, options)
         add_rank_checks(menu_region, world, player, options)
         for i in range(1, 26):
             add_reach_level_event(level_regions[i], player, i)
             add_map_points(level_regions[i], player, i)
 
-    # Require 9 ship pieces to access Level 25 if last ship piece is there
+def add_floor_items(world, player, options, level_regions):
+    for i in range(1, 26):
+        locs_to_add: list[TJELocation] = []
+        for loc_data in FLOOR_ITEM_LOCATIONS[i-1]:
+            new_loc = TJELocation(player, loc_data.name, world.location_name_to_id[loc_data.name],
+                                  level_regions[loc_data.level])
+            if loc_data.level == 1 or options.restrict_prog_items:
+                new_loc.progress_type = LocationProgressType.EXCLUDED
+            locs_to_add.append(new_loc)
+        level_regions[i].locations.extend(locs_to_add)
 
-    multiworld.regions.extend(level_regions)
+def add_ship_pieces(world, player, level_regions):
+    for loc_data in SHIP_PIECE_LOCATIONS:
+        if loc_data.level in world.ship_piece_levels:
+            new_loc = TJELocation(player, loc_data.name, world.location_name_to_id[loc_data.name],
+                                  level_regions[loc_data.level])
+            new_loc.progress_type = LocationProgressType.PRIORITY
+            level_regions[loc_data.level].locations.append(new_loc)
+
+def add_rank_checks(menu : Region, world, player, options):
+    for number, rank in enumerate(RANK_NAMES, start=1):
+        loc_name = RANK_LOC_TEMPLATE.format(rank)
+        loc = TJELocation(player, loc_name, world.location_name_to_id[loc_name], menu)
+        loc.access_rule = lambda state, rank_num=number: state.has("ranks", player, rank_num)
+        if number <= options.max_major_rank.value:
+            loc.progress_type = LocationProgressType.PRIORITY
+            forbid_item(loc, "Promotion", player)
+        else:
+            loc.progress_type = LocationProgressType.EXCLUDED
+        menu.locations.append(loc)
+
+#endregion
+
+#region Logic-tracking events
 
 def create_event(player: int, event: str, point_value: int = 0, rank_value: int = 0, progression = True) -> TJEItem:
     item = TJEItem(event, ItemClassification.progression_skip_balancing if progression else ItemClassification.filler,
@@ -119,18 +141,6 @@ def add_reach_level_event(level: Region, player: int, number: int):
     reach_loc.place_locked_item(create_event(player, f"Reached Level {number}"))
     reach_loc.show_in_spoiler = False
     level.locations.append(reach_loc)
-
-def add_rank_checks(menu : Region, world, player: int, options : TJEOptions):
-    for rank_number, rank in zip(range(1, 9), RANK_NAMES):
-        loc_name = RANK_LOC_TEMPLATE.format(rank)
-        loc = TJELocation(player, loc_name, world.location_name_to_id[loc_name], menu)
-        loc.access_rule = lambda state, actual_rank_number=rank_number: state.has("ranks", player, actual_rank_number)
-        if rank_number <= options.max_major_rank.value:
-            loc.progress_type = LocationProgressType.PRIORITY
-            forbid_item(loc, "Promotion", player)
-        else:
-            loc.progress_type = LocationProgressType.EXCLUDED
-        menu.locations.append(loc)
 
 # For internal rank number and logic tracking only
 def add_rank_events(menu : Region, player: int, options : TJEOptions):
@@ -148,5 +158,7 @@ def add_map_points(level: Region, player: int, level_number: int):
     value = expected_map_points_on_level(level_number)
     map_loc = TJELocation(player, f"Uncover {value} Map Tiles on Level {level_number}", None, level)
     map_loc.show_in_spoiler = False
-    map_loc.place_locked_item(create_event(player, f"Uncover {value} Map Tiles on Level {level_number}", value))
+    map_loc.place_locked_item(create_event(player, f"{value} Points", value))
     level.locations.append(map_loc)
+
+#endregion
