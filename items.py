@@ -122,8 +122,7 @@ ELEVATOR_KEY_ITEMS : list[TJEItemData] = [
 ]
 
 MISC_ITEMS : list[TJEItemData] = [
-    # Logically represents uncovering 1/8 of the map tiles for 7 points
-    TJEItemData(None, "Uncover 7 Map Tiles", TJEItemType.ETHEREAL, ItemClassification.progression_skip_balancing, 7),
+    TJEItemData(None, "Progressive Map Reveal", TJEItemType.ETHEREAL, ItemClassification.useful, 0)
 ]
 
 MASTER_ITEM_LIST = BASE_ITEM_LIST + ELEVATOR_KEY_ITEMS + MISC_ITEMS
@@ -172,7 +171,7 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
     # Create ship pieces
 
     ship_pieces_total = 10
-    
+
     if options.final_ship_piece == ShipPieceOption.LEVEL_25:
         multiworld.get_location("Level 25 - Ship Piece", player).place_locked_item(
             world.create_item("Hyperfunk Thruster", ItemClassification.progression)
@@ -183,14 +182,14 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
         item_list.append(world.create_item(item.name, item.classification))
 
     # Add elevator keys if needed
-    key_levels = world.key_levels
     if options.key_type == ElevatorKeyTypeOption.STATIC:
-        for lvl in key_levels:
-            item_list.append(world.create_item(f"Level {lvl} Elevator Key", ItemClassification.progression))
-        extra_added += len(key_levels)
+        item_list.extend([world.create_item(f"Level {lvl} Elevator Key", ItemClassification.progression)
+                          for lvl in world.key_levels])
+        extra_added += len(world.key_levels)
     elif options.key_type == ElevatorKeyTypeOption.PROGRESSIVE:
-        item_list.extend([world.create_item("Progressive Elevator Key", ItemClassification.progression) for _ in range(options.prog_key_count.value)])
-        extra_added += options.prog_key_count
+        item_list.extend([world.create_item("Progressive Elevator Key", ItemClassification.progression)
+                          for _ in range(len(world.key_levels))])
+        extra_added += len(world.key_levels)
 
     # Add an extra promotion if rank check is 7, two if 8; this helps avoid fill errors from impossible seeds
     extra_promos = max(options.max_major_rank - 6, 0)
@@ -198,8 +197,11 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
         item_list.extend([world.create_item("Promotion") for _ in range(extra_promos)])
         extra_added += extra_promos
 
-    # Generate the main chunk of items
+    if options.map_reveals:
+        item_list.extend([world.create_item("Progressive Map Reveal", ItemClassification.useful) for _ in range(5)])
+        extra_added += 5
 
+    # Generate the main chunk of items
     total_locations = sum(item_totals())
     item_pool_raw = world.generator.generate_item_blob(total_locations - extra_added)
 
