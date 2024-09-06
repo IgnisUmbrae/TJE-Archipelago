@@ -17,15 +17,17 @@ Additions over the base game include:
 
 - New sprites for AP items, ship pieces and hints
 - Configurable starting presents, game over handling (soon), and more
-- Elevator keys: new items that unlock elevators when found
-- Optionally change Un-Fall presents into Up-Warps, which _always_ send you up one level
+- New items:
+  - Elevator items, which are required to unlock elevators
+  - Map revealers, which uncover the map five levels at a time
+  - The Up-Warp present, which replaces Un-Fall and _always_ sends you up one level
 
 ## Caveats
 
-- Game overs are not currently handled and will reset your progress. It's recommended to play with infinite lives for the time being.
+- Progress is currently only saved when travelling between levels, so Game Overs may result in a small amount of lost progress.
 - Item handling is (currently) entirely remote except for starting presents. In particular this means that every item in the game appears as an AP logo.
 - Neither Earl nor 2-player mode is currently supported.
-- Hints are yet to be implemented and locations are generically-named, so in multiworlds it's recommended to play with `restrict_prog_items: yes` to avoid having to scour the map for a singular progression item.
+- Hints are yet to be implemented and locations are generically-named, so in multiworlds it's recommended to play with `restrict_prog_items: yes` to avoid having to scour the map for a singular progression item in a weird location.
 
 ## Setup
 
