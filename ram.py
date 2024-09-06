@@ -377,11 +377,11 @@ class TJEGameController():
             return False
         return True
 
-    def receive_key(self, key_id: int) -> bool:
-        # if DEBUG:
-        #     print("Got a key!")
-        #     print(f"Key levels: {self.key_levels}")
-        #     print(f"Unlocked levels: {self.unlocked_levels}")
+    async def receive_key(self, key_id: int) -> bool:
+        if DEBUG:
+            print("Got a key!")
+            print(f"Key levels: {self.key_levels}")
+            print(f"Unlocked levels: {self.unlocked_levels}")
         if self.prog_keys:
             num_keys = len(self.unlocked_levels)
             try:
@@ -394,7 +394,7 @@ class TJEGameController():
         if level is not None:
             self.unlocked_levels.append(level)
             if DEBUG: print(f"Unlocking level {level}")
-        
+
         return True
 
     async def spawn_item(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
