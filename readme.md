@@ -34,21 +34,23 @@ Additions over the base game include:
 - [Archipelago](https://github.com/ArchipelagoMW/Archipelago/releases) 5.0.0+
 - [BizHawk](https://tasvideos.org/BizHawk/ReleaseHistory) 2.9.1+
 - The latest [Toejam & Earl AP World](https://github.com/IgnisUmbrae/TJE-Archipelago/releases)
-- A legally-obtained copy of **REV 02** Toejam & Earl ROM, the easiest source of which is [the Steam release](https://store.steampowered.com/app/71166/ToeJam__Earl/). **REV 00 is not supported.**
+- A legally-obtained **REV 02** Toejam & Earl ROM, the easiest source of which is [the Steam release](https://store.steampowered.com/app/71166/ToeJam__Earl/). **REV 00 is not supported.**
 
 ### Instructions
 
-Place the downloaded `.apworld` file into the `worlds` subfolder of your Archipelago installation. Now you're ready to generate a world.
+1. Locate your Toejam & Earl REV 02 ROM. If you own the Steam version, you can right-click it in your library, select Manage → Browse Local Files and locate `ToeJamEarl.SGD` in the `uncompressed ROMs` folder.
 
-Generating a world will also generate a patch. You can use the Patch function in the launcher to apply the patch to the ROM and automatically launch BizHawk along with the client. BizHawk will also pop up its Lua scripting window, in which you'll need to enable the connector script by double clicking it.
+2. Place the downloaded `tje.apworld` file into the `worlds` subfolder of your Archipelago installation.
 
-## Configuration
+3. Create a YAML. You can use [the example](https://github.com/IgnisUmbrae/TJE-Archipelago/docs/example.yaml) as a quickstart. Add this to the `Players` subfolder if you're hosting locally, or upload it to the host otherwise.
 
-See the [Options readme](https://github.com/IgnisUmbrae/TJE-Archipelago/docs/yaml-options.md) (TBC).
+4. Now you or the host can generate a world. Archipelago will also generate a patch with the extension `.aptje`; the easiest way to use this is via the Patch function in the launcher, which will apply the patch to the ROM and automatically launch BizHawk along with the client. (You may be asked to locate one or both of these.)
+
+5. BizHawk will also pop up its Lua scripting window, in which you'll need to enable the script `connector_bizhawk_generic` by double clicking it. Now everything will connect together.
 
 ## Credits
 
-I owe a great debt of gratitude to, in no particular order:
+I owe a great debt of gratitude to:
 
 - **slab**, whose hand-labelled disassembly and knowledge of the game's internal workings has been invaluable
 - **DrKelexo**, for being the first to brave the very first release, reams of early feedback, and some stellar spritework
