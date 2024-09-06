@@ -1,0 +1,16 @@
+# This is an example YAML for ToeJam & Earl, intended as a quickstart.
+#
+# For a full overview of all of the options, run "Generate Template Options"
+# in the Archipelago Launcher and check /Players/Templates/ToeJam and Earl.yaml.
+name: Bro
+game: ToeJam and Earl
+ToeJam and Earl:
+  final_ship_piece: level_25
+  game_overs: drop_down
+  include_traps: all
+  starting_presents: hitops
+  restrict_prog_items: no
+  key_type: progressive
+  prog_key_count: 8
+  upwarp_present: yes
+  max_major_rank: bro
