@@ -156,7 +156,7 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
     differential += create_rank_items(world, options, item_list)
     differential += create_elevator_keys(world, options, item_list)
     differential += create_map_reveals(world, options, item_list)
-    differential += create_main_items(world, options, item_list, differential)#
+    differential += create_main_items(world, options, item_list, differential)
     
     create_padding_items(world, options, item_list, differential)
 
@@ -202,10 +202,10 @@ def create_map_reveals(world, options, item_list) -> int:
     return 0
 
 def create_main_items(world, options, item_list, differential) -> int:
-    differential = 0
-
     total_locations = sum(item_totals())
     item_pool_raw = world.generator.generate_item_blob(total_locations - differential)
+
+    differential = 0
 
     # Handle trap options
     forbidden_combos : list[tuple[TJEItemType, ItemClassification]] = []
