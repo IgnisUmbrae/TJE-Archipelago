@@ -144,7 +144,7 @@ class UpwarpPresent(Toggle):
 
 class GameOvers(Choice):
     """
-    What to do in the event of a game over.
+    What to do in the event of a game over. (NOT CURRENTLY IMPLEMENTED)
 
     - Disable: Forces infinite lives so game overs never happen. Also removes Extra Life presents.
     - Drop Down: Forces the player to fall down one level, after which they respawn with three lives.
