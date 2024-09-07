@@ -148,10 +148,13 @@ KEY_IDS = [ITEM_NAME_TO_ID[item.name] for item in ELEVATOR_KEY_ITEMS]
 
 def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions) -> None:
     item_list: list[TJEItem] = []
+    # This number is relative to the number of *base* locations (floor items + ship pieces)
+    # Negative means we need to add items; positive means we have too many
     differential = 0
 
+    create_ship_pieces(multiworld, world, player, options, item_list)
+
     differential += create_rank_items(world, options, item_list)
-    differential += create_ship_pieces(multiworld, world, player, options, item_list)
     differential += create_elevator_keys(world, options, item_list)
     differential += create_map_reveals(world, options, item_list)
     differential += create_main_items(world, options, item_list, differential)#
