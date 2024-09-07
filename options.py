@@ -116,8 +116,8 @@ class MaxRankCheck(NamedRange):
 
     display_name = "Highest Big Rank Check"
 
-    range_start: 0
-    range_end: 8
+    range_start = 0
+    range_end = 8
 
     special_range_names = {
         "off": 0,
