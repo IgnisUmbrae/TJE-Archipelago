@@ -152,3 +152,6 @@ def expected_point_totals(cumulative=False) -> list[float]:
     if not cumulative:
         return totals
     return [round(n) for n in itertools.accumulate(iterable=totals)]
+
+if __name__ == "__main__":
+    print(item_totals(False))

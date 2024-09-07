@@ -118,7 +118,6 @@ ELEVATOR_KEY_ITEMS : list[TJEItemData] = [
     TJEItemData(None, "Level 23 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
     TJEItemData(None, "Level 24 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
     TJEItemData(None, "Progressive Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0)
-
 ]
 
 MISC_ITEMS : list[TJEItemData] = [
@@ -163,7 +162,7 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
 
     multiworld.itempool.extend(item_list)
 
-def create_ship_pieces(multiworld, world, player, options, item_list) -> int:
+def create_ship_pieces(multiworld, world, player, options, item_list) -> None:
     ship_pieces_total = 10
 
     if options.final_ship_piece == ShipPieceOption.LEVEL_25:
@@ -174,8 +173,6 @@ def create_ship_pieces(multiworld, world, player, options, item_list) -> int:
 
     for item in MASTER_ITEM_LIST[:ship_pieces_total]:
         item_list.append(world.create_item(item.name, item.classification))
-
-    return 0
 
 def create_elevator_keys(world, options, item_list) -> int:
     if options.key_type == ElevatorKeyTypeOption.STATIC:
@@ -202,6 +199,7 @@ def create_map_reveals(world, options, item_list) -> int:
     if options.map_reveals:
         item_list.extend([world.create_item("Progressive Map Reveal", ItemClassification.useful) for _ in range(5)])
         return 5
+    return 0
 
 def create_main_items(world, options, item_list, differential) -> int:
     differential = 0
