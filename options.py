@@ -127,7 +127,7 @@ class MaxRankCheck(NamedRange):
         "dude": 4,
         "bro": 5,
         "homey": 6,
-        "rapmster": 7,
+        "rapmaster": 7,
         "funk_lord": 8
     }
 
