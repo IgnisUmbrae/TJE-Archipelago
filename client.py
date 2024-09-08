@@ -57,7 +57,7 @@ class TJEClient(BizHawkClient):
 
         self.patched_ending = False
 
-        self.edible_queue = SpawnQueue(cooldown=1)
+        self.edible_queue = SpawnQueue(cooldown=2)
         self.present_queue = SpawnQueue(cooldown=1)
         self.misc_queue = SpawnQueue(cooldown=1)
 
@@ -75,6 +75,7 @@ class TJEClient(BizHawkClient):
         ctx.game = self.game
         ctx.items_handling = 0b011 # Local inventory handled in patch
         ctx.want_slot_data = True
+        ctx.watcher_timeout = 0.125
 
         self.game_controller.add_monitors(ctx)
 
