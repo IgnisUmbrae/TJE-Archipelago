@@ -147,8 +147,8 @@ class GameOvers(Choice):
     What to do in the event of a game over. (NOT CURRENTLY IMPLEMENTED)
 
     - Disable: Forces infinite lives so game overs never happen. Also removes Extra Life presents.
-    - Drop Down: Forces the player to fall down one level, after which they respawn with three lives.
-    - Reset: Return to the title screen, as in the base game.
+    - Drop Down: Forces the player to fall down one level, after which they respawn normally.
+    - Reset: Return to the title screen, as in the base game. Some progress will be lost.
     """
 
     display_name = "Game Over Handling"
