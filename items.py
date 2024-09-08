@@ -148,7 +148,7 @@ KEY_IDS = [ITEM_NAME_TO_ID[item.name] for item in ELEVATOR_KEY_ITEMS]
 
 def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions) -> None:
     item_list: list[TJEItem] = []
-    
+
     create_ship_pieces(multiworld, world, player, options, item_list)
 
     handle_trap_options(world, options)
@@ -173,7 +173,7 @@ def handle_trap_options(world, options) -> None:
 
 def handle_gameover_options(world, options) -> None:
     if options.game_overs == GameOverOption.DISABLE:
-        world.generator.forbid_item(ITEM_NAME_TO_CODE("Extra Life"))
+        world.generator.forbid_item(ITEM_NAME_TO_CODE["Extra Life"])
 
 def create_ship_pieces(multiworld, world, player, options, item_list) -> None:
     ship_pieces_total = 10
