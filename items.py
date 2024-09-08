@@ -5,7 +5,8 @@ from BaseClasses import Item, ItemClassification, MultiWorld
 
 from .constants import BASE_TJE_ID
 from .generators import item_totals
-from .options import ElevatorKeyTypeOption, StartingPresentOption, TJEOptions, TrapOption, ShipPieceOption
+from .options import ElevatorKeyTypeOption, GameOverOption, StartingPresentOption, \
+                     TJEOptions, TrapOption, ShipPieceOption
 
 # TO DO: lots of redundancy here; needs a big clean-up
 
@@ -147,19 +148,32 @@ KEY_IDS = [ITEM_NAME_TO_ID[item.name] for item in ELEVATOR_KEY_ITEMS]
 
 def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions) -> None:
     item_list: list[TJEItem] = []
+    
     create_ship_pieces(multiworld, world, player, options, item_list)
+
+    handle_trap_options(world, options)
+    handle_gameover_options(world, options)
 
     # This number is relative to the number of *base* locations (floor items + ship pieces)
     # Negative means we need to add items; positive means we have too many
-    differential = 0
-    differential += create_rank_items(world, options, item_list)
-    differential += create_elevator_keys(world, options, item_list)
-    differential += create_map_reveals(world, options, item_list)
+    differential = create_rank_items(world, options, item_list) \
+                   + create_elevator_keys(world, options, item_list) \
+                   + create_map_reveals(world, options, item_list)
 
-    required_padding = create_main_items(world, options, item_list, differential)
-    create_padding_items(world, options, item_list, required_padding)
+    create_main_items(world, item_list, differential)
+    #create_padding_items(world, options, item_list, required_padding)
 
     multiworld.itempool.extend(item_list)
+
+def handle_trap_options(world, options) -> None:
+    if options.include_traps in [TrapOption.NONE, TrapOption.FOOD_ONLY]:
+        world.generator.forbid_trap_presents()
+    if options.include_traps in [TrapOption.NONE, TrapOption.PRESENTS_ONLY]:
+        world.generator.forbid_trap_food()
+
+def handle_gameover_options(world, options) -> None:
+    if options.game_overs == GameOverOption.DISABLE:
+        world.generator.forbid_item(ITEM_NAME_TO_CODE("Extra Life"))
 
 def create_ship_pieces(multiworld, world, player, options, item_list) -> None:
     ship_pieces_total = 10
@@ -188,6 +202,7 @@ def create_rank_items(world, options, item_list) -> int:
         differential -= 8
 
     # Add an extra promotion if rank check is 7, two if 8; this helps avoid fill errors from impossible seeds
+    # These may end up being unplaceable, but the seed will still be completable in that instance
     extra_promos = max(options.max_major_rank - 6, 0)
     if extra_promos > 0:
         item_list.extend([world.create_item("Promotion") for _ in range(extra_promos)])
@@ -200,24 +215,9 @@ def create_map_reveals(world, options, item_list) -> int:
         return 5
     return 0
 
-def create_main_items(world, options, item_list, differential) -> int:
+def create_main_items(world, item_list, differential) -> None:
     total_locations = sum(item_totals())
     item_pool_raw = world.generator.generate_item_blob(total_locations - differential)
-
-    required_padding = 0
-
-    # Handle trap options
-    forbidden_combos : list[tuple[TJEItemType, ItemClassification]] = []
-    match options.include_traps:
-        case TrapOption.NONE:
-            forbidden_combos += [(TJEItemType.EDIBLE, ItemClassification.trap),
-                                (TJEItemType.PRESENT, ItemClassification.trap)]
-        case TrapOption.ITEMS_ONLY:
-            forbidden_combos += [(TJEItemType.EDIBLE, ItemClassification.trap)]
-        case TrapOption.PRESENTS_ONLY:
-            forbidden_combos += [(TJEItemType.PRESENT, ItemClassification.trap)]
-        case TrapOption.ALL:
-            pass
 
     for item in item_pool_raw:
         item_id = ITEM_CODE_TO_ID[item]
@@ -225,21 +225,16 @@ def create_main_items(world, options, item_list, differential) -> int:
         item_data = ITEM_NAME_TO_DATA[item_name]
         item_classification = item_data.classification
 
-        if (item_data.type, item_classification) not in forbidden_combos:
-            item_list.append(world.create_item(item_name, item_classification))
-        else:
-            required_padding -= 1
+        item_list.append(world.create_item(item_name, item_classification))
 
-    return required_padding
-
-def create_padding_items(world, options, item_list, differential) -> None:
-    if differential < 0:
-        item_list.extend([
-            world.create_item(ITEM_CODE_TO_ID[code])
-            for code in world.generator.generate_item_blob(
-                abs(differential), include_bad=(options.include_traps == TrapOption.NONE)
-            )
-        ])
+# def create_padding_items(world, options, item_list, differential) -> None:
+#     if differential < 0:
+#         item_list.extend([
+#             world.create_item(ITEM_CODE_TO_ID[code])
+#             for code in world.generator.generate_item_blob(
+#                 abs(differential), include_bad=(options.include_traps == TrapOption.NONE)
+#             )
+#         ])
 
 def create_starting_presents(world, multiworld : MultiWorld, options: TJEOptions) -> None:
     match options.starting_presents:
