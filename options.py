@@ -14,7 +14,7 @@ class GameOverOption(IntEnum):
 
 class TrapOption(IntEnum):
     NONE = 0
-    ITEMS_ONLY = 1
+    FOOD_ONLY = 1
     PRESENTS_ONLY = 2
     ALL = 3
 
@@ -172,7 +172,7 @@ class IncludeTraps(Choice):
     display_name = "Include Traps in Item Pool"
 
     option_none = TrapOption.NONE
-    option_items = TrapOption.ITEMS_ONLY
+    option_food = TrapOption.FOOD_ONLY
     option_presents = TrapOption.PRESENTS_ONLY
     option_all = TrapOption.ALL
 
