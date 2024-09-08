@@ -7,13 +7,10 @@ BAD_PRESENT_INDICES = set([13, 16, 18, 23, 24])
 LV1_FORBIDDEN_PRESENT_INDICES = set([0, 2, 5, 16, 18, 26])
 assert(len(PRESENT_LIST) == len(PRESENT_WEIGHTS))
 
-GOOD_FOOD_LIST = list(range(0x40, 0x4B))
-BAD_FOOD_LIST = list(range(0x4B, 0x50))
+FOOD_LIST = range(0x40, 0x50)
+FOOD_WEIGHTS = [1]*len(FOOD_LIST)
+BAD_FOOD_INDICES = set([11, 12, 13, 14, 15])
 A_BUCK = 0x50
-
-# PADDING_LIST = [0x1A] + GOOD_FOOD_LIST + [A_BUCK]
-# PADDING_WEIGHTS = [5] + [1]*len(GOOD_FOOD_LIST) + [5]
-# assert(len(PADDING_LIST) == len(PADDING_WEIGHTS))
 
 # With thanks to James Green for this precomputation
 
@@ -44,9 +41,24 @@ GAP_LIST_WEIGHTS = [5 - gaps.count(4) for gaps in GAP_LISTS]
 class TJEGenerator():
     def __init__(self, world):
         self.random = world.random
+        self.global_banned_food = set()
+        self.global_banned_presents = set()
 
-    def get_present_distribution(self, level_one : bool = False, include_bad : bool = True) -> tuple[list[int], list[float]]:
+    def forbid_item(self, item_code: int):
+        if item_code in PRESENT_LIST:
+            self.global_banned_presents.add(PRESENT_LIST.index(item_code))
+        elif item_code in FOOD_LIST:
+            self.global_banned_food.add(FOOD_LIST.index(item_code))
+
+    def forbid_trap_presents(self):
+        self.global_banned_presents |= BAD_PRESENT_INDICES
+
+    def forbid_trap_food(self):
+        self.global_banned_food |= BAD_FOOD_INDICES
+
+    def get_present_distribution(self, level_one: bool = False, include_bad: bool = True) -> tuple[list[int], list[float]]:
         forbiddens = set()
+        forbiddens |= self.global_banned_presents
         if level_one:
             forbiddens |= LV1_FORBIDDEN_PRESENT_INDICES
         if not include_bad:
@@ -58,16 +70,27 @@ class TJEGenerator():
 
         return culled_present_list, culled_present_weights
 
-    # Not clear if this actually uniformly randomly chosen in the code
-    def get_random_food(self, include_bad : bool = True) -> int:
-        food_list = GOOD_FOOD_LIST+BAD_FOOD_LIST if include_bad else GOOD_FOOD_LIST
-        return self.random.choices(food_list)[0]
+    def get_food_distribution(self, include_bad: bool = True) -> tuple[list[int], list[float]]:
+        forbiddens = set()
+        forbiddens |= self.global_banned_food
+        if not include_bad:
+            forbiddens |= BAD_FOOD_INDICES
 
-    def get_random_present(self, level_one : bool = False, include_bad : bool = True) -> int:
+        culled_food_list = [FOOD_LIST[i] for i in range(len(FOOD_LIST)) if i not in forbiddens]
+        culled_food_weights = [FOOD_WEIGHTS[i] for i in range(len(FOOD_WEIGHTS)) if i not in forbiddens]
+
+        return culled_food_list, culled_food_weights
+
+    # Not clear if this actually uniformly randomly chosen in the code
+    def get_random_food(self, include_bad: bool = True) -> int:
+        food_list, food_distro = self.get_food_distribution(include_bad)
+        return self.random.choices(food_list, food_distro, k=1)[0]
+
+    def get_random_present(self, level_one: bool = False, include_bad: bool = True) -> int:
         present_list, present_distro = self.get_present_distribution(level_one, include_bad)
         return self.random.choices(present_list, present_distro, k=1)[0]
 
-    def get_random_item(self, level_one : bool = False, include_bad : bool = True) -> int:
+    def get_random_item(self, level_one: bool = False, include_bad: bool = True) -> int:
         if level_one or self.random.random() < 0.5:
             return self.get_random_present(level_one, include_bad)
         else:
@@ -154,4 +177,7 @@ def expected_point_totals(cumulative=False) -> list[float]:
     return [round(n) for n in itertools.accumulate(iterable=totals)]
 
 if __name__ == "__main__":
-    print(item_totals(False))
+    from random import Random
+    generator = TJEGenerator(Random())
+    generator.global_banned_food |= BAD_FOOD_INDICES
+    print([generator.get_random_food() for _ in range(100)])
