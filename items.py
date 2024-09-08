@@ -147,18 +147,17 @@ KEY_IDS = [ITEM_NAME_TO_ID[item.name] for item in ELEVATOR_KEY_ITEMS]
 
 def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions) -> None:
     item_list: list[TJEItem] = []
+    create_ship_pieces(multiworld, world, player, options, item_list)
+
     # This number is relative to the number of *base* locations (floor items + ship pieces)
     # Negative means we need to add items; positive means we have too many
     differential = 0
-
-    create_ship_pieces(multiworld, world, player, options, item_list)
-
     differential += create_rank_items(world, options, item_list)
     differential += create_elevator_keys(world, options, item_list)
     differential += create_map_reveals(world, options, item_list)
-    differential += create_main_items(world, options, item_list, differential)
-    
-    create_padding_items(world, options, item_list, differential)
+
+    required_padding = create_main_items(world, options, item_list, differential)
+    create_padding_items(world, options, item_list, required_padding)
 
     multiworld.itempool.extend(item_list)
 
@@ -205,7 +204,7 @@ def create_main_items(world, options, item_list, differential) -> int:
     total_locations = sum(item_totals())
     item_pool_raw = world.generator.generate_item_blob(total_locations - differential)
 
-    differential = 0
+    required_padding = 0
 
     # Handle trap options
     forbidden_combos : list[tuple[TJEItemType, ItemClassification]] = []
@@ -229,9 +228,9 @@ def create_main_items(world, options, item_list, differential) -> int:
         if (item_data.type, item_classification) not in forbidden_combos:
             item_list.append(world.create_item(item_name, item_classification))
         else:
-            differential -= 1
+            required_padding -= 1
 
-    return differential
+    return required_padding
 
 def create_padding_items(world, options, item_list, differential) -> None:
     if differential < 0:
