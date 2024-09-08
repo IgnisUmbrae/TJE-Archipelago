@@ -56,6 +56,8 @@ def create_regions(multiworld: MultiWorld, player: int, options: TJEOptions):
     add_floor_items(world, player, options, level_regions)
     add_ship_pieces(world, player, level_regions)
 
+    restrict_lv1_presents(level_regions)
+
     handle_key_options(multiworld, world, player, options)
     handle_ship_piece_options(multiworld, player, options)
     handle_rank_options(multiworld, world, player, options, level_regions)
@@ -68,6 +70,15 @@ def connect_regions_basic(level_regions):
 
     for i in range(1, 26):
         level_regions[i].connect(level_regions[i-1], f"Level {i} Bummer", None)
+
+#region Misc
+
+def restrict_lv1_presents(level_regions):
+    for loc in level_regions[1].get_locations()[:4]:
+        loc.item_rule = lambda i: i not in ["Icarus Wings", "Innertube", "Rocket Skates",
+                                            "Mystery Present", "Randomizer", "Total Bummer"]
+
+#endregion
 
 #region Options handling routines
 
