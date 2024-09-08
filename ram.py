@@ -240,7 +240,6 @@ class TJEGameController():
                 if DEBUG: print("Failed to load save data!")
             finally:
                 self.load_delay = None
-                #await self.poke_ram(ctx, RAM_ADDRS.TJ_STATE, b"\x03")
                 self.game_state = TJEGameState.NORMAL
 
     async def update_save_data(self, ctx: "BizHawkClientContext") -> None:
@@ -504,8 +503,6 @@ class TJEGameController():
             if self.save_data is None:
                 await self.level_one_initialization(ctx)
             else:
-                # Put ToeJam to sleep while we wait for the safe load
-                #await self.poke_ram(ctx, RAM_ADDRS.TJ_SLEEP_TIMER, b"\x01\x2D")
                 self.load_delay = TickDelay(functools.partial(self.load_save_data, ctx), 8)
                 self.game_state = TJEGameState.WAITING_FOR_LOAD
         if self.game_state in LOADING_STATES and self.current_level != -1:
