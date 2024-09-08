@@ -9,7 +9,7 @@ from worlds.Files import APProcedurePatch, APTokenMixin, APTokenTypes
 
 from .constants import EMPTY_PRESENT, INITIAL_PRESENT_ADDRS
 from .items import ITEM_ID_TO_CODE
-from .options import StartingPresentOption
+from .options import StartingPresentOption, GameOverOption
 
 if TYPE_CHECKING:
     from . import TJEWorld
@@ -73,5 +73,9 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
         patch.write_token(APTokenTypes.WRITE, 0x00010b06, b"\x10\x3C\x00\x19\x4E\x71") # Always up unless on level 25
         patch.write_token(APTokenTypes.WRITE, 0x00017be6, b"\x4e\x71\x4e\x71") # Always show "item here" hint signs
         patch.write_token(APTokenTypes.WRITE, 0x000abc34, b"\x15\x10\x22\x17\x01\x12\x10") # Change name to Up-Warp
+    
+    # Patch out life subtraction
+    if world.options.game_overs == GameOverOption.DISABLE:
+        patch.write_token(APTokenTypes.WRITE, 0x0000bcd0, b"\x4E\x71\x4E\x71")
 
     patch.write_file("token_data.bin", patch.get_token_binary())
