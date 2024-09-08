@@ -502,7 +502,7 @@ class TJEGameController():
             else:
                 # Put ToeJam to sleep while we wait for the safe load
                 #await self.poke_ram(ctx, RAM_ADDRS.TJ_SLEEP_TIMER, b"\x01\x2D")
-                self.load_delay = TickDelay(functools.partial(self.load_save_data, ctx), 2)
+                self.load_delay = TickDelay(functools.partial(self.load_save_data, ctx), 8)
                 self.game_state = TJEGameState.WAITING_FOR_LOAD
         if self.game_state in LOADING_STATES and self.current_level != -1:
             if self.load_delay is None: await self.update_save_data(ctx)
@@ -573,12 +573,13 @@ class TJEGameController():
             await self.alter_current_elevator(ctx, lock=False)
 
     async def update_game_state(self, ctx: "BizHawkClientContext") -> None:
+        old_state = self.game_state
         if self.load_delay is not None:
             self.game_state = TJEGameState.WAITING_FOR_LOAD
         else:
             try:
                 toejam_state = await self.peek_ram(ctx, RAM_ADDRS.TJ_STATE, 1)
-                toejam_lives = await self.peek_ram(ctx, RAM_ADDRS.TJ_LIVES, 1)
+                #toejam_lives = await self.peek_ram(ctx, RAM_ADDRS.TJ_LIVES, 1)
                 toejam_sprite = int.from_bytes(await self.peek_ram(ctx, RAM_ADDRS.TJ_SPRITE, 1))
                 menu_flag = await self.peek_ram(ctx, RAM_ADDRS.TJ_MENU_FLAG, 1)
                 fall_state = await self.peek_ram(ctx, RAM_ADDRS.TJ_FALL_STATE, 1)
@@ -621,6 +622,7 @@ class TJEGameController():
             except (bizhawk.RequestFailedError, bizhawk.NotConnectedError):
                 pass
 
-        if DEBUG: print(f"Game state: {self.game_state}")
+        if DEBUG:
+            if old_state != self.game_state: print(f"Game state: {self.game_state}")
 
     #endregion
