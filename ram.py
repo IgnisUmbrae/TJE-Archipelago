@@ -221,9 +221,13 @@ class TJEGameController():
                 await bizhawk.lock(ctx.bizhawk_ctx)
                 for point in SAVE_DATA_POINTS:
                     #if DEBUG: print(f"Loading {point.name} with data {self.save_data[point.name]}")
-                    if point.name == "Lives (TJ)" and int.from_bytes(self.save_data[point.name]) < 3:
+                    # Failsafe to ensure we don't instakill/gameover
+                    if point.name == "Lives (TJ)" and int.from_bytes(self.save_data[point.name]) == 0:
                         self.save_data[point.name] = b"\x03"
                     await self.poke_ram(ctx, point.address, self.save_data[point.name])
+
+                # Fill HP bar
+                await self.poke_ram(ctx, RAM_ADDRS.TJ_HP_RESTORE, b"\x7F")
 
                 # Level 1 floor items have to be manually altered as it has already loaded in
                 level_1_items = int.from_bytes(self.save_data["Collected items"][4:8])
