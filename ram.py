@@ -1,3 +1,5 @@
+from math import e
+import random
 import struct
 import functools
 from typing import TYPE_CHECKING, Any, Callable, Optional
@@ -10,7 +12,8 @@ from worlds._bizhawk.client import BizHawkClient
 from .constants import DEBUG, EMPTY_SHIP_PIECE, EMPTY_ITEM, SHIP_PIECE, RANK_NAMES, RAM_ADDRS, \
                        TJ_GHOST_SPRITES, TJ_SWIMMING_SPRITES, TJ_HITOPS_JUMP_SPRITES, TOEJAM_STATE_LOAD_DOWN, \
                        ELEVATOR_LOCKED, ELEVATOR_UNLOCKED, END_ELEVATOR_UNLOCKED_STATES, SAVE_DATA_POINTS
-from .items import ITEM_NAME_TO_ID, PRESENT_IDS, EDIBLE_IDS, SHIP_PIECE_IDS, KEY_IDS, ITEM_ID_TO_CODE
+from .items import ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, \
+                    PRESENT_IDS, EDIBLE_IDS, SHIP_PIECE_IDS, KEY_IDS, INSTATRAP_IDS
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, RANK_LOC_TEMPLATE, SHIP_PIECE_LOC_TEMPLATE
 
 if TYPE_CHECKING:
@@ -143,7 +146,7 @@ class TJEGameController():
                 await self.ship_item_monitor.tick()
                 await self.rank_monitor.tick()
                 await self.level_monitor.tick()
-                
+ 
                 await self.update_game_state(ctx)
 
                 if self.is_playing:
@@ -158,7 +161,8 @@ class TJEGameController():
             "Floor item",
             self.current_collected_items_addr,
             4,
-            lambda: not self.is_loading_state_strict() and not self.is_on_menu() and not self.is_awaiting_load(),
+            lambda: (not self.is_loading_state_strict() and not self.is_on_menu()
+                     and not self.is_awaiting_load() and not self.is_dead()),
             self.handle_floor_item_change,
             self,
             ctx
@@ -329,7 +333,7 @@ class TJEGameController():
             return None
         return RAM_ADDRS.UNCOVERED_MAP_MASK + level*7
 
-    async def get_first_empty_inv_slot(self, ctx: "BizHawkClientContext") -> Optional[int]:    
+    async def get_empty_inv_slot(self, ctx: "BizHawkClientContext") -> Optional[int]:    
         current_inventory = await self.peek_ram(ctx, RAM_ADDRS.INVENTORY, 16)
         if current_inventory:
             split_inventory = [current_inventory[i:i+1] for i in range(len(current_inventory))]
@@ -340,13 +344,15 @@ class TJEGameController():
         else:
             return None
 
-    async def get_first_empty_dropped_present_slot(self, ctx: "BizHawkClientContext") -> Optional[int]:
+    async def get_empty_dropped_present_slot(self, ctx: "BizHawkClientContext") -> Optional[int]:
         dropped_presents_table = await self.peek_ram(ctx, RAM_ADDRS.DROPPED_PRESENTS, 256)
         if dropped_presents_table:
             dropped_present_types = [dropped_presents_table[i:i+8][0:1]
                                      for i in range(0, len(dropped_presents_table), 8)]
-            try: return dropped_present_types.index(EMPTY_ITEM)
-            except ValueError: return None
+            try:
+                return dropped_present_types.index(EMPTY_ITEM)
+            except ValueError:
+                return None
         else:
             return None
         
@@ -355,16 +361,43 @@ class TJEGameController():
         if floor_item_table:
             floor_item_types = [floor_item_table[i:i+8][0:1]
                                 for i in range(0, len(floor_item_table), 8)]
-            try: return floor_item_types.index(EMPTY_ITEM)
-            except ValueError: return None
+            try:
+                return floor_item_types.index(EMPTY_ITEM)
+            except ValueError:
+                return None
         else:
             return None
 
     #endregion
 
+    #region Trap activation functions
+
+    async def receive_trap(self, ctx: "BizHawkClientContext", trap_id: int) -> bool:
+        if self.is_playing:
+            print(f"Activating {ITEM_ID_TO_NAME[trap_id]}")
+            match ITEM_ID_TO_NAME[trap_id]:
+                case "Cupid Trap":
+                    return await self.trap_cupid(ctx)
+                case "Sleep Trap":
+                    return await self.trap_sleep(ctx)
+                case _:
+                    pass
+        else:
+            return False
+
+    async def trap_cupid(self, ctx: "BizHawkClientContext", evil=True) -> bool:
+        return (await self.poke_ram(ctx, RAM_ADDRS.CUPID_EFF_TIMER, b"\xF0") and
+                await self.poke_ram(ctx, RAM_ADDRS.CUPID_HEART_REF, b"\xFF") and
+                await self.poke_ram(ctx, RAM_ADDRS.CUPID_EFF_TYPE, random.randint(0, 63 if evil else 3).to_bytes(1)))
+    
+    async def trap_sleep(self, ctx: "BizHawkClientContext") -> bool:
+        return await self.poke_ram(ctx, RAM_ADDRS.TJ_SLEEP_TIMER, b"\01\x2D")
+
+    #endregion
+
     #region Spawning functions (also receipt of ethereal items)
 
-    async def receive_map_reveal(self, ctx) -> bool:
+    async def receive_map_reveal(self, ctx: "BizHawkClientContext") -> bool:
         if DEBUG: print("Got a map reveal!")
         if self.num_map_reveals >= 5:
             return True
@@ -415,10 +448,12 @@ class TJEGameController():
                 success = await self.award_ship_piece(ctx, item_id)
             elif item_id in KEY_IDS:
                 success = await self.receive_key(item_id)
+            elif item_id in INSTATRAP_IDS:
+                success = await self.receive_trap(ctx, item_id)
             elif item_id == ITEM_NAME_TO_ID["Progressive Map Reveal"]:
                 success = await self.receive_map_reveal(ctx)
             else:
-                return False
+                success = False
             return success
         return False
 
@@ -450,7 +485,7 @@ class TJEGameController():
 
     # Spawns a present in TJ's inventory
     async def spawn_in_inventory(self, ctx: "BizHawkClientContext", pres_id: int) -> bool:
-        slot = await self.get_first_empty_inv_slot(ctx)
+        slot = await self.get_empty_inv_slot(ctx)
         if slot is not None:
             await self.poke_ram(ctx, self.inventory_slot_to_ram_address(slot), ITEM_ID_TO_CODE[pres_id].to_bytes(1))
             return True
@@ -459,7 +494,7 @@ class TJEGameController():
 
     async def spawn_present_as_dropped(self, ctx: "BizHawkClientContext", pres_id: int) -> bool:
         if self.game_state not in SPAWN_BLOCKING_STATES:
-            slot = await self.get_first_empty_dropped_present_slot(ctx)
+            slot = await self.get_empty_dropped_present_slot(ctx)
             if slot is not None and self.current_level is not None:
                 toejam_position = await self.peek_ram(ctx, RAM_ADDRS.TJ_POSITION, 4)
                 success = await self.poke_ram(ctx, self.dropped_present_slot_to_ram_address(slot),
@@ -473,6 +508,9 @@ class TJEGameController():
     #endregion
 
     #region Change handling & monitor-related functions
+
+    def is_dead(self) -> bool:
+        return (self.game_state == TJEGameState.GHOST)
 
     def is_awaiting_load(self) -> bool:
         return (self.load_delay is not None)
