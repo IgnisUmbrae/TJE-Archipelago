@@ -5,8 +5,7 @@ from BaseClasses import Item, ItemClassification, MultiWorld
 
 from .constants import BASE_TJE_ID
 from .generators import item_totals
-from .options import ElevatorKeyTypeOption, GameOverOption, StartingPresentOption, \
-                     TJEOptions, TrapOption, ShipPieceOption
+from .options import TJEOptions, ElevatorKeyTypeOption, GameOverOption, StartingPresentOption, ShipPieceOption
 
 # TO DO: lots of redundancy here; needs a big clean-up
 
@@ -121,11 +120,16 @@ ELEVATOR_KEY_ITEMS : list[TJEItemData] = [
     TJEItemData(None, "Progressive Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0)
 ]
 
+INSTATRAP_ITEMS : list[TJEItemData] = [
+    TJEItemData(None, "Cupid Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
+    TJEItemData(None, "Sleep Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0)
+]
+
 MISC_ITEMS : list[TJEItemData] = [
     TJEItemData(None, "Progressive Map Reveal", TJEItemType.ETHEREAL, ItemClassification.useful, 0)
 ]
 
-MASTER_ITEM_LIST = BASE_ITEM_LIST + ELEVATOR_KEY_ITEMS + MISC_ITEMS
+MASTER_ITEM_LIST = BASE_ITEM_LIST + ELEVATOR_KEY_ITEMS + INSTATRAP_ITEMS + MISC_ITEMS
 
 ITEM_NAME_TO_DATA : dict[str, TJEItemData] = {item.name: item for item in MASTER_ITEM_LIST}
 
@@ -143,6 +147,7 @@ SHIP_PIECE_IDS = [ITEM_NAME_TO_ID[item.name] for item in BASE_ITEM_LIST if item.
 PRESENT_IDS = [ITEM_NAME_TO_ID[item.name] for item in BASE_ITEM_LIST if item.type == TJEItemType.PRESENT]
 EDIBLE_IDS = [ITEM_NAME_TO_ID[item.name] for item in BASE_ITEM_LIST if item.type == TJEItemType.EDIBLE]
 KEY_IDS = [ITEM_NAME_TO_ID[item.name] for item in ELEVATOR_KEY_ITEMS]
+INSTATRAP_IDS = [ITEM_NAME_TO_ID[item.name] for item in INSTATRAP_ITEMS]
 
 #endregion
 
@@ -158,7 +163,8 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
     # Negative means we need to add items; positive means we have too many
     differential = create_rank_items(world, options, item_list) \
                    + create_elevator_keys(world, options, item_list) \
-                   + create_map_reveals(world, options, item_list)
+                   + create_map_reveals(world, options, item_list) \
+                   + create_instatraps(world, options, item_list)
 
     create_main_items(world, item_list, differential)
     #create_padding_items(world, options, item_list, required_padding)
@@ -166,9 +172,9 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
     multiworld.itempool.extend(item_list)
 
 def handle_trap_options(world, options) -> None:
-    if options.include_traps in [TrapOption.NONE, TrapOption.FOOD_ONLY]:
+    if not options.trap_presents:
         world.generator.forbid_trap_presents()
-    if options.include_traps in [TrapOption.NONE, TrapOption.PRESENTS_ONLY]:
+    if not options.trap_food:
         world.generator.forbid_trap_food()
 
 def handle_gameover_options(world, options) -> None:
@@ -187,6 +193,19 @@ def create_ship_pieces(multiworld, world, player, options, item_list) -> None:
     for item in MASTER_ITEM_LIST[:ship_pieces_total]:
         item_list.append(world.create_item(item.name, item.classification))
 
+def create_instatraps(world, options, item_list) -> int:
+    instatrap_weights = [3 if options.trap_cupid else 0,
+                         1 if options.trap_sleep else 0]
+
+    if sum(instatrap_weights) > 0:
+        instatrap_total = world.random.randint(15, 25)
+        item_list.extend([
+            world.create_item(id, ItemClassification.trap)
+            for id in world.random.choices(INSTATRAP_IDS, weights=instatrap_weights, k=instatrap_total)
+        ])
+
+    return instatrap_total
+
 def create_elevator_keys(world, options, item_list) -> int:
     if options.key_type == ElevatorKeyTypeOption.STATIC:
         item_list.extend([world.create_item(f"Level {lvl} Elevator Key", ItemClassification.progression)
@@ -198,12 +217,12 @@ def create_elevator_keys(world, options, item_list) -> int:
 
 def create_rank_items(world, options, item_list) -> int:
     differential = 0
-    if options.max_major_rank > 0:
+    if options.max_rank_check > 0:
         differential -= 8
 
     # Add an extra promotion if rank check is 7, two if 8; this helps avoid fill errors from impossible seeds
     # These may end up being unplaceable, but the seed will still be completable in that instance
-    extra_promos = max(options.max_major_rank - 6, 0)
+    extra_promos = max(options.max_rank_check - 6, 0)
     if extra_promos > 0:
         item_list.extend([world.create_item("Promotion") for _ in range(extra_promos)])
         differential += extra_promos
@@ -226,15 +245,6 @@ def create_main_items(world, item_list, differential) -> None:
         item_classification = item_data.classification
 
         item_list.append(world.create_item(item_name, item_classification))
-
-# def create_padding_items(world, options, item_list, differential) -> None:
-#     if differential < 0:
-#         item_list.extend([
-#             world.create_item(ITEM_CODE_TO_ID[code])
-#             for code in world.generator.generate_item_blob(
-#                 abs(differential), include_bad=(options.include_traps == TrapOption.NONE)
-#             )
-#         ])
 
 def create_starting_presents(world, multiworld : MultiWorld, options: TJEOptions) -> None:
     match options.starting_presents:
