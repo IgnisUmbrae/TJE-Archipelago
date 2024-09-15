@@ -5,13 +5,13 @@ from typing import Optional, Any
 from BaseClasses import CollectionState, ItemClassification
 from worlds.AutoWorld import World, WebWorld
 
-from .rom import TJEProcedurePatch, write_tokens
 from .client import TJEClient # required to register with BizHawkClient
 from .generators import TJEGenerator, get_key_levels
 from .items import TJEItem, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, create_items, create_starting_presents
 from .locations import LOCATION_NAME_TO_ID
-from .options import ShipPieceOption, ElevatorKeyTypeOption, TJEOptions
+from .options import GameOverOption, ShipPieceOption, ElevatorKeyTypeOption, TJEOptions
 from .regions import create_regions
+from .rom import TJEProcedurePatch, write_tokens
 
 class TJEWeb(WebWorld):
     theme = "partyTime"
@@ -95,5 +95,6 @@ class TJEWorld(World):
                 "prog_keys" : self.options.key_type == ElevatorKeyTypeOption.PROGRESSIVE,
                 "key_levels" : self.key_levels,
                 "starting_presents" : self.starting_presents,
-                "strict_level_25" : self.options.final_ship_piece == ShipPieceOption.LEVEL_25
+                "strict_level_25" : self.options.final_ship_piece == ShipPieceOption.LEVEL_25,
+                "infinite_lives" : self.options.game_overs == GameOverOption.DISABLE
         }

@@ -133,8 +133,9 @@ class TJEClient(BizHawkClient):
                     print(f"{edibles_waiting} edibles waiting to spawn")
                 if presents_waiting > 0:
                     print(f"{presents_waiting} presents waiting to spawn")
-            await self.handle_queue(ctx, self.present_queue)
+
             await self.handle_queue(ctx, self.edible_queue)
+            await self.handle_queue(ctx, self.present_queue)
             await self.handle_queue(ctx, self.misc_queue)
             await self.handle_queue(ctx, self.trap_queue)
 

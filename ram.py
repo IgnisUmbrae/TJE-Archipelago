@@ -445,6 +445,7 @@ class TJEGameController():
             level = KEY_IDS.index(key_id) + 2
 
         if level is not None:
+            if DEBUG: print(f"Key unlocks level {level}")
             self.unlocked_levels.append(level)
 
         return True
