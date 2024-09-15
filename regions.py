@@ -82,7 +82,7 @@ def restrict_lv1_presents(level_regions):
 
 #region Options handling routines
 
-def handle_key_options(multiworld, world, player, options):
+def handle_key_options(multiworld, world, player,  options: TJEOptions):
     for i in world.key_levels:
         if options.key_type == ElevatorKeyTypeOption.STATIC:
             add_rule(multiworld.get_entrance(f"Level {i} Elevator", player),
@@ -91,13 +91,13 @@ def handle_key_options(multiworld, world, player, options):
             add_rule(multiworld.get_entrance(f"Level {i} Elevator", player),
                      lambda state, lvl=i: state.has("Progressive Elevator Key", player, world.key_levels.index(lvl)+1))
 
-def handle_ship_piece_options(multiworld, player, options):
+def handle_ship_piece_options(multiworld, player,  options: TJEOptions):
     if options.final_ship_piece == ShipPieceOption.LEVEL_25:
         add_rule(multiworld.get_entrance("Level 24 Elevator", player),
                  lambda state: state.has_group("Ship Pieces", player, 9))
 
-def handle_rank_options(multiworld, world, player, options, level_regions):
-    if options.max_major_rank > 0:
+def handle_rank_options(multiworld, world, player,  options: TJEOptions, level_regions):
+    if options.max_rank_check > 0:
         menu_region = multiworld.get_region("Menu", player)
         add_rank_events(menu_region, player, options)
         add_rank_checks(menu_region, world, player, options)
@@ -105,7 +105,7 @@ def handle_rank_options(multiworld, world, player, options, level_regions):
             add_reach_level_event(level_regions[i], player, i)
             add_map_points(level_regions[i], player, i)
 
-def add_floor_items(world, player, options, level_regions):
+def add_floor_items(world, player,  options: TJEOptions, level_regions):
     for i in range(1, 26):
         locs_to_add: list[TJELocation] = []
         for loc_data in FLOOR_ITEM_LOCATIONS[i-1]:
@@ -124,12 +124,12 @@ def add_ship_pieces(world, player, level_regions):
             new_loc.progress_type = LocationProgressType.PRIORITY
             level_regions[loc_data.level].locations.append(new_loc)
 
-def add_rank_checks(menu : Region, world, player, options):
+def add_rank_checks(menu: Region, world, player, options: TJEOptions):
     for number, rank in enumerate(RANK_NAMES, start=1):
         loc_name = RANK_LOC_TEMPLATE.format(rank)
         loc = TJELocation(player, loc_name, world.location_name_to_id[loc_name], menu)
         loc.access_rule = lambda state, rank_num=number: state.has("ranks", player, rank_num)
-        if number <= options.max_major_rank.value:
+        if number <= options.max_rank_check.value:
             loc.progress_type = LocationProgressType.PRIORITY
             forbid_item(loc, "Promotion", player)
         else:
@@ -154,11 +154,11 @@ def add_reach_level_event(level: Region, player: int, number: int):
     level.locations.append(reach_loc)
 
 # For internal rank number and logic tracking only
-def add_rank_events(menu : Region, player: int, options : TJEOptions):
+def add_rank_events(menu: Region, player: int, options: TJEOptions):
     for rank_number, rank, threshold in zip(range(1, 9), RANK_NAMES, RANK_THRESHOLDS):
         rank_loc = TJELocation(player, f"Reached {rank}", None, menu)
         rank_loc.show_in_spoiler = False
-        prog : bool = (rank_number <= options.max_major_rank.value)
+        prog : bool = (rank_number <= options.max_rank_check.value)
         rank_loc.place_locked_item(create_event(player, f"Reached {rank}",
                                                 point_value = 0, rank_value = 1, progression = prog))
         rank_loc.access_rule = lambda state, actual_threshold=threshold: state.has("points", player, actual_threshold)
