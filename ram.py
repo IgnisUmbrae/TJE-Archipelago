@@ -142,62 +142,64 @@ class TJEGameController():
         if self.connected:
             if self.load_delay is not None: await self.load_delay.tick()
             if not self.game_complete:
-                await self.floor_item_monitor.tick()
-                await self.ship_item_monitor.tick()
-                await self.rank_monitor.tick()
-                await self.level_monitor.tick()
+                for monitor in self.monitors: await monitor.tick()
  
                 await self.update_game_state(ctx)
-
-                if self.is_playing:
-                    await self.update_elevator_lock_state(ctx)
 
     #endregion
 
     #region Initialization functions
 
     def add_monitors(self, ctx : "BizHawkClientContext"):
-        self.floor_item_monitor = AddressMonitor(
-            "Floor item",
-            self.current_collected_items_addr,
-            4,
-            lambda: (not self.is_loading_state_strict() and not self.is_on_menu()
-                     and not self.is_awaiting_load() and not self.is_dead()),
-            self.handle_floor_item_change,
-            self,
-            ctx
-        )
-
-        self.ship_item_monitor = AddressMonitor(
-            "Ship item",
-            lambda: self.earthling_to_ram_address(1),
-            1,
-            lambda: not self.is_on_menu() and self.is_ship_piece_level() and not self.is_loading_state_strict(),
-            self.handle_ship_item_change,
-            self,
-            ctx
-        )
-
-        self.rank_monitor = AddressMonitor(
-            "Rank",
-            lambda: RAM_ADDRS.TJ_RANK,
-            1,
-            lambda: not self.is_on_menu() and not self.is_awaiting_load(),# and not self.is_loading_state(),
-            self.handle_rank_change,
-            self,
-            ctx
-        )
-
-        self.level_monitor = AddressMonitor(
-            "Level",
-            lambda: RAM_ADDRS.TJ_LEVEL,
-            1,
-            lambda: not self.is_awaiting_load(),
-            self.handle_level_change ,
-            self,
-            ctx,
-            enabled=True
-        )
+        self.monitors = [
+            AddressMonitor(
+                "Floor item",
+                self.current_collected_items_addr,
+                4,
+                lambda: (not self.is_loading_state_strict() and not self.is_on_menu()
+                        and not self.is_awaiting_load() and not self.is_dead()),
+                self.handle_floor_item_change,
+                self,
+                ctx
+            ),
+            AddressMonitor(
+                "Ship item",
+                lambda: self.earthling_to_ram_address(1),
+                1,
+                lambda: not self.is_on_menu() and self.is_ship_piece_level() and not self.is_loading_state_strict(),
+                self.handle_ship_item_change,
+                self,
+                ctx
+            ),
+            AddressMonitor(
+                "Rank",
+                lambda: RAM_ADDRS.TJ_RANK,
+                1,
+                lambda: not self.is_on_menu() and not self.is_awaiting_load(),# and not self.is_loading_state(),
+                self.handle_rank_change,
+                self,
+                ctx
+            ),
+            AddressMonitor(
+                "Level",
+                lambda: RAM_ADDRS.TJ_LEVEL,
+                1,
+                lambda: not self.is_awaiting_load(),
+                self.handle_level_change,
+                self,
+                ctx,
+                enabled=True
+            ),
+            AddressMonitor(
+                "Elevator",
+                lambda: RAM_ADDRS.END_ELEVATOR_STATE,
+                1,
+                lambda: not self.is_on_menu() and not self.is_awaiting_load(),# and not self.is_loading_state(),
+                self.handle_elevator_state_change,
+                self,
+                ctx
+            )
+        ]
 
     def handle_slot_data(self, slot_data : dict[str, Any]):
         if DEBUG: print("Got slot data!")
@@ -266,13 +268,13 @@ class TJEGameController():
         try:
             await bizhawk.write(ctx.bizhawk_ctx, [(address, value, "68K RAM")])
             return True
-        except bizhawk.RequestFailedError:
+        except (bizhawk.RequestFailedError, bizhawk.NotConnectedError):
             return False
 
     async def peek_ram(self, ctx: "BizHawkClientContext", address: int, size: int) -> Optional[bytes]:
         try:
             return (await bizhawk.read(ctx.bizhawk_ctx, [(address, size, "68K RAM")]))[0]
-        except bizhawk.RequestFailedError:
+        except (bizhawk.RequestFailedError, bizhawk.NotConnectedError):
             return None
 
     # Valid levels: 0–25
@@ -327,7 +329,7 @@ class TJEGameController():
         if level < 0 or level > 25:
             return None
         return RAM_ADDRS.TRANSP_MAP_MASK + level*7
-    
+
     def level_to_open_tiles_ram_address(self, level: int) -> Optional[int]:
         if level < 0 or level > 25:
             return None
@@ -367,6 +369,23 @@ class TJEGameController():
                 return None
         else:
             return None
+
+    def should_be_unlocked(self) -> bool:
+        if self.current_level in [0,1]:
+            return True
+
+        if self.key_levels is not None:
+            # Not a key level, or already unlocked
+            key_check = (self.current_level not in self.key_levels or self.current_level in self.unlocked_levels)
+        else:
+            key_check = True
+
+        if self.current_level == 24 and self.strict_level_25:
+            level25_check = (self.num_ship_pieces_owned == 9)
+        else:
+            level25_check = True
+
+        return key_check and level25_check
 
     #endregion
 
@@ -416,8 +435,6 @@ class TJEGameController():
     async def receive_key(self, key_id: int) -> bool:
         if DEBUG:
             print("Got a key!")
-            print(f"Key levels: {self.key_levels}")
-            print(f"Unlocked levels: {self.unlocked_levels}")
         if self.prog_keys:
             num_keys = len(self.unlocked_levels)
             try:
@@ -429,7 +446,6 @@ class TJEGameController():
 
         if level is not None:
             self.unlocked_levels.append(level)
-            if DEBUG: print(f"Unlocking level {level}")
 
         return True
 
@@ -534,6 +550,7 @@ class TJEGameController():
     async def handle_level_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
         #self.current_level, previous_level = int.from_bytes(new_data), int.from_bytes(old_data)
         toejam_state = await self.peek_ram(ctx, RAM_ADDRS.TJ_STATE, 1)
+        # Special handling for menu, aka "level -1"
         self.current_level = int.from_bytes(new_data) if toejam_state != b"\x00" else -1
         if DEBUG: print(f"Level changed to {self.current_level}")
 
@@ -544,7 +561,10 @@ class TJEGameController():
                 self.load_delay = TickDelay(functools.partial(self.load_save_data, ctx), 8)
                 self.game_state = TJEGameState.WAITING_FOR_LOAD
         if self.game_state in LOADING_STATES and self.current_level != -1:
-            if self.load_delay is None: await self.update_save_data(ctx)
+            if self.load_delay is None:
+                await self.update_save_data(ctx)
+
+        #await self.handle_elevator_state_change(ctx, None, ELEVATOR_LOCKED if self.current_level < 25 else b"\x0B")
 
     async def handle_floor_item_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
         changes = int.from_bytes(new_data) ^ int.from_bytes(old_data)
@@ -570,46 +590,21 @@ class TJEGameController():
             await self.client.trigger_location(ctx, loc)
             #self.save_data["Rank"] = rank.to_bytes(1)
 
-    #endregion
-
-    #region Game state update functions
-
-    async def alter_current_elevator(self, ctx: "BizHawkClientContext", lock: bool) -> None:
-        if DEBUG:
-            if lock:
-                print(f"Locking level {self.current_level}")
-            else:
-                print(f"Unlocking level {self.current_level}")
-        await self.poke_ram(ctx, RAM_ADDRS.END_ELEVATOR_STATE, ELEVATOR_LOCKED if lock else ELEVATOR_UNLOCKED)
-
-    def should_be_unlocked(self) -> bool:
-        if self.current_level in [0,1]:
-            return True
-
-        if self.key_levels is not None:
-            # Not a key level, or already unlocked
-            key_check = (self.current_level not in self.key_levels or self.current_level in self.unlocked_levels)
-        else:
-            key_check = True
-
-        if self.current_level == 24 and self.strict_level_25:
-            level25_check = (self.num_ship_pieces_owned == 9)
-        else:
-            level25_check = True
-
-        return key_check and level25_check
-
-    async def update_elevator_lock_state(self, ctx: "BizHawkClientContext") -> None:
+    async def handle_elevator_state_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
+        print(f"Elevator state changed to {new_data}")
         should_be_unlocked = self.should_be_unlocked()
-        current_elevator_state = await self.peek_ram(ctx, RAM_ADDRS.END_ELEVATOR_STATE, 1)
-
+        lock = None
         # Should be locked, currently unlocked
-        if not should_be_unlocked and current_elevator_state in END_ELEVATOR_UNLOCKED_STATES:
-            await self.alter_current_elevator(ctx, lock=True)
+        if not should_be_unlocked and new_data in END_ELEVATOR_UNLOCKED_STATES:
+            lock = True
+            if DEBUG: print(f"Locking level {self.current_level}")
         # Should be unlocked, currently locked, currently not in elevator (prevents being trolled by door)
-        elif (should_be_unlocked and current_elevator_state not in END_ELEVATOR_UNLOCKED_STATES
+        elif (should_be_unlocked and new_data not in END_ELEVATOR_UNLOCKED_STATES
                 and self.game_state not in [TJEGameState.IN_ELEVATOR]):
-            await self.alter_current_elevator(ctx, lock=False)
+            lock = False
+            if DEBUG: print(f"Unlocking level {self.current_level}")
+        if lock is not None:
+            await self.poke_ram(ctx, RAM_ADDRS.END_ELEVATOR_STATE, ELEVATOR_LOCKED if lock else ELEVATOR_UNLOCKED)
 
     async def update_game_state(self, ctx: "BizHawkClientContext") -> None:
         old_state = self.game_state
@@ -662,6 +657,7 @@ class TJEGameController():
                 pass
 
         if DEBUG:
-            if old_state != self.game_state: print(f"Game state: {self.game_state}")
+            if old_state != self.game_state:
+                print(f"Game state changed to {self.game_state}")
 
     #endregion
