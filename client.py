@@ -7,7 +7,7 @@ from NetUtils import ClientStatus, NetworkItem
 
 from .constants import DEBUG
 from .ram import TJEGameController
-from .items import EDIBLE_IDS, ITEM_ID_TO_NAME, PRESENT_IDS
+from .items import ITEM_ID_TO_NAME, EDIBLE_IDS, PRESENT_IDS, INSTATRAP_IDS
 from .locations import LOCATION_NAME_TO_ID
 
 if TYPE_CHECKING:
@@ -57,8 +57,9 @@ class TJEClient(BizHawkClient):
 
         self.patched_ending = False
 
-        self.edible_queue = SpawnQueue(cooldown=2)
-        self.present_queue = SpawnQueue(cooldown=1)
+        self.edible_queue = SpawnQueue(cooldown=3)
+        self.present_queue = SpawnQueue(cooldown=2)
+        self.trap_queue = SpawnQueue(cooldown=1)
         self.misc_queue = SpawnQueue(cooldown=1)
 
         self.ticks = 0
@@ -131,6 +132,7 @@ class TJEClient(BizHawkClient):
             await self.handle_queue(ctx, self.present_queue)
             await self.handle_queue(ctx, self.edible_queue)
             await self.handle_queue(ctx, self.misc_queue)
+            await self.handle_queue(ctx, self.trap_queue)
 
     async def handle_new_items(self, ctx: "BizHawkClientContext") -> None:
         num_new = len(ctx.items_received) - self.num_items_received
@@ -141,6 +143,7 @@ class TJEClient(BizHawkClient):
                 #if DEBUG: print(f"Sorting item: {ITEM_ID_TO_NAME[nwi.item]}")
                 if nwi.item in PRESENT_IDS: self.present_queue.add(nwi)
                 elif nwi.item in EDIBLE_IDS: self.edible_queue.add(nwi)
+                elif nwi.item in INSTATRAP_IDS: self.trap_queue.add(nwi)
                 else: self.misc_queue.add(nwi)
 
             self.num_items_received = len(ctx.items_received)
