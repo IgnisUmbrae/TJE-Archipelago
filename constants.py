@@ -3,7 +3,7 @@ from typing import NamedTuple
 
 BASE_TJE_ID = 25101991
 
-DEBUG = False
+DEBUG = True
 
 #region Floor items and ship pieces
 
@@ -84,9 +84,14 @@ class RAM_ADDRS(IntEnum):
     COLLECTED_SHIP_PIECES = 0xF444
 
     # Map-related
-
     UNCOVERED_MAP_MASK = 0x91EC
     TRANSP_MAP_MASK = 0x92A2
+
+    # Trap-related
+
+    CUPID_HEART_REF = 0xE1DC
+    CUPID_EFF_TIMER = 0xE1DF
+    CUPID_EFF_TYPE = 0xE1E2
 
 #endregion
 
