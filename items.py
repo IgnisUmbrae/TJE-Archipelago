@@ -87,7 +87,7 @@ BASE_ITEM_LIST: list[TJEItemData] = [
     TJEItemData(0x4C, "Moldy Cheese", TJEItemType.EDIBLE, ItemClassification.trap, 0),
     TJEItemData(0x4D, "Moldy Bread", TJEItemType.EDIBLE, ItemClassification.trap, 0),
     TJEItemData(0x4E, "Slimy Fungus", TJEItemType.EDIBLE, ItemClassification.trap, 0),
-    TJEItemData(0x4F, "Cabbage", TJEItemType.EDIBLE, ItemClassification.trap, 0),
+    TJEItemData(0x4F, "Old Cabbage", TJEItemType.EDIBLE, ItemClassification.trap, 0),
     TJEItemData(0x50, "A Buck", TJEItemType.EDIBLE, ItemClassification.filler, 0),
 
     TJEItemData(0xFF, "Nothing", TJEItemType.ETHEREAL, ItemClassification.filler, 0)
