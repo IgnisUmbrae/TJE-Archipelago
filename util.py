@@ -3,6 +3,34 @@ from functools import partial
 from math import floor
 # import random
 
+ITEM_NAME_TO_HP_VALUE: dict[str, int] = {
+    "Candy Cane": 4,
+    "Watermelon": 4,
+    "Bacon & Eggs": 4,
+    "Cereal": 4,
+    "Fries": 8,
+    "Pancake": 8,
+    "Cherry Pie": 8,
+    "Pizza": 8,
+    "Burger": 12,
+    "Fudge Sundae": 12,
+    "Fudge Cake": 12,
+    "Moldy Cheese": -4,
+    "Moldy Bread": -4,
+    "Slimy Fungus": -4,
+    "Fish Bones": -8,
+    "Old Cabbage": -12
+}
+
+HP_VALUE_TO_ITEMS: dict[int, list[str]] = {
+    4: ["Candy Cane", "Watermelon", "Bacon & Eggs", "Cereal"],
+    8: ["Fries", "Pancake", "Cherry Pie", "Pizza"],
+    12: ["Burger", "Fudge Sundae", "Fudge Cake"],
+    -4: ["Moldy Cheese", "Moldy Bread", "Slimy Fungus"],
+    -8: ["Fish Bones"],
+    -12: ["Old Cabbage"]
+}
+
 FOOD_BASIS = [12, 8, 4]
 
 def sign(num: int) -> int:
@@ -40,7 +68,6 @@ def simplify_queue(queue: list[int], current_hp: int, max_hp: int) -> tuple[int,
         if n < total_subchains - 1:
             death_count += 1
         else:
-            print(x)
             if (x and x[-1] == max_hp) or not x:
                 leftover_queue = []
             else:
