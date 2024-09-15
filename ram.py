@@ -1,4 +1,3 @@
-from math import e
 import random
 import struct
 import functools
@@ -9,7 +8,7 @@ import worlds._bizhawk as bizhawk
 from worlds._bizhawk import ConnectionStatus
 from worlds._bizhawk.client import BizHawkClient
 
-from .constants import DEBUG, EMPTY_SHIP_PIECE, EMPTY_ITEM, SHIP_PIECE, RANK_NAMES, RAM_ADDRS, \
+from .constants import DEBUG, EMPTY_SHIP_PIECE, EMPTY_ITEM, COLLECTED_SHIP_ITEM, RANK_NAMES, RAM_ADDRS, \
                        TJ_GHOST_SPRITES, TJ_SWIMMING_SPRITES, TJ_HITOPS_JUMP_SPRITES, TOEJAM_STATE_LOAD_DOWN, \
                        ELEVATOR_LOCKED, ELEVATOR_UNLOCKED, END_ELEVATOR_UNLOCKED_STATES, SAVE_DATA_POINTS
 from .items import ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, \
@@ -113,7 +112,7 @@ class TJEGameController():
 
         # Ship piece–related
 
-        self.ship_piece_levels, self.collected_ship_piece_levels = [], []
+        self.ship_item_levels, self.collected_ship_item_levels = [], []
 
         self.num_ship_pieces_owned = 0
 
@@ -154,19 +153,18 @@ class TJEGameController():
         self.monitors = [
             AddressMonitor(
                 "Floor item",
-                self.current_collected_items_addr,
-                4,
-                lambda: (not self.is_loading_state_strict() and not self.is_on_menu()
-                        and not self.is_awaiting_load() and not self.is_dead()),
+                lambda: RAM_ADDRS.COLLECTED_ITEMS,
+                104,
+                lambda: not self.is_on_menu() and not self.is_awaiting_load(),#and not self.is_loading_state_strict() and not self.is_dead(),
                 self.handle_floor_item_change,
                 self,
                 ctx
             ),
             AddressMonitor(
                 "Ship item",
-                lambda: self.earthling_to_ram_address(1),
-                1,
-                lambda: not self.is_on_menu() and self.is_ship_piece_level() and not self.is_loading_state_strict(),
+                lambda: RAM_ADDRS.TRIGGERED_SHIP_ITEMS,
+                10,
+                lambda: not self.is_on_menu() and not self.is_awaiting_load(),# and self.is_ship_piece_level() and not self.is_loading_state_strict(),
                 self.handle_ship_item_change,
                 self,
                 ctx
@@ -194,7 +192,7 @@ class TJEGameController():
                 "Elevator",
                 lambda: RAM_ADDRS.END_ELEVATOR_STATE,
                 1,
-                lambda: not self.is_on_menu() and not self.is_awaiting_load(),# and not self.is_loading_state(),
+                lambda: not self.is_on_menu() and not self.is_awaiting_load(),
                 self.handle_elevator_state_change,
                 self,
                 ctx
@@ -203,7 +201,7 @@ class TJEGameController():
 
     def handle_slot_data(self, slot_data : dict[str, Any]):
         if DEBUG: print("Got slot data!")
-        self.ship_piece_levels = slot_data["ship_piece_levels"]
+        self.ship_item_levels = slot_data["ship_piece_levels"]
         self.key_levels = slot_data["key_levels"]
         self.prog_keys = slot_data["prog_keys"]
         self.starting_presents = slot_data["starting_presents"]
@@ -236,8 +234,7 @@ class TJEGameController():
                 await self.poke_ram(ctx, RAM_ADDRS.TJ_HP_RESTORE, b"\x7F")
 
                 # Level 1 floor items have to be manually altered as it has already loaded in
-                level_1_items = int.from_bytes(self.save_data["Collected items"][4:8])
-                level_1_collected = [31-i for i in range(level_1_items.bit_length()) if level_1_items & (1 << i)]
+                level_1_collected = self.one_indices(int.from_bytes(self.save_data["Collected items"][4:8]), 32)
                 for index in level_1_collected:
                     await self.poke_ram(ctx, self.floor_item_slot_to_ram_address(index), EMPTY_ITEM)
 
@@ -277,8 +274,11 @@ class TJEGameController():
         except (bizhawk.RequestFailedError, bizhawk.NotConnectedError):
             return None
 
+    def one_indices(self, bitfield: int, total_bits: int) -> list[int]:
+        return [(total_bits-1)-i for i in range(bitfield.bit_length()) if bitfield & (1 << i)]
+
     # Valid levels: 0–25
-    def level_to_collected_items_address(self, level : int) -> Optional[int]:
+    def level_to_collected_items_address(self, level: int) -> Optional[int]:
         if level < 0 or level > 25:
             return None
         return RAM_ADDRS.COLLECTED_ITEMS + level * 4
@@ -480,7 +480,7 @@ class TJEGameController():
 
     async def award_ship_piece(self, ctx: "BizHawkClientContext", ship_piece_id: int) -> bool:
         slot = SHIP_PIECE_IDS.index(ship_piece_id)
-        await self.poke_ram(ctx, self.collected_ship_piece_to_ram_address(slot), SHIP_PIECE)
+        await self.poke_ram(ctx, self.collected_ship_piece_to_ram_address(slot), COLLECTED_SHIP_ITEM)
         self.num_ship_pieces_owned += 1
         return True
 
@@ -535,17 +535,14 @@ class TJEGameController():
         return (self.game_state == TJEGameState.MAIN_MENU or self.current_level == -1)
     
     def is_ship_piece_level(self) -> bool:
-        return (self.current_level in self.ship_piece_levels and
-                self.current_level not in self.collected_ship_piece_levels)
+        return (self.current_level in self.ship_item_levels and
+                self.current_level not in self.collected_ship_item_levels)
 
     def is_loading_state(self) -> bool:
         return (self.game_state in LOADING_STATES)
 
     def is_loading_state_strict(self) -> bool:
         return (self.game_state in LOADING_STATES_STRICT)
-
-    def current_collected_items_addr(self):
-        return self.level_to_collected_items_address(self.current_level)
 
     async def handle_level_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
         #self.current_level, previous_level = int.from_bytes(new_data), int.from_bytes(old_data)
@@ -564,34 +561,26 @@ class TJEGameController():
             if self.load_delay is None:
                 await self.update_save_data(ctx)
 
-        #await self.handle_elevator_state_change(ctx, None, ELEVATOR_LOCKED if self.current_level < 25 else b"\x0B")
-
     async def handle_floor_item_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
-        changes = int.from_bytes(new_data) ^ int.from_bytes(old_data)
-        changed_indices = [31-i for i in range(changes.bit_length()) if changes & (1 << i)]
-
-        for index in changed_indices:
-            await self.client.trigger_location(ctx, FLOOR_ITEM_LOC_TEMPLATE.format(self.current_level, index+1))
+        changed_indices = self.one_indices(int.from_bytes(new_data) ^ int.from_bytes(old_data), 104*8)
+        level_item_pairs = [divmod(i, 32) for i in changed_indices]
+        for (level, item_num) in level_item_pairs:
+            await self.client.trigger_location(ctx, FLOOR_ITEM_LOC_TEMPLATE.format(level, item_num+1))
 
     async def handle_ship_item_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
-        if (old_data, new_data) == (SHIP_PIECE, EMPTY_SHIP_PIECE):
-            success = await self.client.trigger_location(ctx, SHIP_PIECE_LOC_TEMPLATE.format(self.current_level))
+        triggered_levels = [old_data[i] for i in range(10) if new_data[i] != old_data[i]]
+        for level in triggered_levels:
+            success = await self.client.trigger_location(ctx, SHIP_PIECE_LOC_TEMPLATE.format(level))
             if success:
-                # Mark it as collected in the game (will be moved into ROM later)
-                slot = self.ship_piece_levels.index(self.current_level)
-                await self.poke_ram(ctx, self.triggered_ship_item_to_ram_address(slot), b"\x00")
-                # And in the game state here
-                self.collected_ship_piece_levels.append(self.current_level)
+                self.collected_ship_item_levels.append(self.current_level)
 
     async def handle_rank_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
         rank = int.from_bytes(new_data)
         if rank > 0:
             loc = RANK_LOC_TEMPLATE.format(RANK_NAMES[rank-1])
             await self.client.trigger_location(ctx, loc)
-            #self.save_data["Rank"] = rank.to_bytes(1)
 
     async def handle_elevator_state_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
-        print(f"Elevator state changed to {new_data}")
         should_be_unlocked = self.should_be_unlocked()
         lock = None
         # Should be locked, currently unlocked

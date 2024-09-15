@@ -74,7 +74,7 @@ class TJEClient(BizHawkClient):
             return False
 
         ctx.game = self.game
-        ctx.items_handling = 0b011 # Local inventory handled in patch
+        ctx.items_handling = 0b011 # Initial inventory handled in patch; everything else remote
         ctx.want_slot_data = True
         ctx.watcher_timeout = 0.125
 
@@ -88,9 +88,13 @@ class TJEClient(BizHawkClient):
             self.game_controller.handle_slot_data(args["slot_data"])
 
     # We're 1 piece away from done so we need the last ship piece collection to trigger the ending
-    async def prepare_for_final_ship_piece(self, ctx: "BizHawkClientContext") -> None:
+    async def repair_ending(self, ctx: "BizHawkClientContext") -> None:
         try:
-            await bizhawk.write(ctx.bizhawk_ctx, [(0x00020cf8, b"\x4E\xBA\xFB\xEA", "MD CART")])
+            await bizhawk.write(ctx.bizhawk_ctx, [(
+                0x00020cec,
+                b"\x30\x02\x48\xC0\x2F\x00\x36\x03\x48\xC3\x2F\x03\x4E\xBA\xFB\xEA\x4A\x42\x50\x8F",
+                "MD CART"
+                )])
             self.patched_ending = True
         except bizhawk.RequestFailedError:
             return
@@ -166,6 +170,6 @@ class TJEClient(BizHawkClient):
         if not ctx.finished_game:
             await self.handle_items(ctx)
         if not self.patched_ending and self.game_controller.num_ship_pieces_owned == 9:
-            await self.prepare_for_final_ship_piece(ctx)
+            await self.repair_ending(ctx)
         if not ctx.finished_game and self.game_controller.num_ship_pieces_owned == 10:
             await self.goal_in(ctx)

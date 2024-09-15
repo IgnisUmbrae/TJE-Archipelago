@@ -14,7 +14,7 @@ END_ELEVATOR_UNLOCKED_STATES = [b"\x00", b"\x01", b"\x02", b"\x03", b"\x04"]
 
 FIXED_SHIP_PIECE_LEVELS = [2, 6, 10, 12, 15, 17, 20, 21, 23, 25]
 
-SHIP_PIECE = b"\x00"
+COLLECTED_SHIP_ITEM = b"\x00"
 EMPTY_SHIP_PIECE = b"\xFF"
 EMPTY_ITEM = b"\xFF"
 EMPTY_PRESENT = b"\xFF"
@@ -111,7 +111,7 @@ SAVE_DATA_POINTS: list[DataPoint] = [
     DataPoint("Lives (TJ)", RAM_ADDRS.TJ_LIVES, 1),
 
     DataPoint("Inventory", RAM_ADDRS.INVENTORY.value, 16),
-    DataPoint("Collected items", RAM_ADDRS.COLLECTED_ITEMS.value, 256),
+    DataPoint("Collected items", RAM_ADDRS.COLLECTED_ITEMS.value, 104),
     DataPoint("Dropped presents", RAM_ADDRS.DROPPED_PRESENTS.value, 256),
     DataPoint("Collected ship pieces", RAM_ADDRS.COLLECTED_SHIP_PIECES.value, 10),
     DataPoint("Triggered ship items", RAM_ADDRS.TRIGGERED_SHIP_ITEMS.value, 10),

@@ -60,18 +60,17 @@ STATIC_ROM_PATCHES: list[tuple[int, bytes]] = [
                  b"\x67\x28\x14\xBC\x00\xFF\x4A\x2E\x00\x17\x67\x1E\x10\x2A\x00\x01\x48\x80\xE5\x40\x20\x7C\x00"
                  b"\xFF\xDD\xE8\x24\x3C\x80\x00\x00\x00\x12\x2E\xFF\xFD\xE2\xAA\x85\xB0\x00\x00\x52\x6E\xFF\xFC"
                  b"\x30\x2E\xFF\xFC\xB0\x44\x6D\x00\xFD\xE2\x4C\xEE\x0C\x7C\xFF\xDC\x4E\x5E\x4E\x75\x49\x27\x6D"
-                 b"\x20\x73\x74\x75\x66\x66\x65\x64\x00"), 
+                 b"\x20\x73\x74\x75\x66\x66\x65\x64\x00"),
 
     ### Ship piece–related ###
 
     # Ship piece display routine will now use a copy of the collected ship pieces
     # Copy is located at 0xFFF444 and will track collection of actual ship pieces
-    # Original is at 0xFFE212 will track which ship piece *overworld items* have been triggered
+    # Original is at 0xFFE212 will track which ship piece overworld items have been triggered
     (0x00020906, b"\x26\x7c\x00\xff\xf4\x44"),
 
-    # Ship pieces not marked as collected when collected, skip animation
-    # Patch 4e ba fb ea back in here to return to normal behaviour on Level 25
-    (0x00020cf8, b"\x4e\x71\x4e\x71"),
+    # Skip ship piece collection animation, but still mark ship piece overworld items as collected
+    (0x00020cec, b"\x20\x7C\x00\xFF\xE2\x12\x42\x30\x30\x00\x4E\x71\x4E\x71\x4E\x71\x4A\x42\x4E\x71"),
 
     # Alter various ship piece–related strings
     (0x000205e8, b"\x42\x69\x67\x20\x41\x50\x20\x69\x74\x65\x6d\x20\x6f\x6e\x20\x74\x68\x69\x73\x20\x6c\x65\x76\x65"
