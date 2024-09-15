@@ -1,6 +1,0 @@
-/tools/sprites_png
-/tools/*.bin
-__pycache__
-.vscode
-.pylintrc
-.gitignore
