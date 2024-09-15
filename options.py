@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import IntEnum
 
-from Options import PerGameCommonOptions, Toggle, Choice, OptionGroup, NamedRange
+from Options import PerGameCommonOptions, Toggle, Choice, OptionGroup, NamedRange, DefaultOnToggle
 
 class ShipPieceOption(IntEnum):
     LEVEL_25 = 0
@@ -11,12 +11,6 @@ class GameOverOption(IntEnum):
     DISABLE = 0
     DROP_DOWN = 1
     RESET = 2
-
-class TrapOption(IntEnum):
-    NONE = 0
-    FOOD_ONLY = 1
-    PRESENTS_ONLY = 2
-    ALL = 3
 
 class StartingPresentOption(IntEnum):
     NONE = 0
@@ -144,7 +138,7 @@ class UpwarpPresent(Toggle):
 
 class GameOvers(Choice):
     """
-    What to do in the event of a game over. (NOT CURRENTLY IMPLEMENTED)
+    What to do in the event of a game over.
 
     - Disable: Forces infinite lives so game overs never happen. Also removes Extra Life presents.
     - Drop Down: Forces the player to fall down one level, after which they respawn normally.
@@ -159,34 +153,44 @@ class GameOvers(Choice):
 
     default = GameOverOption.DROP_DOWN
 
-class IncludeTraps(Choice):
+class TrapPresents(DefaultOnToggle):
     """
-    Includes different categories of trap from the item pool.
-
-    - None: No traps.
-    - Items Only: Only bad food is included.
-    - Presents Only: Only presents with negative effects are included.
-    - All: All bad items and presents.
+    Include trap presents (Earthling, Total Bummer etc) in the item pool.
     """
 
-    display_name = "Include Traps in Item Pool"
+    display_name = "Include Trap Presents"
 
-    option_none = TrapOption.NONE
-    option_food = TrapOption.FOOD_ONLY
-    option_presents = TrapOption.PRESENTS_ONLY
-    option_all = TrapOption.ALL
+class TrapFood(DefaultOnToggle):
+    """
+    Include trap food (Slimy Fungus, Fish Bones etc) in the item pool.
+    """
 
-    default = option_all
+    display_name = "Include Trap Food"
+
+class TrapCupid(Toggle):
+    """
+    Add control-scrambling Cupid traps into the item pool.
+    """
+
+    display_name = "Enable Cupid Traps"
+
+class TrapSleep(Toggle):
+    """
+    Add sleep traps into the item pool.
+    """
+
+    display_name = "Enable Sleep Traps"
+
 
 class StartingPresents(Choice):
     """
     Toejam's starting presents.
 
     - None: no presents at all!
-    - Hi-Tops: four Super Hi-Tops, same as base game
-    - Mobility Mix: one each of Super Hi-Tops, Spring Shoes, Icarus Wings and Rocket Skates
-    - Random Good: four random non-trap presents
-    - Random Any: four completely random presents, may include traps
+    - Hitops: four Super Hitops, same as base game
+    - Mobility Mix: one each of Super Hitops, Spring Shoes, Icarus Wings and Rocket Skates
+    - Good: four random non-trap presents
+    - Any: four completely random presents, may include traps
     """
 
     display_name = "Starting Presents"
@@ -201,17 +205,23 @@ class StartingPresents(Choice):
     
 tje_option_groups = [
     OptionGroup("Basic Items/Locations", [
-        IncludeTraps,
         FinalShipPieceLocation,
-        ExcludeItemsFromProgression,
+        ExcludeItemsFromProgression
+    ]),
+    OptionGroup("Trap Options", [
+        TrapFood,
+        TrapPresents,
+        TrapCupid,
+        TrapSleep
     ]),
     OptionGroup("Extra Items/Locations", [
+        MapReveals,
         ElevatorKeyType,
         ElevatorKeyGap,
-        # ProgElevatorKeyCount,
         MaxRankCheck
     ]),
     OptionGroup("Mutators", [
+        StartingPresents,
         UpwarpPresent,
         GameOvers
     ]),
@@ -221,12 +231,15 @@ tje_option_groups = [
 @dataclass
 class TJEOptions(PerGameCommonOptions):
     final_ship_piece: FinalShipPieceLocation
-    include_traps: IncludeTraps
-    game_overs: GameOvers
-    starting_presents: StartingPresents
     restrict_prog_items: ExcludeItemsFromProgression
+    trap_food: TrapFood
+    trap_presents: TrapPresents
+    trap_cupid: TrapCupid
+    trap_sleep: TrapSleep
+    map_reveals: MapReveals
     key_type: ElevatorKeyType
     key_gap: ElevatorKeyGap
-    max_major_rank: MaxRankCheck
+    max_rank_check: MaxRankCheck
+    starting_presents: StartingPresents
     upwarp_present: UpwarpPresent
-    map_reveals: MapReveals
+    game_overs: GameOvers
