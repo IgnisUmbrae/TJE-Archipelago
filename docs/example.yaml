@@ -13,5 +13,5 @@ ToeJam and Earl:
   key_type: progressive
   key_gap: 1
   upwarp_present: yes
-  max_major_rank: bro
+  max_rank_check: bro
   map_reveals: yes

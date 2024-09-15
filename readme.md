@@ -44,7 +44,7 @@ Additions over the base game include:
 
 2. Place the downloaded `tje.apworld` file into the `worlds` subfolder of your Archipelago installation.
 
-3. Create a YAML. You can use [the example](https://github.com/IgnisUmbrae/TJE-Archipelago/docs/example.yaml) as a quickstart. Add this to the `Players` subfolder if you're hosting locally, or upload it to the host otherwise.
+3. Create a YAML. You can use [the example](https://github.com/IgnisUmbrae/TJE-Archipelago/blob/main/docs/example.yaml) as a quickstart. Add this to the `Players` subfolder if you're hosting locally, or upload it to the host otherwise.
 
 4. Now you or the host can generate a world. Archipelago will also generate a patch with the extension `.aptje`; the easiest way to use this is via the Patch function in the launcher, which will apply the patch to the ROM and automatically launch BizHawk along with the client. (You may be asked to locate one or both of these.)
 
