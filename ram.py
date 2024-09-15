@@ -155,7 +155,7 @@ class TJEGameController():
                 "Floor item",
                 lambda: RAM_ADDRS.COLLECTED_ITEMS,
                 104,
-                lambda: not self.is_on_menu() and not self.is_awaiting_load(),#and not self.is_loading_state_strict() and not self.is_dead(),
+                lambda: not self.is_on_menu() and not self.is_awaiting_load(),
                 self.handle_floor_item_change,
                 self,
                 ctx
@@ -164,7 +164,7 @@ class TJEGameController():
                 "Ship item",
                 lambda: RAM_ADDRS.TRIGGERED_SHIP_ITEMS,
                 10,
-                lambda: not self.is_on_menu() and not self.is_awaiting_load(),# and self.is_ship_piece_level() and not self.is_loading_state_strict(),
+                lambda: not self.is_on_menu() and not self.is_awaiting_load(),
                 self.handle_ship_item_change,
                 self,
                 ctx
@@ -173,7 +173,7 @@ class TJEGameController():
                 "Rank",
                 lambda: RAM_ADDRS.TJ_RANK,
                 1,
-                lambda: not self.is_on_menu() and not self.is_awaiting_load(),# and not self.is_loading_state(),
+                lambda: not self.is_on_menu() and not self.is_awaiting_load(),
                 self.handle_rank_change,
                 self,
                 ctx
@@ -538,11 +538,11 @@ class TJEGameController():
         return (self.current_level in self.ship_item_levels and
                 self.current_level not in self.collected_ship_item_levels)
 
-    def is_loading_state(self) -> bool:
-        return (self.game_state in LOADING_STATES)
+    # def is_loading_state(self) -> bool:
+    #     return (self.game_state in LOADING_STATES)
 
-    def is_loading_state_strict(self) -> bool:
-        return (self.game_state in LOADING_STATES_STRICT)
+    # def is_loading_state_strict(self) -> bool:
+    #     return (self.game_state in LOADING_STATES_STRICT)
 
     async def handle_level_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
         #self.current_level, previous_level = int.from_bytes(new_data), int.from_bytes(old_data)
@@ -602,7 +602,7 @@ class TJEGameController():
         else:
             try:
                 toejam_state = await self.peek_ram(ctx, RAM_ADDRS.TJ_STATE, 1)
-                #toejam_lives = await self.peek_ram(ctx, RAM_ADDRS.TJ_LIVES, 1)
+                toejam_lives = await self.peek_ram(ctx, RAM_ADDRS.TJ_LIVES, 1)
                 toejam_sprite = int.from_bytes(await self.peek_ram(ctx, RAM_ADDRS.TJ_SPRITE, 1))
                 menu_flag = await self.peek_ram(ctx, RAM_ADDRS.TJ_MENU_FLAG, 1)
                 fall_state = await self.peek_ram(ctx, RAM_ADDRS.TJ_FALL_STATE, 1)
@@ -616,6 +616,8 @@ class TJEGameController():
                 if self.is_playing:
                     if toejam_sprite in TJ_GHOST_SPRITES:
                         self.game_state = TJEGameState.GHOST
+                        if int.from_bytes(toejam_lives) == 0:
+                            await self.update_save_data(ctx)
                     else:
                         match global_elevator_state:
                             case b"\x00": # Not in an elevator
