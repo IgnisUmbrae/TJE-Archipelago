@@ -65,7 +65,7 @@ class TJEWorld(World):
         item = TJEItem(name, classification, self.item_name_to_id[name], self.player)
         if name == "Promotion":
             item.rank_value = 1
-            if self.options.max_major_rank.value > 0:
+            if self.options.max_rank_check.value > 0:
                 item.classification = ItemClassification.progression
 
         item.point_value = data.point_value
