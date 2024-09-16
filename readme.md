@@ -50,6 +50,10 @@ Additions over the base game include:
 
 5. BizHawk will also pop up its Lua scripting window, in which you'll need to enable the script `connector_bizhawk_generic` by double clicking it. Now everything will connect together.
 
+## Questions, feedback, etc
+
+Come and visit us in [our corner of the Archipelago Discord](https://discord.com/channels/731205301247803413/1204326236415856671).
+
 ## Credits
 
 I owe a great debt of gratitude to:
