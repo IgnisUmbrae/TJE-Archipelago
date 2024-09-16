@@ -603,7 +603,7 @@ class TJEGameController():
         else:
             try:
                 toejam_state = await self.peek_ram(ctx, RAM_ADDRS.TJ_STATE, 1)
-                toejam_lives = await self.peek_ram(ctx, RAM_ADDRS.TJ_LIVES, 1)
+                #toejam_lives = await self.peek_ram(ctx, RAM_ADDRS.TJ_LIVES, 1)
                 toejam_sprite = int.from_bytes(await self.peek_ram(ctx, RAM_ADDRS.TJ_SPRITE, 1))
                 menu_flag = await self.peek_ram(ctx, RAM_ADDRS.TJ_MENU_FLAG, 1)
                 fall_state = await self.peek_ram(ctx, RAM_ADDRS.TJ_FALL_STATE, 1)
@@ -617,8 +617,6 @@ class TJEGameController():
                 if self.is_playing:
                     if toejam_sprite in TJ_GHOST_SPRITES:
                         self.game_state = TJEGameState.GHOST
-                        if int.from_bytes(toejam_lives) == 0:
-                            await self.update_save_data(ctx)
                     else:
                         match global_elevator_state:
                             case b"\x00": # Not in an elevator

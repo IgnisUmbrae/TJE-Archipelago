@@ -107,20 +107,18 @@ class TJEClient(BizHawkClient):
         }])
         self.game_controller.game_complete = True
 
-    # Ship pieces are always the last in the list of locations for each level,
-    # so pass index = -1 to trigger one for a particular level
-    async def trigger_location(self, ctx: "BizHawkClientContext", name : str) -> bool:
+    async def trigger_location(self, ctx: "BizHawkClientContext", name: str) -> bool:
         try:
             loc_id = LOCATION_NAME_TO_ID[name]
-            if DEBUG: logger.debug("Triggering location: %s", name)
-            await ctx.send_msgs([{
-                "cmd": "LocationChecks",
-                "locations": [loc_id]
-            }])
-            return True
-        except (KeyError, IndexError):
-            logger.warning("WARNING: Attempted to trigger nonexistent location: '%s'!", name)
+        except KeyError:
             return False
+
+        if DEBUG: logger.debug("Triggering location: %s", name)
+        await ctx.send_msgs([{
+            "cmd": "LocationChecks",
+            "locations": [loc_id]
+        }])
+        return True
 
     async def handle_items(self, ctx: "BizHawkClientContext") -> None:
         if not ctx.finished_game:
