@@ -196,6 +196,15 @@ class TJEGameController():
                 self.handle_elevator_state_change,
                 self,
                 ctx
+            ),
+            AddressMonitor(
+                "Game over",
+                lambda: RAM_ADDRS.TJ_GAME_OVER_FLAG,
+                1,
+                lambda: not self.is_on_menu() and not self.is_awaiting_load(),
+                self.handle_game_over_flag,
+                self,
+                ctx
             )
         ]
 
@@ -224,9 +233,9 @@ class TJEGameController():
             try:
                 await bizhawk.lock(ctx.bizhawk_ctx)
                 for point in SAVE_DATA_POINTS:
-                    #if DEBUG: print(f"Loading {point.name} with data {self.save_data[point.name]}")
                     # Failsafe to ensure we don't instakill/gameover
-                    if point.name == "Lives (TJ)" and int.from_bytes(self.save_data[point.name]) == 0:
+                    if (point.name in ["Lives (TJ)", "Max health (TJ)", "Health (TJ)"] and
+                        int.from_bytes(self.save_data[point.name]) == 0):
                         self.save_data[point.name] = b"\x03"
                     await self.poke_ram(ctx, point.address, self.save_data[point.name])
 
@@ -507,7 +516,7 @@ class TJEGameController():
             await self.poke_ram(ctx, self.inventory_slot_to_ram_address(slot), ITEM_ID_TO_CODE[pres_id].to_bytes(1))
             return True
         else:
-            return (await self.spawn_present_as_dropped(ctx, pres_id))
+            return await self.spawn_present_as_dropped(ctx, pres_id)
 
     async def spawn_present_as_dropped(self, ctx: "BizHawkClientContext", pres_id: int) -> bool:
         if self.game_state not in SPAWN_BLOCKING_STATES:
@@ -544,6 +553,10 @@ class TJEGameController():
 
     # def is_loading_state_strict(self) -> bool:
     #     return (self.game_state in LOADING_STATES_STRICT)
+
+    async def handle_game_over_flag(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
+        if int.from_bytes(new_data) & 0x80 != 0:
+            await self.update_save_data(ctx)
 
     async def handle_level_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
         #self.current_level, previous_level = int.from_bytes(new_data), int.from_bytes(old_data)
