@@ -77,8 +77,8 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
     if world.options.game_overs == GameOverOption.DISABLE:
         patch.write_token(APTokenTypes.WRITE, 0x0000bcd0, b"\x4E\x71\x4E\x71") # Skip life subtraction
     elif world.options.game_overs == GameOverOption.DROP_DOWN:
-        patch.write_token(APTokenTypes.WRITE, 0x000111ac, b"\x4E\xB9\x00\x10\xA5\x00")
-        patch.write_token(APTokenTypes.WRITE, 0x0010a500, b"\x24\x7C\x00\xFF\xDA\x22\x14\xBC\x00\x01\x24\x7C\x00\xFF"
+        patch.write_token(APTokenTypes.WRITE, 0x000111ac, b"\x4E\xB9\x00\x10\xA3\x00")
+        patch.write_token(APTokenTypes.WRITE, 0x0010a300, b"\x24\x7C\x00\xFF\xDA\x22\x14\xBC\x00\x01\x24\x7C\x00\xFF"
                                                           b"\xA2\x48\x14\xBC\x00\x04\x24\x7C\x00\xFF\xA2\xA7\x02\x12"
                                                           b"\x00\x7F\x4E\x75")
 
