@@ -8,7 +8,7 @@ import worlds._bizhawk as bizhawk
 from worlds._bizhawk import ConnectionStatus
 from worlds._bizhawk.client import BizHawkClient
 
-from .constants import DEBUG, EMPTY_SHIP_PIECE, EMPTY_ITEM, COLLECTED_SHIP_ITEM, RANK_NAMES, RAM_ADDRS, \
+from .constants import DEBUG, EMPTY_ITEM, COLLECTED_SHIP_ITEM, RANK_NAMES, RAM_ADDRS, \
                        TJ_GHOST_SPRITES, TJ_SWIMMING_SPRITES, TJ_HITOPS_JUMP_SPRITES, TOEJAM_STATE_LOAD_DOWN, \
                        ELEVATOR_LOCKED, ELEVATOR_UNLOCKED, END_ELEVATOR_UNLOCKED_STATES, SAVE_DATA_POINTS
 from .items import ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, \
@@ -134,6 +134,10 @@ class TJEGameController():
         self.connected = False
         self.load_delay = None
 
+        #self.deathlink = False
+
+        self.paused = False
+
     #region Per-update high-level logic functions
 
     async def tick(self, ctx: "BizHawkClientContext"):
@@ -155,7 +159,7 @@ class TJEGameController():
                 "Floor item",
                 lambda: RAM_ADDRS.COLLECTED_ITEMS,
                 104,
-                lambda: not self.is_on_menu() and not self.is_awaiting_load(),
+                lambda: not self.is_on_menu() and not self.is_awaiting_load() and not self.is_paused(),
                 self.handle_floor_item_change,
                 self,
                 ctx
@@ -164,7 +168,7 @@ class TJEGameController():
                 "Ship item",
                 lambda: RAM_ADDRS.TRIGGERED_SHIP_ITEMS,
                 10,
-                lambda: not self.is_on_menu() and not self.is_awaiting_load(),
+                lambda: not self.is_on_menu() and not self.is_awaiting_load() and not self.is_paused(),
                 self.handle_ship_item_change,
                 self,
                 ctx
@@ -173,7 +177,7 @@ class TJEGameController():
                 "Rank",
                 lambda: RAM_ADDRS.TJ_RANK,
                 1,
-                lambda: not self.is_on_menu() and not self.is_awaiting_load(),
+                lambda: not self.is_on_menu() and not self.is_awaiting_load() and not self.is_paused(),
                 self.handle_rank_change,
                 self,
                 ctx
@@ -192,8 +196,17 @@ class TJEGameController():
                 "Elevator",
                 lambda: RAM_ADDRS.END_ELEVATOR_STATE,
                 1,
-                lambda: not self.is_on_menu() and not self.is_awaiting_load(),
+                lambda: not self.is_on_menu() and not self.is_awaiting_load() and not self.is_paused(),
                 self.handle_elevator_state_change,
+                self,
+                ctx
+            ),
+            AddressMonitor(
+                "Player input",
+                lambda: RAM_ADDRS.TJ_CURRENT_BUTTONS,
+                1,
+                lambda: not self.is_on_menu() and not self.is_awaiting_load(),
+                self.handle_input,
                 self,
                 ctx
             ),
@@ -214,12 +227,12 @@ class TJEGameController():
         self.key_levels = slot_data["key_levels"]
         self.prog_keys = slot_data["prog_keys"]
         self.starting_presents = slot_data["starting_presents"]
-        self.strict_level_25 = slot_data["strict_level_25"]
+        #self.strict_level_25 = slot_data["strict_level_25"]
+        #self.deathlink = slot_data["deathlink"]
 
     # Initialization that cannot be done on the title screen (e.g. identifying starting presents)
     async def level_one_initialization(self, ctx: "BizHawkClientContext") -> None:
         if DEBUG: print("Performing Level 1 initialization")
-        await self.poke_ram(ctx, RAM_ADDRS.COLLECTED_SHIP_PIECES, EMPTY_SHIP_PIECE*10)
         for present in self.starting_presents:
             await self.identify_present(ctx, present)
 
@@ -257,6 +270,7 @@ class TJEGameController():
     async def update_save_data(self, ctx: "BizHawkClientContext") -> None:
         if DEBUG: print("Updating save data…")
         try:
+            await bizhawk.display_message(ctx.bizhawk_ctx, "AP CLIENT: Updating save data")
             await bizhawk.lock(ctx.bizhawk_ctx)
             self.save_data = {}
             for point in SAVE_DATA_POINTS:
@@ -389,7 +403,7 @@ class TJEGameController():
         else:
             key_check = True
 
-        if self.current_level == 24 and self.strict_level_25:
+        if self.current_level == 24:
             level25_check = (self.num_ship_pieces_owned == 9)
         else:
             level25_check = True
@@ -441,14 +455,14 @@ class TJEGameController():
             return False
         return True
 
-    async def receive_key(self, key_id: int) -> bool:
+    async def receive_key(self, ctx: "BizHawkClientContext", key_id: int) -> bool:
         if DEBUG:
             print("Got a key!")
         if self.prog_keys:
             num_keys = len(self.unlocked_levels)
             try:
                 level = self.key_levels[num_keys]
-            except KeyError:
+            except IndexError:
                 level = None
         else:
             level = KEY_IDS.index(key_id) + 2
@@ -456,6 +470,8 @@ class TJEGameController():
         if level is not None:
             if DEBUG: print(f"Key unlocks level {level}")
             self.unlocked_levels.append(level)
+            if self.current_level == level:
+                await self.recheck_elevator_unlock(ctx)
 
         return True
 
@@ -473,7 +489,7 @@ class TJEGameController():
             elif item_id in SHIP_PIECE_IDS:
                 success = await self.award_ship_piece(ctx, item_id)
             elif item_id in KEY_IDS:
-                success = await self.receive_key(item_id)
+                success = await self.receive_key(ctx, item_id)
             elif item_id in INSTATRAP_IDS:
                 success = await self.receive_trap(ctx, item_id)
             elif item_id == ITEM_NAME_TO_ID["Progressive Map Reveal"]:
@@ -492,6 +508,9 @@ class TJEGameController():
         slot = SHIP_PIECE_IDS.index(ship_piece_id)
         await self.poke_ram(ctx, self.collected_ship_piece_to_ram_address(slot), COLLECTED_SHIP_ITEM)
         self.num_ship_pieces_owned += 1
+        if DEBUG: print(f"Currently have {self.num_ship_pieces_owned} ship pieces")
+        if self.current_level == 24:
+            await self.recheck_elevator_unlock(ctx)
         return True
 
     # Spawns any standard floor item at TJ's current position
@@ -535,6 +554,9 @@ class TJEGameController():
 
     #region Change handling & monitor-related functions
 
+    def is_paused(self) -> bool:
+        return self.paused
+
     def is_dead(self) -> bool:
         return (self.game_state == TJEGameState.GHOST)
 
@@ -554,6 +576,18 @@ class TJEGameController():
     # def is_loading_state_strict(self) -> bool:
     #     return (self.game_state in LOADING_STATES_STRICT)
 
+    async def handle_input(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
+        new_data, old_data = int.from_bytes(new_data), int.from_bytes(old_data)
+        #previous_inputs = int.from_bytes(await self.peek_ram(ctx, 0x8020, 1))
+        if new_data & 0x80:
+            if not self.paused and not self.game_state == TJEGameState.IN_INVENTORY:#not previous_inputs & 0x80:
+                if DEBUG: print("Game paused; saving")
+                await self.update_save_data(ctx)
+                self.paused = True
+        elif old_data & 0x80:
+            if DEBUG: print("Game unpaused")
+            self.paused = False
+
     async def handle_game_over_flag(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
         if int.from_bytes(new_data) & 0x80 != 0:
             await self.update_save_data(ctx)
@@ -563,6 +597,9 @@ class TJEGameController():
         toejam_state = await self.peek_ram(ctx, RAM_ADDRS.TJ_STATE, 1)
         # Special handling for menu, aka "level -1"
         self.current_level = int.from_bytes(new_data) if toejam_state != b"\x00" else -1
+        if self.current_level == -1:
+            if DEBUG: print("Reboot detected; force unpausing")
+            self.paused = False
         if DEBUG: print(f"Level changed to {self.current_level}")
 
         if self.current_level == 1 and self.game_state == TJEGameState.MAIN_MENU:
@@ -570,6 +607,7 @@ class TJEGameController():
                 await self.level_one_initialization(ctx)
             else:
                 self.load_delay = TickDelay(functools.partial(self.load_save_data, ctx), 8)
+                await bizhawk.display_message(ctx.bizhawk_ctx, "AP CLIENT: Loading save data")
                 self.game_state = TJEGameState.WAITING_FOR_LOAD
         if self.game_state in LOADING_STATES and self.current_level != -1:
             if self.load_delay is None:
@@ -608,6 +646,9 @@ class TJEGameController():
             if DEBUG: print(f"Unlocking level {self.current_level}")
         if lock is not None:
             await self.poke_ram(ctx, RAM_ADDRS.END_ELEVATOR_STATE, ELEVATOR_LOCKED if lock else ELEVATOR_UNLOCKED)
+
+    async def recheck_elevator_unlock(self, ctx: "BizHawkClientContext"):
+        await self.handle_elevator_state_change(ctx, b"\x00", b"\x0A")
 
     async def update_game_state(self, ctx: "BizHawkClientContext") -> None:
         old_state = self.game_state
