@@ -14,7 +14,7 @@ ToeJam and Earl:
   starting_presents: hitops
   restrict_prog_items: no
   key_type: progressive
-  key_gap: 1
+  key_gap: 5
   upwarp_present: yes
   map_reveals: yes
   max_rank_check: bro
