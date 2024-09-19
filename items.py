@@ -154,7 +154,7 @@ INSTATRAP_IDS = [ITEM_NAME_TO_ID[item.name] for item in INSTATRAP_ITEMS]
 def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions) -> None:
     item_list: list[TJEItem] = []
 
-    create_ship_pieces(multiworld, world, player, options, item_list)
+    create_ship_pieces(multiworld, world, player, item_list)
 
     handle_trap_options(world, options)
     handle_gameover_options(world, options)
@@ -181,7 +181,7 @@ def handle_gameover_options(world, options) -> None:
     if options.game_overs == GameOverOption.DISABLE:
         world.generator.forbid_item(ITEM_NAME_TO_CODE["Extra Life"])
 
-def create_ship_pieces(multiworld, world, player, options, item_list) -> None:
+def create_ship_pieces(multiworld, world, player, item_list) -> None:
     ship_pieces_total = 10
 
     multiworld.get_location("Level 25 - Ship Piece", player).place_locked_item(

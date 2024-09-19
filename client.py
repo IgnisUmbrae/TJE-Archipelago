@@ -7,7 +7,7 @@ from NetUtils import ClientStatus, NetworkItem
 
 from .constants import DEBUG
 from .ram import TJEGameController
-from .items import ITEM_ID_TO_NAME, EDIBLE_IDS, PRESENT_IDS, INSTATRAP_IDS
+from .items import EDIBLE_IDS, PRESENT_IDS, INSTATRAP_IDS
 from .locations import LOCATION_NAME_TO_ID
 
 if TYPE_CHECKING:
