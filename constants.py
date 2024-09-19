@@ -3,7 +3,7 @@ from typing import NamedTuple
 
 BASE_TJE_ID = 25101991
 
-DEBUG = True
+DEBUG = False
 
 #region Floor items and ship pieces
 
