@@ -16,7 +16,8 @@ This lets you play the classic Sega ~~Genesis~~ Mega Drive game _Toejam & Earl_ 
 Additions over the base game include:
 
 - New sprites for AP items, ship pieces and hints
-- Configurable starting presents, game over handling (soon), and more
+- Configurable starting presents, game over handling, and more
+- Progress is saved when paused, when travelling between levels (both up and down), and on game over
 - New items:
   - Elevator items, which are required to unlock elevators
   - Map revealers, which uncover the map five levels at a time
@@ -24,7 +25,6 @@ Additions over the base game include:
 
 ## Caveats
 
-- Progress is currently only saved when travelling between levels, so Game Overs may result in a small amount of lost progress.
 - Item handling is (currently) entirely remote except for starting presents. In particular this means that every item in the game appears as an AP logo.
 - Neither Earl nor 2-player mode is currently supported.
 - Hints are yet to be implemented and locations are generically-named, so in multiworlds it's recommended to play with `restrict_prog_items: yes` to avoid having to scour the map for a singular progression item in a weird location.
