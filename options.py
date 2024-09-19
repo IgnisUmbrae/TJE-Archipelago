@@ -3,10 +3,6 @@ from enum import IntEnum
 
 from Options import PerGameCommonOptions, Toggle, Choice, OptionGroup, NamedRange, DefaultOnToggle
 
-class ShipPieceOption(IntEnum):
-    LEVEL_25 = 0
-    ANYWHERE = 1
-
 class GameOverOption(IntEnum):
     DISABLE = 0
     DROP_DOWN = 1
@@ -83,23 +79,6 @@ class ExcludeItemsFromProgression(Toggle):
     """
 
     display_name = "Restrict Progression Item Locations"
-
-class FinalShipPieceLocation(Choice):
-    """
-    Determines the location of the final ship piece.
-
-    - Level 25: The final ship piece will always appear on Level 25 in its usual, non-randomized location.
-                Selecting this will lock the Level 24 elevator until the other 9 have been found.
-    - Anywhere: The final ship piece can appear anywhere, including in other worlds.
-                If this option is chosen, the ending must be manually triggered from the ship piece screen.
-    """
-
-    display_name = "Location of Final Ship Piece"
-
-    option_level_25 = ShipPieceOption.LEVEL_25
-    option_anywhere = ShipPieceOption.ANYWHERE
-
-    default = ShipPieceOption.LEVEL_25
 
 class MaxRankCheck(NamedRange):
     """
@@ -205,7 +184,6 @@ class StartingPresents(Choice):
     
 tje_option_groups = [
     OptionGroup("Basic Items/Locations", [
-        FinalShipPieceLocation,
         ExcludeItemsFromProgression
     ]),
     OptionGroup("Trap Options", [
@@ -230,7 +208,6 @@ tje_option_groups = [
 
 @dataclass
 class TJEOptions(PerGameCommonOptions):
-    final_ship_piece: FinalShipPieceLocation
     restrict_prog_items: ExcludeItemsFromProgression
     trap_food: TrapFood
     trap_presents: TrapPresents

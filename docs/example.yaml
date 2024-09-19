@@ -7,11 +7,14 @@ game: ToeJam and Earl
 ToeJam and Earl:
   final_ship_piece: level_25
   game_overs: drop_down
-  include_traps: all
+  trap_presents: yes
+  trap_food: yes
+  trap_cupid: yes
+  trap_sleep: no
   starting_presents: hitops
   restrict_prog_items: no
   key_type: progressive
   key_gap: 1
   upwarp_present: yes
-  max_rank_check: bro
   map_reveals: yes
+  max_rank_check: bro

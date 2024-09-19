@@ -5,7 +5,7 @@ from BaseClasses import Item, ItemClassification, MultiWorld
 
 from .constants import BASE_TJE_ID
 from .generators import item_totals
-from .options import TJEOptions, ElevatorKeyTypeOption, GameOverOption, StartingPresentOption, ShipPieceOption
+from .options import TJEOptions, ElevatorKeyTypeOption, GameOverOption, StartingPresentOption
 
 # TO DO: lots of redundancy here; needs a big clean-up
 
@@ -184,11 +184,10 @@ def handle_gameover_options(world, options) -> None:
 def create_ship_pieces(multiworld, world, player, options, item_list) -> None:
     ship_pieces_total = 10
 
-    if options.final_ship_piece == ShipPieceOption.LEVEL_25:
-        multiworld.get_location("Level 25 - Ship Piece", player).place_locked_item(
-            world.create_item("Hyperfunk Thruster", ItemClassification.progression)
-        )
-        ship_pieces_total -= 1
+    multiworld.get_location("Level 25 - Ship Piece", player).place_locked_item(
+        world.create_item("Hyperfunk Thruster", ItemClassification.progression)
+    )
+    ship_pieces_total -= 1
 
     for item in MASTER_ITEM_LIST[:ship_pieces_total]:
         item_list.append(world.create_item(item.name, item.classification))

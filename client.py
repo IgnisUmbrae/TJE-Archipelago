@@ -55,8 +55,6 @@ class TJEClient(BizHawkClient):
         self.game_controller = TJEGameController(self)
         self.num_items_received = 0
 
-        self.patched_ending = False
-
         self.edible_queue = SpawnQueue(cooldown=3)
         self.present_queue = SpawnQueue(cooldown=2)
         self.trap_queue = SpawnQueue(cooldown=1)
@@ -87,25 +85,19 @@ class TJEClient(BizHawkClient):
         if cmd == "Connected":
             self.game_controller.handle_slot_data(args["slot_data"])
 
-    # We're 1 piece away from done so we need the last ship piece collection to trigger the ending
-    async def repair_ending(self, ctx: "BizHawkClientContext") -> None:
-        try:
-            await bizhawk.write(ctx.bizhawk_ctx, [(
-                0x00020cec,
-                b"\x30\x02\x48\xC0\x2F\x00\x36\x03\x48\xC3\x2F\x03\x4E\xBA\xFB\xEA\x4A\x42\x50\x8F",
-                "MD CART"
-                )])
-            self.patched_ending = True
-        except bizhawk.RequestFailedError:
-            return
-
     async def goal_in(self, ctx: "BizHawkClientContext") -> None:
-        print("Finished game!")
+        if DEBUG: print("Finished game!")
         await ctx.send_msgs([{
             "cmd": "StatusUpdate",
             "status": ClientStatus.CLIENT_GOAL
         }])
         self.game_controller.game_complete = True
+        ctx.finished_game = True
+        
+        self.edible_queue.empty()
+        self.present_queue.empty()
+        self.misc_queue.empty()
+        self.trap_queue.empty()
 
     async def trigger_location(self, ctx: "BizHawkClientContext", name: str) -> bool:
         try:
@@ -121,29 +113,26 @@ class TJEClient(BizHawkClient):
         return True
 
     async def handle_items(self, ctx: "BizHawkClientContext") -> None:
-        if not ctx.finished_game:
-            await self.handle_new_items(ctx)
+        await self.handle_new_items(ctx)
 
-            if DEBUG:
-                edibles_waiting = len(self.edible_queue.queue)
-                presents_waiting = len(self.present_queue.queue)
-                if edibles_waiting > 0:
-                    print(f"{edibles_waiting} edibles waiting to spawn")
-                if presents_waiting > 0:
-                    print(f"{presents_waiting} presents waiting to spawn")
+        if DEBUG:
+            edibles_waiting = len(self.edible_queue.queue)
+            presents_waiting = len(self.present_queue.queue)
+            if edibles_waiting > 0:
+                print(f"{edibles_waiting} edibles waiting to spawn")
+            if presents_waiting > 0:
+                print(f"{presents_waiting} presents waiting to spawn")
 
-            await self.handle_queue(ctx, self.edible_queue)
-            await self.handle_queue(ctx, self.present_queue)
-            await self.handle_queue(ctx, self.misc_queue)
-            await self.handle_queue(ctx, self.trap_queue)
+        await self.handle_queue(ctx, self.edible_queue)
+        await self.handle_queue(ctx, self.present_queue)
+        await self.handle_queue(ctx, self.misc_queue)
+        await self.handle_queue(ctx, self.trap_queue)
 
     async def handle_new_items(self, ctx: "BizHawkClientContext") -> None:
         num_new = len(ctx.items_received) - self.num_items_received
         # Sort items into the appropriate queues
         if num_new > 0:
-            #if DEBUG: logger.debug(f"Sorting {num_new} new items (of {len(ctx.items_received)} total)")
             for nwi in ctx.items_received[-num_new:]:
-                #if DEBUG: print(f"Sorting item: {ITEM_ID_TO_NAME[nwi.item]}")
                 if nwi.item in PRESENT_IDS: self.present_queue.add(nwi)
                 elif nwi.item in EDIBLE_IDS: self.edible_queue.add(nwi)
                 elif nwi.item in INSTATRAP_IDS: self.trap_queue.add(nwi)
@@ -156,9 +145,6 @@ class TJEClient(BizHawkClient):
         if queue.can_spawn():
             oldest = queue.oldest()
             success = await self.game_controller.spawn_item(ctx, oldest.item)
-            if DEBUG:
-                if success:
-                    print(f"Successfully spawned queued item {ITEM_ID_TO_NAME[oldest.item]}")
             if success:
                 queue.mark_spawned(oldest)
 
@@ -168,7 +154,5 @@ class TJEClient(BizHawkClient):
 
         if not ctx.finished_game:
             await self.handle_items(ctx)
-        if not self.patched_ending and self.game_controller.num_ship_pieces_owned == 9:
-            await self.repair_ending(ctx)
-        if not ctx.finished_game and self.game_controller.num_ship_pieces_owned == 10:
-            await self.goal_in(ctx)
+            if self.game_controller.num_ship_pieces_owned == 10:
+                await self.goal_in(ctx)

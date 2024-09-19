@@ -6,7 +6,7 @@ from worlds.generic.Rules import forbid_item, add_rule
 from .constants import RANK_NAMES, RANK_THRESHOLDS
 from .items import TJEItem
 from .generators import expected_map_points_on_level
-from .options import ShipPieceOption, ElevatorKeyTypeOption, TJEOptions
+from .options import ElevatorKeyTypeOption, TJEOptions
 from .locations import TJELocation, FLOOR_ITEM_LOCATIONS, SHIP_PIECE_LOCATIONS, RANK_LOC_TEMPLATE
 
 class TJERegion(NamedTuple):
@@ -55,11 +55,11 @@ def create_regions(multiworld: MultiWorld, player: int, options: TJEOptions):
 
     add_floor_items(world, player, options, level_regions)
     add_ship_pieces(world, player, level_regions)
+    handle_final_ship_piece(multiworld, player)
 
     restrict_lv1_presents(level_regions)
 
     handle_key_options(multiworld, world, player, options)
-    handle_ship_piece_options(multiworld, player, options)
     handle_rank_options(multiworld, world, player, options, level_regions)
 
     multiworld.regions.extend(level_regions)
@@ -91,10 +91,9 @@ def handle_key_options(multiworld, world, player,  options: TJEOptions):
             add_rule(multiworld.get_entrance(f"Level {i} Elevator", player),
                      lambda state, lvl=i: state.has("Progressive Elevator Key", player, world.key_levels.index(lvl)+1))
 
-def handle_ship_piece_options(multiworld, player,  options: TJEOptions):
-    if options.final_ship_piece == ShipPieceOption.LEVEL_25:
-        add_rule(multiworld.get_entrance("Level 24 Elevator", player),
-                 lambda state: state.has_group("Ship Pieces", player, 9))
+def handle_final_ship_piece(multiworld, player):
+    add_rule(multiworld.get_entrance("Level 24 Elevator", player),
+                lambda state: state.has_group("Ship Pieces", player, 9))
 
 def handle_rank_options(multiworld, world, player,  options: TJEOptions, level_regions):
     if options.max_rank_check > 0:
