@@ -656,15 +656,18 @@ class TJEGameController():
             self.game_state = TJEGameState.WAITING_FOR_LOAD
         else:
             try:
-                toejam_state = await self.peek_ram(ctx, RAM_ADDRS.TJ_STATE, 1)
-                #toejam_lives = await self.peek_ram(ctx, RAM_ADDRS.TJ_LIVES, 1)
-                toejam_sprite = int.from_bytes(await self.peek_ram(ctx, RAM_ADDRS.TJ_SPRITE, 1))
-                menu_flag = await self.peek_ram(ctx, RAM_ADDRS.TJ_MENU_FLAG, 1)
-                fall_state = await self.peek_ram(ctx, RAM_ADDRS.TJ_FALL_STATE, 1)
-                unfall_flag = await self.peek_ram(ctx, RAM_ADDRS.TJ_UNFALL_FLAG, 1)
-                global_elevator_state = await self.peek_ram(ctx, RAM_ADDRS.GLOBAL_ELEVATOR_STATE, 1)
-                toejam_z = int.from_bytes(
-                    (await self.peek_ram(ctx, RAM_ADDRS.TJ_POSITION, 6))[4:6], byteorder="big", signed=True)
+                try:
+                    toejam_state = await self.peek_ram(ctx, RAM_ADDRS.TJ_STATE, 1)
+                    #toejam_lives = await self.peek_ram(ctx, RAM_ADDRS.TJ_LIVES, 1)
+                    toejam_sprite = int.from_bytes(await self.peek_ram(ctx, RAM_ADDRS.TJ_SPRITE, 1))
+                    menu_flag = await self.peek_ram(ctx, RAM_ADDRS.TJ_MENU_FLAG, 1)
+                    fall_state = await self.peek_ram(ctx, RAM_ADDRS.TJ_FALL_STATE, 1)
+                    unfall_flag = await self.peek_ram(ctx, RAM_ADDRS.TJ_UNFALL_FLAG, 1)
+                    global_elevator_state = await self.peek_ram(ctx, RAM_ADDRS.GLOBAL_ELEVATOR_STATE, 1)
+                    toejam_z = int.from_bytes(
+                        (await self.peek_ram(ctx, RAM_ADDRS.TJ_POSITION, 6))[4:6], byteorder="big", signed=True)
+                except TypeError:
+                    return
 
                 self.is_playing: bool = (toejam_state != b"\x00")
 
