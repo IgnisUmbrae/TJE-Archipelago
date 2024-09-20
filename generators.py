@@ -1,5 +1,4 @@
 import itertools
-from typing import Optional
 
 PRESENT_LIST = range(0, 0x1B)
 PRESENT_WEIGHTS = [4, 5, 3, 4, 3, 4, 4, 3, 4, 4, 4, 1, 5, 4, 4, 4, 3, 1, 2, 2, 2, 1, 2, 2, 2, 2, 5]
@@ -145,7 +144,7 @@ def num_trees_on_level(level : int) -> int:
         return [3, 0][level]
     return 4
 
-def get_key_levels(gap: int) -> Optional[list[int]]:
+def get_key_levels(gap: int) -> list[int] | None:
     match gap:
         case 0:
             return None
@@ -176,8 +175,73 @@ def expected_point_totals(cumulative=False) -> list[float]:
         return totals
     return [round(n) for n in itertools.accumulate(iterable=totals)]
 
+# def sign(num):
+#     return (num > 0) - (num < 0)
+
+# def sborrow(x, y) -> bool:
+#     return sign(x) != sign(y) and sign(x-y) != sign(x)
+
+class TJEInternalRNG():
+    rng_state = 0x3039
+
+    def __init__(self):
+        pass
+
+    def test_rng(self):
+        pregenned_random_sequence = [self.get_random_number() for _ in range(59)]
+        assert(pregenned_random_sequence == [60975, 22016, 20672, 43896, 21923, 16663, 20572, 64074, 13996, 37431,
+                                                  35926, 30713, 35134, 22268, 61038, 47194, 9852, 44328, 8021, 5869,
+                                                  11416, 59367, 64619, 4347, 56933, 62965, 58690, 25646, 12631, 26719,
+                                                  16886, 47427, 62383, 42660, 38736, 16973, 53404, 61022, 38805, 52891,
+                                                  10512, 1809, 4962, 38620, 20783, 9754, 35105, 63580, 36504, 50392,
+                                                  24999, 13250, 11483, 62265, 21191, 36633, 54578, 51549, 7650])
+        print("Pre-generated random sequence: OK")
+
+    def get_random_number(self) -> int:
+        rand_one = self.rng_state // 0x1F31D
+        rand_two = self.rng_state % 0x1F31D
+        rand_two = 0x41A7 * rand_two
+        rand_one = 0xB14 * rand_one
+
+        self.rng_state = rand_two - rand_one
+        if self.rng_state == 0 or rand_two < rand_one:
+            self.rng_state = self.rng_state + 0x7FFFFFFF
+
+        return self.rng_state & 0xFFFF
+
+    def set_random_seed(self, seed: int) -> int:
+        temp = self.rng_state
+
+        if seed < 0:
+            seed = -seed
+        if seed > 0x7FFFFFFE:
+            seed = seed - 0x7FFFFFFF
+        if seed == 0:
+            seed = 1
+
+        self.rng_state = seed
+        return temp
+
+    def is_mailbox_real(self, level_num: int, level_seed: int) -> bool | None:
+        if level_num in [0, 1]:
+            return None
+        if level_num in [2, 3, 12]:
+            return True
+        self.set_random_seed(level_seed)
+        return (self.get_random_number() & 0xFFFF) % 100 > 49
+
+    def test_mailboxes(self):
+        FIXED_SEEDS = [0x04d2, 0xddd5, 0x6c7e, 0x63e0, 0xdd51, 0x7bab, 0x8904, 0x9f55, 0x5ee2, 0x1a46, 0xb8ed, 0x7cf6,
+                       0x4cb1, 0x8e32, 0xd846, 0xef9b, 0xb6a0, 0x2a33, 0x8767, 0x7f91, 0x11b7, 0x7802, 0x88ff, 0x295d,
+                       0x24ca, 0xb9db]
+        FIXED_MAILBOXES = [None, None, True, True, True, False, False, True, True, False, False, False, True,
+                           True, False, True, True, False, False, True, True, False, False, True, True, False]
+
+        assert([tjerng.is_mailbox_real(i, seed) for i, seed in enumerate(FIXED_SEEDS)] == FIXED_MAILBOXES)
+        print("Mailboxes: OK")
+
 if __name__ == "__main__":
-    from random import Random
-    generator = TJEGenerator(Random())
-    generator.global_banned_food |= BAD_FOOD_INDICES
-    print([generator.get_random_food() for _ in range(100)])
+    tjerng = TJEInternalRNG()
+
+    tjerng.test_rng()
+    tjerng.test_mailboxes()
