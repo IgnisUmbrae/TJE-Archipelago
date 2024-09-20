@@ -18,3 +18,7 @@ ToeJam and Earl:
   upwarp_present: yes
   map_reveals: yes
   max_rank_check: bro
+  sleep_when_idle: no
+  free_earthling_services: yes
+  present_timers: higher
+  walk_speed: highest

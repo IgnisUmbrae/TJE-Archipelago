@@ -181,9 +181,66 @@ class StartingPresents(Choice):
     option_any = StartingPresentOption.ANY
 
     default = option_hitops
-    
+
+class SleepWhenIdle(DefaultOnToggle):
+    """
+    Determines whether Toejam will fall asleep if left idle.
+    Defaults to on, as in the base game.
+    School books and sleep traps will still work even if this is set to off.
+    """
+
+    display_name = "Fall Asleep When Idle"
+
+class WalkSpeedBoost(NamedRange):
+    """
+    Increases/decreases walking speed, as a percentage of the base speed.
+    """
+
+    range_start = 50
+    range_end = 150
+
+    special_range_names = {
+        "highest": 150,
+        "higher": 125,
+        "normal": 100,
+        "lower": 75,
+        "lowest": 50
+    }
+
+    default = 100
+#
+    display_name = "Walking Speed Boost"
+
+class ExtendedPresentTimers(NamedRange):
+    """
+    Increases/decreases duration of action presents (Super Hitops etc), as a percentage of the base time.
+    """
+
+    range_start = 50
+    range_end = 150
+
+    special_range_names = {
+        "highest": 150,
+        "higher": 125,
+        "normal": 100,
+        "lower": 75,
+        "lowest": 50
+    }
+
+    default = 100
+
+    display_name = "Action Present Timers"
+
+class FreeEarthlingServices(Toggle):
+    """
+    Makes all Earthling services free. (Wiseman/Opera Singer/Wizard)
+    """
+
+    display_name = "Free Earthling Services"
+
 tje_option_groups = [
     OptionGroup("Basic Items/Locations", [
+        StartingPresents,
         ExcludeItemsFromProgression
     ]),
     OptionGroup("Trap Options", [
@@ -193,18 +250,20 @@ tje_option_groups = [
         TrapSleep
     ]),
     OptionGroup("Extra Items/Locations", [
+        UpwarpPresent,
         MapReveals,
         ElevatorKeyType,
         ElevatorKeyGap,
         MaxRankCheck
     ]),
-    OptionGroup("Mutators", [
-        StartingPresents,
-        UpwarpPresent,
-        GameOvers
+    OptionGroup("Difficulty/QoL", [
+        GameOvers,
+        SleepWhenIdle,
+        WalkSpeedBoost,
+        ExtendedPresentTimers,
+        FreeEarthlingServices
     ]),
 ]
-
 
 @dataclass
 class TJEOptions(PerGameCommonOptions):
@@ -220,3 +279,7 @@ class TJEOptions(PerGameCommonOptions):
     starting_presents: StartingPresents
     upwarp_present: UpwarpPresent
     game_overs: GameOvers
+    sleep_when_idle: SleepWhenIdle
+    walk_speed: WalkSpeedBoost
+    present_timers: ExtendedPresentTimers
+    free_earthling_services: FreeEarthlingServices
