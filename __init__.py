@@ -46,7 +46,10 @@ class TJEWorld(World):
     def generate_early(self) -> None:
         self.seeds = [self.random.getrandbits(16) for _ in range(26)]
         self.generator = TJEGenerator(self)
-        self.key_levels = get_key_levels(self.options.key_gap.value)
+        if self.options.key_type:
+            self.key_levels = get_key_levels(self.options.key_gap.value)
+        else:
+            self.key_levels = []
         self.ship_piece_levels = self.generator.generate_ship_piece_levels()
 
     def create_regions(self) -> None:
