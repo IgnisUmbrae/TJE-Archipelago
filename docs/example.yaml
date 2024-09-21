@@ -5,7 +5,6 @@
 name: Bro
 game: ToeJam and Earl
 ToeJam and Earl:
-  final_ship_piece: level_25
   game_overs: drop_down
   trap_presents: yes
   trap_food: yes
