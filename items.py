@@ -193,6 +193,8 @@ def create_ship_pieces(multiworld, world, player, item_list) -> None:
         item_list.append(world.create_item(item.name, item.classification))
 
 def create_instatraps(world, options, item_list) -> int:
+    instatrap_total = 0
+    
     instatrap_weights = [3 if options.trap_cupid else 0,
                          1 if options.trap_sleep else 0]
 
