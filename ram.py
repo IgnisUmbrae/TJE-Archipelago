@@ -37,7 +37,7 @@ LOADING_STATES = [TJEGameState.IN_ELEVATOR, TJEGameState.TRAVELLING_DOWN]
 LOADING_STATES_STRICT = LOADING_STATES + [TJEGameState.UNFALLING, TJEGameState.IN_INVENTORY]
 
 SPAWN_BLOCKING_STATES = LOADING_STATES_STRICT + [TJEGameState.IN_AIR, TJEGameState.IN_WATER,
-                                          TJEGameState.GHOST, TJEGameState.MAIN_MENU]
+                                          TJEGameState.GHOST, TJEGameState.MAIN_MENU, TJEGameState.ARRIVED]
 
 #endregion
 
