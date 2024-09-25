@@ -194,6 +194,7 @@ class SleepWhenIdle(DefaultOnToggle):
 class WalkSpeedBoost(NamedRange):
     """
     Increases/decreases walking speed, as a percentage of the base speed.
+    Roads boost this by a further 25%, as in the base game.
     """
 
     range_start = 50

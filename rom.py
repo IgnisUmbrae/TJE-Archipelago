@@ -108,10 +108,14 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
         patch.write_token(APTokenTypes.WRITE, 0x00017410, struct.pack(">H", hitops_timer))
 
     if world.options.walk_speed.value != 100:
-        orthogonal_speed = ceil(320*(world.options.walk_speed.value/100))
-        diagonal_speed = ceil(orthogonal_speed/sqrt(2))
-        patch.write_token(APTokenTypes.WRITE, 0x000f028, struct.pack(">H", orthogonal_speed))
-        patch.write_token(APTokenTypes.WRITE, 0x000f02c, struct.pack(">H", diagonal_speed))
+        orthog_land_speed = ceil(320*(world.options.walk_speed.value/100))
+        diag_land_speed = ceil(orthog_land_speed/sqrt(2))
+        patch.write_token(APTokenTypes.WRITE, 0x000f028, struct.pack(">H", orthog_land_speed))
+        patch.write_token(APTokenTypes.WRITE, 0x000f02c, struct.pack(">H", diag_land_speed))
+
+        orthog_road_speed, diag_road_speed = ceil(1.25*orthog_land_speed), ceil(1.25*diag_land_speed)
+        patch.write_token(APTokenTypes.WRITE, 0x000f038, struct.pack(">H", orthog_road_speed))
+        patch.write_token(APTokenTypes.WRITE, 0x000f03c, struct.pack(">H", diag_road_speed))
 
 
     patch.write_file("token_data.bin", patch.get_token_binary())
