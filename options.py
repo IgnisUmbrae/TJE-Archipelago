@@ -3,6 +3,13 @@ from enum import IntEnum
 
 from Options import PerGameCommonOptions, Toggle, Choice, OptionGroup, NamedRange, DefaultOnToggle
 
+class MapRandomizationOption(IntEnum):
+    BASE = 0
+    BASE_SHUFFLE = 1
+    BASE_RANDOM = 2
+    FULL_RANDOM = 3
+    MAPSANITY = 4
+
 class GameOverOption(IntEnum):
     DISABLE = 0
     DROP_DOWN = 1
@@ -19,6 +26,36 @@ class ElevatorKeyTypeOption(IntEnum):
     NONE = 0
     PROGRESSIVE = 1
     STATIC = 2
+
+class MapRandomization(Choice):
+    """
+    Adds extra randomization to the base game's level generation.
+
+    The base game uses eight different level types, each of which specifies different ranges for 8 different parameters,
+    which are randomized just prior to level generation. These include the size of main islands, the amount of water,
+    and how many islets appear in lakes.
+
+    In the base game, the order of these level types is fixed — for example, level 4 is always a "big lake" level.
+
+    NOTE: Choosing any of these options besides "base" will slightly alter one of the level generation parameters to
+          ensure that the levels always generate and thereby avoid softlocks during the elevator loading screens.
+
+    - Base: Unchanged from the base game.
+    - Base shuffle: Randomizes the order of the base level types. The number of each type remains the same.
+    - Base random: Randomizes both the order and number of the base level types.
+    - Full random: Randomizes all the parameters for every level. This may produce strange-looking levels.
+    - Mapsanity: Same as full random, but *every time* a level is loaded, the entire level will regenerate.
+    """
+
+    display_name = "Map Randomization"
+
+    option_base = MapRandomizationOption.BASE
+    option_base_shuffle = MapRandomizationOption.BASE_SHUFFLE
+    option_base_random = MapRandomizationOption.BASE_RANDOM
+    option_full_random = MapRandomizationOption.FULL_RANDOM
+    option_mapsanity = MapRandomizationOption.MAPSANITY
+
+    default = MapRandomizationOption.BASE
 
 class MapReveals(Toggle):
     """
@@ -165,11 +202,11 @@ class StartingPresents(Choice):
     """
     Toejam's starting presents.
 
-    - None: no presents at all!
-    - Hitops: four Super Hitops, same as base game
-    - Mobility Mix: one each of Super Hitops, Spring Shoes, Icarus Wings and Rocket Skates
-    - Good: four random non-trap presents
-    - Any: four completely random presents, may include traps
+    - None: No presents at all!
+    - Hitops: Four Super Hitops, same as base game
+    - Mobility Mix: One each of Super Hitops, Spring Shoes, Icarus Wings and Rocket Skates
+    - Good: Four random non-trap presents
+    - Any: Four completely random presents, possibly including traps
     """
 
     display_name = "Starting Presents"
@@ -264,6 +301,9 @@ tje_option_groups = [
         ExtendedPresentTimers,
         FreeEarthlingServices
     ]),
+    OptionGroup("World Generation", [
+        MapRandomization
+    ])
 ]
 
 @dataclass
@@ -284,3 +324,4 @@ class TJEOptions(PerGameCommonOptions):
     walk_speed: WalkSpeedBoost
     present_timers: ExtendedPresentTimers
     free_earthling_services: FreeEarthlingServices
+    map_rando: MapRandomization

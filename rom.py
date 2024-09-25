@@ -8,9 +8,9 @@ import Utils
 from settings import get_settings
 from worlds.Files import APProcedurePatch, APTokenMixin, APTokenTypes
 
-from .constants import EMPTY_PRESENT, INITIAL_PRESENT_ADDRS
+from .constants import EMPTY_PRESENT, INITIAL_PRESENT_ADDRS, BASE_LEVEL_TYPES
 from .items import ITEM_ID_TO_CODE
-from .options import StartingPresentOption, GameOverOption
+from .options import StartingPresentOption, GameOverOption, MapRandomizationOption
 
 if TYPE_CHECKING:
     from . import TJEWorld
@@ -54,7 +54,7 @@ class TJEProcedurePatch(APProcedurePatch, APTokenMixin):
             raise ValueError("This doesn't appear to be a ToeJam & Earl ROM.")
 
 def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
-    # Add starting presents
+
     if world.options.starting_presents == StartingPresentOption.NONE:
         presents = [EMPTY_PRESENT]*8
     else:
@@ -63,18 +63,15 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
     for i in range(8):
         patch.write_token(APTokenTypes.WRITE, INITIAL_PRESENT_ADDRS[i], presents[i])
 
-    # Add seeds
     patch.write_token(APTokenTypes.WRITE, 0x00097704, struct.pack(">26H", *world.seeds))
 
-    # Add ship piece levels
     patch.write_token(APTokenTypes.WRITE, 0x00097738, struct.pack(">10B", *world.ship_piece_levels))
 
-    # Add Upwarp Present if desired
     if world.options.upwarp_present:
         patch.write_token(APTokenTypes.WRITE, 0x00010b06, b"\x10\x3C\x00\x18\x4E\x71") # Always up unless level 24/25
         patch.write_token(APTokenTypes.WRITE, 0x00017be6, b"\x4e\x71\x4e\x71") # Always show "item here" hint signs
         patch.write_token(APTokenTypes.WRITE, 0x000abc34, b"\x15\x10\x22\x17\x01\x12\x10") # Change name to Up-Warp
-    
+
     if world.options.game_overs == GameOverOption.DISABLE:
         patch.write_token(APTokenTypes.WRITE, 0x0000bcd0, b"\x4E\x71\x4E\x71") # Skip life subtraction
     elif world.options.game_overs == GameOverOption.DROP_DOWN:
@@ -84,7 +81,7 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
                                                           b"\x00\x7F\x4E\x75")
     if not world.options.sleep_when_idle:
         patch.write_token(APTokenTypes.WRITE, 0x0001262a, b"\x4E\x71\x4E\x71")
-    
+
     if world.options.free_earthling_services:
         # Opera singer
         patch.write_token(APTokenTypes.WRITE, 0x00021a70, b"\x4E\x71\x4E\x71")
@@ -116,6 +113,35 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
         orthog_road_speed, diag_road_speed = ceil(1.25*orthog_land_speed), ceil(1.25*diag_land_speed)
         patch.write_token(APTokenTypes.WRITE, 0x000f038, struct.pack(">H", orthog_road_speed))
         patch.write_token(APTokenTypes.WRITE, 0x000f03c, struct.pack(">H", diag_road_speed))
+    
+    if world.options.map_rando != MapRandomizationOption.BASE:
+        # param_failsafe alters the "hidden paths" property of every level type to guarantee that
+        # levels generate successfully; without it, elevator softlocks are possible
+        add_failsafe = False
+        level_types, new_params = None, None
+
+        match world.options.map_rando:
+            case MapRandomizationOption.BASE_SHUFFLE:
+                add_failsafe = True
+                level_types = BASE_LEVEL_TYPES
+                world.random.shuffle(level_types)
+            case MapRandomizationOption.BASE_RANDOM:
+                add_failsafe = True
+                level_types = world.random.choices(range(7), k=24)
+            case MapRandomizationOption.FULL_RANDOM:
+                new_params = b"\x01\x46\x00\x3C\x05\x50\x01\x46\x00\x64\x00\x64\x03\x03\x0F\x50"
+                level_types = [0]*24
+            case MapRandomizationOption.MAPSANITY:
+                pass
+
+        if level_types:
+            patch.write_token(APTokenTypes.WRITE, 0x0008c00e, struct.pack(">24B", *level_types))
+        if new_params:
+            patch.write_token(APTokenTypes.WRITE, 0x0008beca, new_params)
+        if add_failsafe:
+            for addr in [0x0008bef6, 0x0008bf06, 0x0008bf16, 0x0008bf26, 0x0008bf36, 0x0008bf4]:
+                patch.write_token(APTokenTypes.WRITE, addr, b"\x03\x04")
+        
 
 
     patch.write_file("token_data.bin", patch.get_token_binary())

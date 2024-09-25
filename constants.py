@@ -47,6 +47,8 @@ TJ_GHOST_SPRITES = [0x05, 0x06]
 INITIAL_PRESENT_ADDRS = [0x00014393, 0x00014397, 0x000143a5, 0x000143ab,
                          0x000143c5, 0x000143cb, 0x000143d9, 0x000143df]
 
+BASE_LEVEL_TYPES = [0, 1, 5, 2, 7, 3, 4, 2, 6, 7, 2, 3, 6, 2, 4, 7, 2, 4, 2, 7, 4, 5, 1, 7]
+
 # The values at 0xFFA2AC
 class TJ_SPRITE_SET(IntEnum):
     IDLE = 0x1
