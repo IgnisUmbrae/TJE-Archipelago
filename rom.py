@@ -127,7 +127,7 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
                 world.random.shuffle(level_types)
             case MapRandomizationOption.BASE_RANDOM:
                 add_failsafe = True
-                level_types = world.random.choices(range(7), k=24)
+                level_types = world.random.choices(range(8), k=24)
             case MapRandomizationOption.FULL_RANDOM:
                 new_params = b"\x01\x46\x00\x3C\x05\x50\x01\x46\x00\x64\x00\x64\x03\x03\x0F\x50"
                 level_types = [0]*24
@@ -139,7 +139,7 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
         if new_params:
             patch.write_token(APTokenTypes.WRITE, 0x0008beca, new_params)
         if add_failsafe:
-            for addr in [0x0008bef6, 0x0008bf06, 0x0008bf16, 0x0008bf26, 0x0008bf36, 0x0008bf4]:
+            for addr in [0x0008bef6, 0x0008bf06, 0x0008bf16, 0x0008bf26, 0x0008bf36, 0x0008bf46]:
                 patch.write_token(APTokenTypes.WRITE, addr, b"\x03\x04")
         
 
