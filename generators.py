@@ -55,7 +55,10 @@ class TJEGenerator():
     def forbid_trap_food(self):
         self.global_banned_food |= BAD_FOOD_INDICES
 
-    def get_present_distribution(self, level_one: bool = False, include_bad: bool = True) -> tuple[list[int], list[float]]:
+    def fewer_upwarps(self):
+        PRESENT_WEIGHTS[12] = 2
+
+    def get_present_distribution(self, level_one: bool=False, include_bad: bool=True) -> tuple[list[int], list[float]]:
         forbiddens = set()
         forbiddens |= self.global_banned_presents
         if level_one:
@@ -122,7 +125,6 @@ class TJEGenerator():
         # This shuffle+flip guarantees that the first piece is on level 2 or 3
         self.random.shuffle(gaps[:-1])
         return list(itertools.accumulate(iterable=reversed(gaps), initial=1))[1:]
-
 
 # Collectible items only; does not include trees
 def num_items_on_level(level : int, singleplayer : bool = True) -> int:
@@ -237,7 +239,7 @@ class TJEInternalRNG():
         FIXED_MAILBOXES = [None, None, True, True, True, False, False, True, True, False, False, False, True,
                            True, False, True, True, False, False, True, True, False, False, True, True, False]
 
-        assert([tjerng.is_mailbox_real(i, seed) for i, seed in enumerate(FIXED_SEEDS)] == FIXED_MAILBOXES)
+        assert([self.is_mailbox_real(i, seed) for i, seed in enumerate(FIXED_SEEDS)] == FIXED_MAILBOXES)
         print("Mailboxes: OK")
 
 if __name__ == "__main__":

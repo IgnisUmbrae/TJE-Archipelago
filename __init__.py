@@ -51,6 +51,8 @@ class TJEWorld(World):
         else:
             self.key_levels = []
         self.ship_piece_levels = self.generator.generate_ship_piece_levels()
+        if self.options.upwarp_present:
+            self.generator.fewer_upwarps()
 
     def create_regions(self) -> None:
         create_regions(self.multiworld, self.player, self.options)
