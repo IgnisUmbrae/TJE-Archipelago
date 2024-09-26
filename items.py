@@ -262,5 +262,5 @@ def create_starting_presents(world, multiworld : MultiWorld, options: TJEOptions
         case StartingPresentOption.ANY:
             world.starting_presents = [ITEM_CODE_TO_ID[p]
                                        for p in world.generator.generate_initial_inventory(include_bad=True)]*2
-    for item in world.starting_presents:
+    for item in world.starting_presents[:4]:
         multiworld.push_precollected(world.create_item(item))
