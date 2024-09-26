@@ -40,7 +40,7 @@ class MinItemCount(Range):
 
     display_name = "Minimum Items Per Level"
 
-    range_start = 5
+    range_start = 4
     range_end = 28
 
     default = 12
@@ -56,7 +56,7 @@ class MaxItemCount(Range):
 
     display_name = "Maximum Items Per Level"
 
-    range_start = 5
+    range_start = 4
     range_end = 28
 
     default = 28
@@ -78,7 +78,7 @@ class MapRandomization(Choice):
     - Base shuffle: Randomizes the order of the base level types. The number of each type remains the same.
     - Base random: Randomizes both the order and number of the base level types.
     - Full random: Randomizes all the parameters for every level. This may produce strange-looking levels.
-    - Mapsanity: Same as full random, but every level will be completely different every time it's (re)loaded.
+    - Mapsanity: As full_random, but in addition every level will be completely regenerated every time it's loaded.
     """
 
     display_name = "Map Randomization"
