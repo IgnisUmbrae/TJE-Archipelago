@@ -132,18 +132,20 @@ def num_items_on_level(level: int, singleplayer: bool = True, min_items: int = 1
         return None
     if level == 0:
         return 0
+    if level == 1:
+        return min(min_items, 12)
 
-    # Interpret non-default value as override
-    if min_items == 12:
+    if min_items == 12: # Unchanged from base game
         base = 12 if singleplayer else 16
-    else:
+    else: # Overridden
         base = min_items
+
     return min(max_items, base + level - 2)
 
-def item_totals(singleplayer : bool = True, min_items: int = 12, max_items: int = 28) -> list[int]:
+def item_totals(singleplayer: bool = True, min_items: int = 12, max_items: int = 28) -> list[int]:
     return [num_items_on_level(level, singleplayer, min_items, max_items) for level in range(0, 26)]
 
-def num_trees_on_level(level : int) -> int:
+def num_trees_on_level(level: int) -> int:
     if level < 0:
         return 0
     if level < 2:
