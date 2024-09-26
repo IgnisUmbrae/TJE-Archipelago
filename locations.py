@@ -23,26 +23,24 @@ FLOOR_ITEM_LOC_TEMPLATE = "Level {} - Item {}"
 SHIP_PIECE_LOC_TEMPLATE = "Level {} - Ship Piece"
 RANK_LOC_TEMPLATE = "Promoted to {}"
 
-FLOOR_ITEM_LOCATIONS : list[list[TJELocationData]] = []
-SHIP_PIECE_LOCATIONS : list[TJELocationData] = []
-RANK_LOCATIONS : list[TJELocationData] = []
+FLOOR_ITEM_LOCATIONS : list[list[TJELocationData]] = [[]]
 
-items_per_level = item_totals(singleplayer=True)
+max_items_per_level = item_totals(singleplayer=True, min_items=28, max_items=28)
 for level in range(1, 26):
     FLOOR_ITEM_LOCATIONS.append([
         TJELocationData(FLOOR_ITEM_LOC_TEMPLATE.format(level, i+1), TJELocationType.FLOOR_ITEM, level)
-        for i in range(items_per_level[level])
+        for i in range(max_items_per_level[level])
     ])
 
-SHIP_PIECE_LOCATIONS.extend([
+SHIP_PIECE_LOCATIONS: list[TJELocationData] = [
     TJELocationData(SHIP_PIECE_LOC_TEMPLATE.format(level), TJELocationType.SHIP_PIECE, level)
     for level in range(2, 26)
-])
+]
 
-RANK_LOCATIONS.extend([
+RANK_LOCATIONS: list[TJELocationData] = [
     TJELocationData(RANK_LOC_TEMPLATE.format(rank), TJELocationType.RANK, -1)
     for rank in RANK_NAMES
-])
+]
 
 MASTER_LOCATION_LIST = list(itertools.chain(*FLOOR_ITEM_LOCATIONS)) + SHIP_PIECE_LOCATIONS + RANK_LOCATIONS
 
