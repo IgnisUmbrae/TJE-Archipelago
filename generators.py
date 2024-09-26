@@ -170,7 +170,7 @@ def expected_map_points_on_level(level : int) -> int:
         case 2: return 14
         case 3: return 21
         case 4: return 35
-        case _: return 42
+        case _: return 35
 
 # Half the items on a level are presents on average and they're worth 2 points each
 # Assumes 3/4 of these presents are typically "easy" to collect
