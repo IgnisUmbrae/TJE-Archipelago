@@ -98,13 +98,13 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
         patch.write_token(APTokenTypes.WRITE, 0x00009e10, b"\x4E\x71\x4E\x71")
         patch.write_token(APTokenTypes.WRITE, 0x000218ea, b"\x46\x72\x65\x65\x20\x49\x44\x3F\x00")
 
-    if world.options.present_timers.value != 100:
+    if world.options.present_timers.value != world.options.present_timers.default:
         base_timer = ceil(1000*(world.options.present_timers.value/100))
         hitops_timer = ceil(0.75*base_timer)
         patch.write_token(APTokenTypes.WRITE, 0x00017334, struct.pack(">H", base_timer))
         patch.write_token(APTokenTypes.WRITE, 0x00017410, struct.pack(">H", hitops_timer))
 
-    if world.options.walk_speed.value != 100:
+    if world.options.walk_speed.value != world.options.walk_speed.default:
         orthog_land_speed = ceil(320*(world.options.walk_speed.value/100))
         diag_land_speed = ceil(orthog_land_speed/sqrt(2))
         patch.write_token(APTokenTypes.WRITE, 0x000f028, struct.pack(">H", orthog_land_speed))
@@ -113,8 +113,8 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
         orthog_road_speed, diag_road_speed = ceil(1.25*orthog_land_speed), ceil(1.25*diag_land_speed)
         patch.write_token(APTokenTypes.WRITE, 0x000f038, struct.pack(">H", orthog_road_speed))
         patch.write_token(APTokenTypes.WRITE, 0x000f03c, struct.pack(">H", diag_road_speed))
-    
-    if world.options.map_rando != MapRandomizationOption.BASE:
+
+    if world.options.map_rando != world.options.map_rando.default:
         # param_failsafe alters the "hidden paths" property of every level type to guarantee that
         # levels generate successfully; without it, elevator softlocks are possible
         add_failsafe = False
@@ -128,11 +128,9 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
             case MapRandomizationOption.BASE_RANDOM:
                 add_failsafe = True
                 level_types = world.random.choices(range(8), k=24)
-            case MapRandomizationOption.FULL_RANDOM:
-                new_params = b"\x01\x46\x00\x3C\x05\x50\x01\x46\x00\x64\x00\x64\x03\x03\x0F\x50"
+            case MapRandomizationOption.FULL_RANDOM | MapRandomizationOption.MAPSANITY:
+                new_params = b"\x01\x46\x00\x3C\x05\x50\x01\x46\x00\x64\x00\x64\x03\x04\x0F\x50"
                 level_types = [0]*24
-            case MapRandomizationOption.MAPSANITY:
-                pass
 
         if level_types:
             patch.write_token(APTokenTypes.WRITE, 0x0008c00e, struct.pack(">24B", *level_types))
@@ -141,7 +139,20 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
         if add_failsafe:
             for addr in [0x0008bef6, 0x0008bf06, 0x0008bf16, 0x0008bf26, 0x0008bf36, 0x0008bf46]:
                 patch.write_token(APTokenTypes.WRITE, addr, b"\x03\x04")
-        
 
+        if world.options.map_rando == MapRandomizationOption.MAPSANITY:
+            # Don't set level seed; use current RNG value instead
+            patch.write_token(APTokenTypes.WRITE, 0x00004a4c, b"\x4e\x71\x4e\x71\x4e\x71\x4e\x71")
+            # Prevent game from storing previous level data
+            patch.write_token(APTokenTypes.WRITE, 0x00004506, b"\x4e\x71\x4e\x71\x4e\x71\x4e\x71\x4e\x71")
+            patch.write_token(APTokenTypes.WRITE, 0x00004518, b"\x4e\x71\x4e\x71\x4e\x71")
+
+        if world.options.min_items != world.options.min_items.default:
+            patch.write_token(APTokenTypes.WRITE, 0x00014c1b, struct.pack(">B", world.options.min_items.value))
+            patch.write_token(APTokenTypes.WRITE, 0x00014c1f, struct.pack(">B", world.options.min_items.value))
+
+        if world.options.max_items != world.options.max_items.default:
+            patch.write_token(APTokenTypes.WRITE, 0x00014c2f, struct.pack(">B", world.options.max_items.value))
+            patch.write_token(APTokenTypes.WRITE, 0x00014c33, struct.pack(">B", world.options.max_items.value))
 
     patch.write_file("token_data.bin", patch.get_token_binary())

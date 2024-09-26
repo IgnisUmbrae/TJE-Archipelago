@@ -5,7 +5,7 @@ from worlds.generic.Rules import forbid_item, add_rule
 
 from .constants import RANK_NAMES, RANK_THRESHOLDS
 from .items import TJEItem
-from .generators import expected_map_points_on_level
+from .generators import expected_map_points_on_level, item_totals
 from .options import ElevatorKeyTypeOption, TJEOptions
 from .locations import TJELocation, FLOOR_ITEM_LOCATIONS, SHIP_PIECE_LOCATIONS, RANK_LOC_TEMPLATE
 
@@ -105,9 +105,10 @@ def handle_rank_options(multiworld, world, player,  options: TJEOptions, level_r
             add_map_points(level_regions[i], player, i)
 
 def add_floor_items(world, player,  options: TJEOptions, level_regions):
+    per_level_limits = item_totals(True, options.min_items.value, options.max_items.value)
     for i in range(1, 26):
         locs_to_add: list[TJELocation] = []
-        for loc_data in FLOOR_ITEM_LOCATIONS[i-1]:
+        for loc_data in FLOOR_ITEM_LOCATIONS[i-1][:per_level_limits[i]]:
             new_loc = TJELocation(player, loc_data.name, world.location_name_to_id[loc_data.name],
                                   level_regions[loc_data.level])
             if loc_data.level == 1 or options.restrict_prog_items:

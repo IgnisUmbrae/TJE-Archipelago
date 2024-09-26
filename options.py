@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import IntEnum
 
-from Options import PerGameCommonOptions, Toggle, Choice, OptionGroup, NamedRange, DefaultOnToggle
+from Options import PerGameCommonOptions, Toggle, Choice, OptionGroup, Range, NamedRange, DefaultOnToggle
 
 class MapRandomizationOption(IntEnum):
     BASE = 0
@@ -27,6 +27,39 @@ class ElevatorKeyTypeOption(IntEnum):
     PROGRESSIVE = 1
     STATIC = 2
 
+class MinItemCount(Range):
+    """
+    The minimum number of items per level. Defaults to the base value of 12.
+
+    Level 2 has this many items; for each subsequent level one more item will spawn, up to the configured maximum.
+    Level 1 will always have 12 items regardless of what this is set to.
+
+    Should be less than or equal to the maximum item count. If not, the maximum value will take precedence.
+    For example, a minimum of 12 and a maximum of 8 will result in every level from 2 onwards having 8 items.
+    """
+
+    display_name = "Minimum Items Per Level"
+
+    range_start = 5
+    range_end = 28
+
+    default = 12
+
+class MaxItemCount(Range):
+    """
+    The maximum number of items per level. Defaults to the base value of 28.
+    
+    Should be greater than or equal to the minimum item count. If not, will take precedence over the minimum item count.
+    For example, a minimum of 12 and a maximum of 8 will result in every level from 2 onwards having 8 items.
+    """
+
+    display_name = "Maximum Items Per Level"
+
+    range_start = 5
+    range_end = 28
+
+    default = 28
+
 class MapRandomization(Choice):
     """
     Adds extra randomization to the base game's level generation.
@@ -44,7 +77,7 @@ class MapRandomization(Choice):
     - Base shuffle: Randomizes the order of the base level types. The number of each type remains the same.
     - Base random: Randomizes both the order and number of the base level types.
     - Full random: Randomizes all the parameters for every level. This may produce strange-looking levels.
-    - Mapsanity: Same as full random, but *every time* a level is loaded, the entire level will regenerate.
+    - Mapsanity: Same as full random, but every level will be completely different every time it's (re)loaded.
     """
 
     display_name = "Map Randomization"
@@ -279,7 +312,9 @@ class FreeEarthlingServices(Toggle):
 tje_option_groups = [
     OptionGroup("Basic Items/Locations", [
         StartingPresents,
-        ExcludeItemsFromProgression
+        ExcludeItemsFromProgression,
+        MinItemCount,
+        MaxItemCount
     ]),
     OptionGroup("Trap Options", [
         TrapFood,
@@ -308,7 +343,10 @@ tje_option_groups = [
 
 @dataclass
 class TJEOptions(PerGameCommonOptions):
+    starting_presents: StartingPresents
     restrict_prog_items: ExcludeItemsFromProgression
+    min_items: MinItemCount
+    max_items: MaxItemCount
     trap_food: TrapFood
     trap_presents: TrapPresents
     trap_cupid: TrapCupid
@@ -317,7 +355,6 @@ class TJEOptions(PerGameCommonOptions):
     key_type: ElevatorKeyType
     key_gap: ElevatorKeyGap
     max_rank_check: MaxRankCheck
-    starting_presents: StartingPresents
     upwarp_present: UpwarpPresent
     game_overs: GameOvers
     sleep_when_idle: SleepWhenIdle

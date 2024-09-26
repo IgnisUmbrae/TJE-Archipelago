@@ -166,7 +166,7 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
                    + create_map_reveals(world, options, item_list) \
                    + create_instatraps(world, options, item_list)
 
-    create_main_items(world, item_list, differential)
+    create_main_items(world, options, item_list, differential)
     #create_padding_items(world, options, item_list, required_padding)
 
     multiworld.itempool.extend(item_list)
@@ -194,7 +194,7 @@ def create_ship_pieces(multiworld, world, player, item_list) -> None:
 
 def create_instatraps(world, options, item_list) -> int:
     instatrap_total = 0
-    
+
     instatrap_weights = [3 if options.trap_cupid else 0,
                          1 if options.trap_sleep else 0]
 
@@ -235,8 +235,8 @@ def create_map_reveals(world, options, item_list) -> int:
         return 5
     return 0
 
-def create_main_items(world, item_list, differential) -> None:
-    total_locations = sum(item_totals())
+def create_main_items(world, options, item_list, differential) -> None:
+    total_locations = sum(item_totals(True, options.min_items.value, options.max_items.value))
     item_pool_raw = world.generator.generate_item_blob(total_locations - differential)
 
     for item in item_pool_raw:

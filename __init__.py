@@ -76,7 +76,7 @@ class TJEWorld(World):
         item.point_value = data.point_value
 
         return item
-    
+
     def create_items(self) -> None:
         create_items(self, self.multiworld, self.player, self.options)
         create_starting_presents(self, self.multiworld, self.options)
