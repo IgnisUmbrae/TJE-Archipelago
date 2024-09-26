@@ -141,18 +141,18 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
                 patch.write_token(APTokenTypes.WRITE, addr, b"\x03\x04")
 
         if world.options.map_rando == MapRandomizationOption.MAPSANITY:
-            # Don't set level seed; use current RNG value instead
+            # Don't set level seed; current RNG value will be used instead
             patch.write_token(APTokenTypes.WRITE, 0x00004a4c, b"\x4e\x71\x4e\x71\x4e\x71\x4e\x71")
             # Prevent game from storing previous level data
             patch.write_token(APTokenTypes.WRITE, 0x00004506, b"\x4e\x71\x4e\x71\x4e\x71\x4e\x71\x4e\x71")
             patch.write_token(APTokenTypes.WRITE, 0x00004518, b"\x4e\x71\x4e\x71\x4e\x71")
 
-        if world.options.min_items != world.options.min_items.default:
-            patch.write_token(APTokenTypes.WRITE, 0x00014c1b, struct.pack(">B", world.options.min_items.value))
-            patch.write_token(APTokenTypes.WRITE, 0x00014c1f, struct.pack(">B", world.options.min_items.value))
+    if world.options.min_items != world.options.min_items.default:
+        patch.write_token(APTokenTypes.WRITE, 0x00014c1b, struct.pack(">B", world.options.min_items.value))
+        patch.write_token(APTokenTypes.WRITE, 0x00014c1f, struct.pack(">B", world.options.min_items.value))
 
-        if world.options.max_items != world.options.max_items.default:
-            patch.write_token(APTokenTypes.WRITE, 0x00014c2f, struct.pack(">B", world.options.max_items.value))
-            patch.write_token(APTokenTypes.WRITE, 0x00014c33, struct.pack(">B", world.options.max_items.value))
+    if world.options.max_items != world.options.max_items.default:
+        patch.write_token(APTokenTypes.WRITE, 0x00014c2f, struct.pack(">B", world.options.max_items.value))
+        patch.write_token(APTokenTypes.WRITE, 0x00014c33, struct.pack(">B", world.options.max_items.value))
 
     patch.write_file("token_data.bin", patch.get_token_binary())
