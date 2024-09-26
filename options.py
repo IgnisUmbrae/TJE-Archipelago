@@ -31,8 +31,8 @@ class MinItemCount(Range):
     """
     The minimum number of items per level. Defaults to the base value of 12.
 
-    Level 2 has this many items; for each subsequent level one more item will spawn, up to the configured maximum.
-    Level 1 will always have 12 items regardless of what this is set to.
+    Levels 1 and 2 will have exactly this many items.
+    For each subsequent level one more item will spawn, up to the configured maximum.
 
     Should be less than or equal to the maximum item count. If not, the maximum value will take precedence.
     For example, a minimum of 12 and a maximum of 8 will result in every level from 2 onwards having 8 items.
@@ -48,6 +48,7 @@ class MinItemCount(Range):
 class MaxItemCount(Range):
     """
     The maximum number of items per level. Defaults to the base value of 28.
+    Level 1 will always have a maximum of 12 items, regardless of what this is set to.
     
     Should be greater than or equal to the minimum item count. If not, will take precedence over the minimum item count.
     For example, a minimum of 12 and a maximum of 8 will result in every level from 2 onwards having 8 items.
@@ -82,13 +83,13 @@ class MapRandomization(Choice):
 
     display_name = "Map Randomization"
 
-    option_base = MapRandomizationOption.BASE
-    option_base_shuffle = MapRandomizationOption.BASE_SHUFFLE
-    option_base_random = MapRandomizationOption.BASE_RANDOM
-    option_full_random = MapRandomizationOption.FULL_RANDOM
-    option_mapsanity = MapRandomizationOption.MAPSANITY
+    option_base = MapRandomizationOption.BASE.value
+    option_base_shuffle = MapRandomizationOption.BASE_SHUFFLE.value
+    option_base_random = MapRandomizationOption.BASE_RANDOM.value
+    option_full_random = MapRandomizationOption.FULL_RANDOM.value
+    option_mapsanity = MapRandomizationOption.MAPSANITY.value
 
-    default = MapRandomizationOption.BASE
+    default = option_base
 
 class MapReveals(Toggle):
     """
@@ -112,11 +113,11 @@ class ElevatorKeyType(Choice):
 
     display_name = "Elevator Key Type"
 
-    option_none = ElevatorKeyTypeOption.NONE
-    option_progressive = ElevatorKeyTypeOption.PROGRESSIVE
-    option_static = ElevatorKeyTypeOption.STATIC
+    option_none = ElevatorKeyTypeOption.NONE.value
+    option_progressive = ElevatorKeyTypeOption.PROGRESSIVE.value
+    option_static = ElevatorKeyTypeOption.STATIC.value
 
-    default = ElevatorKeyTypeOption.PROGRESSIVE
+    default = option_progressive
 
 class ElevatorKeyGap(NamedRange):
     """
@@ -196,11 +197,11 @@ class GameOvers(Choice):
 
     display_name = "Game Over Handling"
 
-    option_disable = GameOverOption.DISABLE
-    option_drop_down = GameOverOption.DROP_DOWN
-    option_reset = GameOverOption.RESET
+    option_disable = GameOverOption.DISABLE.value
+    option_drop_down = GameOverOption.DROP_DOWN.value
+    option_reset = GameOverOption.RESET.value
 
-    default = GameOverOption.DROP_DOWN
+    default = option_drop_down
 
 class TrapPresents(DefaultOnToggle):
     """
@@ -244,11 +245,11 @@ class StartingPresents(Choice):
 
     display_name = "Starting Presents"
 
-    option_none = StartingPresentOption.NONE
-    option_hitops = StartingPresentOption.HITOPS
-    option_mobility_mix = StartingPresentOption.MIX
-    option_any_good = StartingPresentOption.ANY_GOOD
-    option_any = StartingPresentOption.ANY
+    option_none = StartingPresentOption.NONE.value
+    option_hitops = StartingPresentOption.HITOPS.value
+    option_mobility_mix = StartingPresentOption.MIX.value
+    option_any_good = StartingPresentOption.ANY_GOOD.value
+    option_any = StartingPresentOption.ANY.value
 
     default = option_hitops
 
