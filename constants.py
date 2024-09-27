@@ -119,14 +119,16 @@ PLAYER_RAM_ADDRS: dict[tuple[int, int]] = {
     "SPRITE_SET": (0xA2AC, 0x80),
 
     # Sequential, variable offset for Earl
+    "CURRENT_BUTTONS": (0x801E, 0x1),
+    "PREV_BUTTONS": (0x8020, 0x1),
     "HIGHEST_LEVEL_REACHED": (0x9132, 0x1),
-    "LIVES": (0xA248, 0x01),
-    "BUCKS": (0xA24A, 0x01),
-    "POINTS": (0xA24C, 0x02),
-    "RANK": (0xA250, 0x01),
-    "HEALTH": (0xA252, 0x01),
-    "HP_DISPLAY": (0xA254, 0x02),
-    "HP_RESTORE": (0xA258, 0x02),
+    "LIVES": (0xA248, 0x1),
+    "BUCKS": (0xA24A, 0x1),
+    "POINTS": (0xA24C, 0x2),
+    "RANK": (0xA250, 0x1),
+    "HEALTH": (0xA252, 0x1),
+    "HP_DISPLAY": (0xA254, 0x2),
+    "HP_RESTORE": (0xA258, 0x2),
     "FALL_STATE": (0xDA22, 0x1),
     "SLEEP_TIMER": (0xDA44, 0x2),
     "GLOBAL_ELEVATOR_STATE": (0xDA6A, 0x1),
@@ -137,16 +139,9 @@ PLAYER_RAM_ADDRS: dict[tuple[int, int]] = {
 }
 
 GLOBAL_RAM_ADDRS: dict[int] = {
-    # Global
-    "P1_CURRENT_BUTTONS": 0x801E,
-    "P1_PREV_BUTTONS": 0x8020,
     "UNFALL_FLAG": 0x936C,
     #UNFALL_FLAG_2 = 0x936D
-
-    # Elevator-related
     "END_ELEVATOR_STATE": 0xDA4F,
-
-    # Entity-related
     "PRESENTS_WRAPPING": 0xDA8A,
     "PRESENTS_IDENTIFIED": 0xDA8A,
     "FLOOR_ITEMS": 0xDAE2,
@@ -155,8 +150,6 @@ GLOBAL_RAM_ADDRS: dict[int] = {
     "EARTHLINGS": 0xDE72,
     "TRIGGERED_SHIP_ITEMS": 0xE212,
     "COLLECTED_SHIP_PIECES": 0xF444,
-
-    # Map-related": 
     "UNCOVERED_MAP_MASK": 0x91EC,
     "TRANSP_MAP_MASK": 0x92A2
 }
@@ -174,8 +167,8 @@ def get_slot_addr(name: str, slot: int, player: int = 0) -> int | None:
 
 class SlotStructure(NamedTuple):
     max_slot: int
-    slot_size: int # bytes
-    fixed_offset: int # bytes
+    slot_size: int # in bytes
+    fixed_offset: int # in bytes
 
 GLOBAL_SLOT_STRUCTURES: dict[SlotStructure] = {
     "COLLECTED_ITEMS": SlotStructure(25, 4, 0),
@@ -187,7 +180,7 @@ GLOBAL_SLOT_STRUCTURES: dict[SlotStructure] = {
     "PRESENTS_WRAPPING": SlotStructure(0x1B, 2, 0),
     "PRESENTS_IDENTIFIED": SlotStructure(0x1B, 2, 1),
     "TRANSP_MAP_MASK": SlotStructure(25, 7, 0),
-    "UNCOVERED_MAP_MASK": SlotStructure(25, 7, 0),
+    "UNCOVERED_MAP_MASK": SlotStructure(25, 7, 0)
 }
 
 PLAYER_SLOT_STRUCTURES: dict[SlotStructure] = {
@@ -212,7 +205,7 @@ SAVE_DATA_POINTS: list[DataPoint] = [
     DataPoint("Map masks", GLOBAL_RAM_ADDRS["UNCOVERED_MAP_MASK"], 364),
 ]
 
-def create_save_data_points(player: int = 0) -> None:
+def add_save_data_points(player: int = 0) -> None:
     SAVE_DATA_POINTS.extend([
         DataPoint("Highest level reached", get_ram_addr("HIGHEST_LEVEL_REACHED", player), 1),
 
