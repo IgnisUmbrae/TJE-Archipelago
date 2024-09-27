@@ -12,7 +12,7 @@ from worlds._bizhawk.client import BizHawkClient
 
 from .constants import DEBUG, EMPTY_ITEM, COLLECTED_SHIP_ITEM, RANK_NAMES, \
                        SPRITES_GHOST, SPRITES_WATER, SPRITES_HITOPS_JUMP, STATE_LOAD_DOWN, \
-                       ELEVATOR_LOCKED, ELEVATOR_UNLOCKED, END_ELEVATOR_UNLOCKED_STATES, SAVE_DATA_POINTS, \
+                       ELEVATOR_LOCKED, ELEVATOR_UNLOCKED, END_ELEVATOR_UNLOCKED_STATES, SAVE_DATA_POINTS, add_save_data_points, \
                        get_slot_addr, get_ram_addr
 from .items import ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, \
                     PRESENT_IDS, EDIBLE_IDS, SHIP_PIECE_IDS, KEY_IDS, INSTATRAP_IDS
@@ -172,8 +172,8 @@ class TJEGameController():
         if self.connected:
             if self.load_delay is not None: await self.load_delay.tick()
             if not self.game_complete:
-                for monitor in self.monitors: await monitor.tick()
                 await self.update_game_state(ctx)
+                for monitor in self.monitors: await monitor.tick()
 
     #endregion
 
@@ -246,9 +246,9 @@ class TJEGameController():
             ),
             AddressMonitor(
                 "Player input",
-                "P1_CURRENT_BUTTONS",
+                "CURRENT_BUTTONS",
                 1,
-                MonitorLevel.GLOBAL,
+                level,
                 lambda: not self.is_on_menu() and not self.is_awaiting_load(),
                 self.handle_input,
                 self,
@@ -266,18 +266,19 @@ class TJEGameController():
             )
         ]
 
+    def create_save_points(self):
+        if self.char < 2:
+            add_save_data_points(self.char)
+        else:
+            add_save_data_points(0)
+            add_save_data_points(1)
+
     def handle_slot_data(self, slot_data : dict[str, Any]):
         if DEBUG: print("Got slot data!")
         self.ship_item_levels = slot_data["ship_piece_levels"]
         self.key_levels = slot_data["key_levels"]
         self.prog_keys = slot_data["prog_keys"]
         self.starting_presents = slot_data["starting_presents"]
-
-    # Initialization that cannot be done on the title screen (e.g. identifying starting presents)
-    async def level_one_initialization(self, ctx: "BizHawkClientContext") -> None:
-        if DEBUG: print("Performing Level 1 initialization")
-        for present in self.starting_presents:
-            await self.identify_present(ctx, present)
 
     #endregion
 
@@ -487,6 +488,7 @@ class TJEGameController():
 
     async def identify_present(self, ctx: "BizHawkClientContext", present_id: int) -> bool:
         present = ITEM_ID_TO_CODE[present_id]
+        if DEBUG: print(f"Identifying present {present}")
         await self.poke_ram(ctx, get_slot_addr("PRESENTS_IDENTIFIED", present, self.char), b"\x01")
         return True
 
@@ -561,7 +563,6 @@ class TJEGameController():
 
     async def handle_input(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
         new_data, old_data = int.from_bytes(new_data), int.from_bytes(old_data)
-        #previous_inputs = int.from_bytes(await self.peek_ram(ctx, 0x8020, 1))
         if new_data & 0x80:
             if not self.paused and not self.game_state == TJEGameState.IN_INVENTORY:#not previous_inputs & 0x80:
                 if DEBUG: print("Game paused; saving")
@@ -584,13 +585,10 @@ class TJEGameController():
             self.paused = False
         if DEBUG: print(f"Level changed to {self.current_level}")
 
-        if self.current_level == 1 and self.game_state == TJEGameState.MAIN_MENU:
-            if self.save_data is None:
-                await self.level_one_initialization(ctx)
-            else:
-                self.load_delay = TickDelay(functools.partial(self.load_save_data, ctx), 8)
-                await bizhawk.display_message(ctx.bizhawk_ctx, "AP CLIENT: Loading save data")
-                self.game_state = TJEGameState.WAITING_FOR_LOAD
+        if self.current_level == 1 and self.game_state == TJEGameState.MAIN_MENU and self.save_data is not None:
+            self.load_delay = TickDelay(functools.partial(self.load_save_data, ctx), 8)
+            await bizhawk.display_message(ctx.bizhawk_ctx, "AP CLIENT: Loading save data")
+            self.game_state = TJEGameState.WAITING_FOR_LOAD
         if self.game_state in LOADING_STATES and self.current_level != -1:
             if self.load_delay is None:
                 await self.update_save_data(ctx)
