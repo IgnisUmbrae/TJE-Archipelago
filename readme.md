@@ -50,7 +50,7 @@ tje_options:
   rom_file: "ToeJamEarl.SGD"
 ```
 
-3. Place the downloaded `tje.apworld` file into the `worlds` subfolder of your Archipelago installation.
+3. Place the downloaded `tje.apworld` file into the `custom_worlds` subfolder of your Archipelago installation.
 
 4. Create a YAML. You can use [the example](https://github.com/IgnisUmbrae/TJE-Archipelago/blob/main/docs/example.yaml) as a quickstart. Add this to the `Players` subfolder if you're hosting locally, or upload it to the host otherwise.
 
