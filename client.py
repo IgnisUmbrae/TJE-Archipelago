@@ -77,7 +77,9 @@ class TJEClient(BizHawkClient):
         ctx.watcher_timeout = 0.125
 
         char = int.from_bytes((await bizhawk.read(ctx.bizhawk_ctx, [(0x000242c5, 1, "MD CART")]))[0])
+
         self.game_controller.add_monitors(ctx, char)
+        self.game_controller.create_save_points()
 
         return True
 
