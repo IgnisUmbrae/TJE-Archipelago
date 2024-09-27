@@ -416,7 +416,7 @@ class TJEGameController():
 
     async def receive_trap(self, ctx: "BizHawkClientContext", trap_id: int) -> bool:
         if self.is_playing:
-            print(f"Activating {ITEM_ID_TO_NAME[trap_id]}")
+            if DEBUG: print(f"Activating {ITEM_ID_TO_NAME[trap_id]}")
             match ITEM_ID_TO_NAME[trap_id]:
                 case "Cupid Trap":
                     return await self.trap_cupid(ctx)
@@ -431,7 +431,7 @@ class TJEGameController():
         return (await self.poke_ram(ctx, RAM_ADDRS.CUPID_EFF_TIMER, b"\xF0") and
                 await self.poke_ram(ctx, RAM_ADDRS.CUPID_HEART_REF, b"\xFF") and
                 await self.poke_ram(ctx, RAM_ADDRS.CUPID_EFF_TYPE, random.randint(0, 63 if evil else 3).to_bytes(1)))
-    
+
     async def trap_sleep(self, ctx: "BizHawkClientContext") -> bool:
         return await self.poke_ram(ctx, RAM_ADDRS.TJ_SLEEP_TIMER, b"\01\x2D")
 
