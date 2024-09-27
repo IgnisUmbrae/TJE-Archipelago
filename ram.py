@@ -420,7 +420,8 @@ class TJEGameController():
                                     random.randint(0, 63 if evil else 3).to_bytes(1)))
 
     async def trap_sleep(self, ctx: "BizHawkClientContext") -> bool:
-        return await self.poke_ram(ctx, get_ram_addr("SLEEP_TIMER", self.char), b"\01\x2D")
+        return (await self.poke_ram(ctx, get_ram_addr("SPRITE", self.char), b"\x00") and
+                await self.poke_ram(ctx, get_ram_addr("SLEEP_TIMER", self.char), b"\x01\x2D"))
 
     #endregion
 
