@@ -3,6 +3,11 @@ from enum import IntEnum
 
 from Options import PerGameCommonOptions, Toggle, Choice, OptionGroup, Range, NamedRange, DefaultOnToggle
 
+class CharacterOption(IntEnum):
+    TOEJAM = 0
+    EARL = 1
+    BOTH = 2
+
 class MapRandomizationOption(IntEnum):
     BASE = 0
     BASE_SHUFFLE = 1
@@ -26,6 +31,18 @@ class ElevatorKeyTypeOption(IntEnum):
     NONE = 0
     PROGRESSIVE = 1
     STATIC = 2
+
+class Character(Choice):
+    """
+    Which character you want to play as.
+    """
+    display_name = "Character"
+
+    option_toejam = CharacterOption.TOEJAM.value
+    option_earl = CharacterOption.EARL.value
+    option_both = CharacterOption.BOTH.value
+
+    default = option_toejam
 
 class MinItemCount(Range):
     """
@@ -331,6 +348,7 @@ tje_option_groups = [
         MaxRankCheck
     ]),
     OptionGroup("Difficulty/QoL", [
+        Character,
         GameOvers,
         SleepWhenIdle,
         WalkSpeedBoost,
@@ -363,3 +381,4 @@ class TJEOptions(PerGameCommonOptions):
     present_timers: ExtendedPresentTimers
     free_earthling_services: FreeEarthlingServices
     map_rando: MapRandomization
+    character: Character

@@ -142,12 +142,6 @@ STATIC_ROM_PATCHES: list[tuple[int, bytes]] = [
 
     ### Menu modifications ###
 
-    # "Who" menu: only one item / Toejam only / text change
-    (0x00024326, b"\x00\x01"),
-    (0x000242c4, b"\x00\x01"),
-    (0x000242d6, b"\x4F\x6E\x65\x20\x50\x6C\x61\x79\x65\x72\x20\x2D\x2D\x20\x6A"
-                 b"\x75\x73\x27\x20\x54\x6F\x65\x6A\x61\x6D\x00"),
-
     # "What" menu: remove Fixed World option / rename Random World to AP World / AP World uses Fixed World seeds
     (0x000243b8, b"\x00\x04"),
     (0x00024350, b"\x50\x6C\x61\x79\x20\x4E\x65\x77\x20\x47\x61\x6D\x65\x20\x2D\x2D\x20"

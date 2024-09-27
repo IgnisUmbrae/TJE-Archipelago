@@ -96,9 +96,9 @@ class TJEWorld(World):
 
     def fill_slot_data(self) -> dict[str, Any]:
         return {
-                "ship_piece_levels" : self.ship_piece_levels,
-                "prog_keys" : self.options.key_type == ElevatorKeyTypeOption.PROGRESSIVE,
-                "key_levels" : self.key_levels,
-                "starting_presents" : self.starting_presents,
-                "infinite_lives" : self.options.game_overs == GameOverOption.DISABLE
+                "ship_piece_levels": self.ship_piece_levels,
+                "prog_keys": self.options.key_type == ElevatorKeyTypeOption.PROGRESSIVE,
+                "key_levels": self.key_levels,
+                "starting_presents": self.starting_presents,
+                "infinite_lives": self.options.game_overs == GameOverOption.DISABLE
         }

@@ -21,7 +21,7 @@ class SpawnQueue():
         self.counter = cooldown
         self.cooldown = cooldown
         self.reset_cooldown()
-    
+
     def can_spawn(self) -> bool:
         return (self.counter == 0 and self.queue)
 
@@ -76,7 +76,8 @@ class TJEClient(BizHawkClient):
         ctx.want_slot_data = True
         ctx.watcher_timeout = 0.125
 
-        self.game_controller.add_monitors(ctx)
+        char = int.from_bytes((await bizhawk.read(ctx.bizhawk_ctx, [(0x000242c5, 1, "MD CART")]))[0])
+        self.game_controller.add_monitors(ctx, char)
 
         return True
 

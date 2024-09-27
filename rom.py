@@ -10,7 +10,7 @@ from worlds.Files import APProcedurePatch, APTokenMixin, APTokenTypes
 
 from .constants import EMPTY_PRESENT, INITIAL_PRESENT_ADDRS, BASE_LEVEL_TYPES
 from .items import ITEM_ID_TO_CODE
-from .options import StartingPresentOption, GameOverOption, MapRandomizationOption
+from .options import CharacterOption, StartingPresentOption, GameOverOption, MapRandomizationOption
 
 if TYPE_CHECKING:
     from . import TJEWorld
@@ -55,6 +55,30 @@ class TJEProcedurePatch(APProcedurePatch, APTokenMixin):
 
 def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
 
+    patch.write_token(APTokenTypes.WRITE, 0x00097704, struct.pack(">26H", *world.seeds))
+
+    patch.write_token(APTokenTypes.WRITE, 0x00097738, struct.pack(">10B", *world.ship_piece_levels))
+
+    # "Who" menu: only one item / TJ or Earl only / text change
+    # Menu return options: 0 for 2-player, 1 for TJ only, 2 for Earl only
+    patch.write_token(APTokenTypes.WRITE, 0x00024327, b"\x01")
+    match world.options.character:
+        case CharacterOption.TOEJAM:
+            ret_val = 1
+            string = (b"\x4F\x6E\x65\x20\x50\x6C\x61\x79\x65\x72\x20\x2D\x2D\x20\x6A"
+                      b"\x75\x73\x27\x20\x54\x6F\x65\x6A\x61\x6D\x00")
+        case CharacterOption.EARL:
+            ret_val = 2
+            string = (b"\x4F\x6E\x65\x20\x50\x6C\x61\x79\x65\x72\x20\x2D\x2D\x20\x6A"
+                      b"\x75\x73\x27\x20\x45\x61\x72\x6C\x00")
+        case CharacterOption.BOTH:
+            ret_val = 0
+            string = None
+
+    if string:
+        patch.write_token(APTokenTypes.WRITE, 0x000242c5, struct.pack(">B", ret_val))
+        patch.write_token(APTokenTypes.WRITE, 0x000242d6, string)
+
     if world.options.starting_presents == StartingPresentOption.NONE:
         presents = [EMPTY_PRESENT]*8
     else:
@@ -62,10 +86,6 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
 
     for i in range(8):
         patch.write_token(APTokenTypes.WRITE, INITIAL_PRESENT_ADDRS[i], presents[i])
-
-    patch.write_token(APTokenTypes.WRITE, 0x00097704, struct.pack(">26H", *world.seeds))
-
-    patch.write_token(APTokenTypes.WRITE, 0x00097738, struct.pack(">10B", *world.ship_piece_levels))
 
     if world.options.upwarp_present:
         patch.write_token(APTokenTypes.WRITE, 0x00010b06, b"\x10\x3C\x00\x18\x4E\x71") # Always up unless level 24/25

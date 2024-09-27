@@ -2,15 +2,18 @@ import random
 import struct
 import functools
 from typing import TYPE_CHECKING, Any, Callable, Optional
-from enum import Enum
+from enum import Enum, IntEnum
+
+from requests import get
 
 import worlds._bizhawk as bizhawk
 from worlds._bizhawk import ConnectionStatus
 from worlds._bizhawk.client import BizHawkClient
 
-from .constants import DEBUG, EMPTY_ITEM, COLLECTED_SHIP_ITEM, RANK_NAMES, RAM_ADDRS, \
-                       TJ_GHOST_SPRITES, TJ_SWIMMING_SPRITES, TJ_HITOPS_JUMP_SPRITES, TOEJAM_STATE_LOAD_DOWN, \
-                       ELEVATOR_LOCKED, ELEVATOR_UNLOCKED, END_ELEVATOR_UNLOCKED_STATES, SAVE_DATA_POINTS
+from .constants import DEBUG, EMPTY_ITEM, COLLECTED_SHIP_ITEM, NO_SPAWN_SPRITE_SETS, RANK_NAMES, \
+                       SPRITES_GHOST, SPRITES_WATER, SPRITES_HITOPS_JUMP, STATE_LOAD_DOWN, \
+                       ELEVATOR_LOCKED, ELEVATOR_UNLOCKED, END_ELEVATOR_UNLOCKED_STATES, SAVE_DATA_POINTS, \
+                       get_slot_addr, get_ram_addr
 from .items import ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, \
                     PRESENT_IDS, EDIBLE_IDS, SHIP_PIECE_IDS, KEY_IDS, INSTATRAP_IDS
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, RANK_LOC_TEMPLATE, SHIP_PIECE_LOC_TEMPLATE
@@ -41,9 +44,15 @@ SPAWN_BLOCKING_STATES = LOADING_STATES_STRICT + [TJEGameState.IN_AIR, TJEGameSta
 
 #endregion
 
+class MonitorLevel(IntEnum):
+    GLOBAL = -1
+    TOEJAM = 0
+    EARL = 1
+    BOTH = 2
+
 class AddressMonitor():
-    def __init__(self, name: str, address_fn: Callable, size: int, enable_test_fn: Callable, on_trigger_fn: Callable,
-                 parent: "TJEGameController", ctx : "BizHawkClientContext", enabled=False):
+    def __init__(self, name: str, addr_name: str, size: int, level: MonitorLevel, enable_test_fn: Callable,
+                 on_trigger_fn: Callable, parent: "TJEGameController", ctx : "BizHawkClientContext", enabled=False):
         self.name = name
         self.parent = parent
         self.on_trigger = on_trigger_fn
@@ -51,19 +60,35 @@ class AddressMonitor():
 
         self.old_data, self.new_data = None, None
 
+        self.monitor_level = None
+        self.monitor_addrs = []
+
         self.enable_test = enable_test_fn
         self.enabled = enabled
         if DEBUG: print("{} monitoring {}".format(self.name, "enabled" if self.enabled else "disabled"))
 
-        self.address = None
-        self.address_fn = address_fn
+        self.addr_name = addr_name
         self.size = size
 
+        self.set_monitor_level(level)
+
+    def set_monitor_level(self, level: MonitorLevel):
+        self.monitor_level = level
+        match level:
+            case MonitorLevel.GLOBAL:
+                self.monitor_addrs.append(get_ram_addr(self.addr_name))
+            case MonitorLevel.TOEJAM | MonitorLevel.EARL:
+                self.monitor_addrs.append(get_ram_addr(self.addr_name, level.value))
+            case MonitorLevel.BOTH:
+                self.monitor_addrs = [get_ram_addr(self.addr_name, 0), get_ram_addr(self.addr_name, 1)]
+        self.reset_data()
+
     def reset_data(self):
-        self.old_data, self.new_data = None, None
+        entries = len(self.monitor_addrs)
+        self.old_data, self.new_data = [None]*entries, [None]*entries
 
     def check_enabledness(self):
-        new_state = self.enable_test()
+        new_state = self.monitor_addrs and self.enable_test()
         if DEBUG:
             if self.enabled != new_state:
                 print("{} monitoring {}".format(self.name, "enabled" if new_state else "disabled"))
@@ -74,16 +99,16 @@ class AddressMonitor():
     async def tick(self):
         self.check_enabledness()
         if self.enabled:
-            self.address = self.address_fn()
-            self.old_data = self.new_data
+            for i, addr in enumerate(self.monitor_addrs):
+                self.old_data[i] = self.new_data[i]
+                self.new_data[i] = await self.parent.peek_ram(self.ctx, addr, self.size)
 
-            self.new_data = await self.parent.peek_ram(self.ctx, self.address, self.size)
+                if (self.old_data[i] is not None and self.new_data[i] is not None
+                    and self.old_data[i] != self.new_data[i]):
+                    await self.trigger(i)
 
-            if self.old_data is not None and self.new_data is not None and self.old_data != self.new_data:
-                await self.trigger()
-
-    async def trigger(self):
-        await self.on_trigger(self.ctx, self.old_data, self.new_data)
+    async def trigger(self, index: int):
+        await self.on_trigger(self.ctx, self.old_data[index], self.new_data[index])
 
 class TickDelay():
     def __init__(self, callback: Callable, delay: int = 3):
@@ -138,6 +163,8 @@ class TJEGameController():
 
         self.paused = False
 
+        self.char = 0
+
     #region Per-update high-level logic functions
 
     async def tick(self, ctx: "BizHawkClientContext"):
@@ -146,19 +173,32 @@ class TJEGameController():
             if self.load_delay is not None: await self.load_delay.tick()
             if not self.game_complete:
                 for monitor in self.monitors: await monitor.tick()
- 
+
                 await self.update_game_state(ctx)
 
     #endregion
 
     #region Initialization functions
 
-    def add_monitors(self, ctx : "BizHawkClientContext"):
+    def add_monitors(self, ctx: "BizHawkClientContext", char: int):
+        # These are the values returned by the menu, which don't match the others in-game
+        match char:
+            case 1:
+                level = MonitorLevel.TOEJAM
+                self.char = 0
+            case 2:
+                level = MonitorLevel.EARL
+                self.char = 1
+            case 0:
+                level = MonitorLevel.BOTH
+                self.char = 2
+
         self.monitors = [
             AddressMonitor(
                 "Floor item",
-                lambda: RAM_ADDRS.COLLECTED_ITEMS,
+                "COLLECTED_ITEMS",
                 104,
+                MonitorLevel.GLOBAL,
                 lambda: not self.is_on_menu() and not self.is_awaiting_load() and not self.is_paused(),
                 self.handle_floor_item_change,
                 self,
@@ -166,8 +206,9 @@ class TJEGameController():
             ),
             AddressMonitor(
                 "Ship item",
-                lambda: RAM_ADDRS.TRIGGERED_SHIP_ITEMS,
+                "TRIGGERED_SHIP_ITEMS",
                 10,
+                MonitorLevel.GLOBAL,
                 lambda: not self.is_on_menu() and not self.is_awaiting_load() and not self.is_paused(),
                 self.handle_ship_item_change,
                 self,
@@ -175,8 +216,9 @@ class TJEGameController():
             ),
             AddressMonitor(
                 "Rank",
-                lambda: RAM_ADDRS.TJ_RANK,
+                "RANK",
                 1,
+                level,
                 lambda: not self.is_on_menu() and not self.is_awaiting_load() and not self.is_paused(),
                 self.handle_rank_change,
                 self,
@@ -184,8 +226,9 @@ class TJEGameController():
             ),
             AddressMonitor(
                 "Level",
-                lambda: RAM_ADDRS.TJ_LEVEL,
+                "LEVEL",
                 1,
+                level,
                 lambda: not self.is_awaiting_load(),
                 self.handle_level_change,
                 self,
@@ -194,8 +237,9 @@ class TJEGameController():
             ),
             AddressMonitor(
                 "Elevator",
-                lambda: RAM_ADDRS.END_ELEVATOR_STATE,
+                "END_ELEVATOR_STATE",
                 1,
+                MonitorLevel.GLOBAL,
                 lambda: not self.is_on_menu() and not self.is_awaiting_load() and not self.is_paused(),
                 self.handle_elevator_state_change,
                 self,
@@ -203,8 +247,9 @@ class TJEGameController():
             ),
             AddressMonitor(
                 "Player input",
-                lambda: RAM_ADDRS.TJ_CURRENT_BUTTONS,
+                "P1_CURRENT_BUTTONS",
                 1,
+                MonitorLevel.GLOBAL,
                 lambda: not self.is_on_menu() and not self.is_awaiting_load(),
                 self.handle_input,
                 self,
@@ -212,8 +257,9 @@ class TJEGameController():
             ),
             AddressMonitor(
                 "Game over",
-                lambda: RAM_ADDRS.TJ_GAME_OVER_FLAG,
+                "GAME_OVER_FLAG",
                 1,
+                level,
                 lambda: not self.is_on_menu() and not self.is_awaiting_load(),
                 self.handle_game_over_flag,
                 self,
@@ -227,6 +273,7 @@ class TJEGameController():
         self.key_levels = slot_data["key_levels"]
         self.prog_keys = slot_data["prog_keys"]
         self.starting_presents = slot_data["starting_presents"]
+        #self.char = slot_data["character"]
         #self.strict_level_25 = slot_data["strict_level_25"]
         #self.deathlink = slot_data["deathlink"]
 
@@ -247,18 +294,18 @@ class TJEGameController():
                 await bizhawk.lock(ctx.bizhawk_ctx)
                 for point in SAVE_DATA_POINTS:
                     # Failsafe to ensure we don't instakill/gameover
-                    if (point.name in ["Lives (TJ)", "Max health (TJ)", "Health (TJ)"] and
+                    if (point.name in ["Lives", "Max health", "Health"] and
                         int.from_bytes(self.save_data[point.name]) == 0):
                         self.save_data[point.name] = b"\x03"
                     await self.poke_ram(ctx, point.address, self.save_data[point.name])
 
                 # Fill HP bar
-                await self.poke_ram(ctx, RAM_ADDRS.TJ_HP_RESTORE, b"\x7F")
+                await self.poke_ram(ctx, get_ram_addr("TJ_HP_RESTORE", self.char), b"\x7F")
 
                 # Level 1 floor items have to be manually altered as it has already loaded in
                 level_1_collected = self.one_indices(int.from_bytes(self.save_data["Collected items"][4:8]), 32)
                 for index in level_1_collected:
-                    await self.poke_ram(ctx, self.floor_item_slot_to_ram_address(index), EMPTY_ITEM)
+                    await self.poke_ram(ctx, get_slot_addr("FLOOR_ITEMS", index, self.char), EMPTY_ITEM)
 
                 await bizhawk.unlock(ctx.bizhawk_ctx)
             except bizhawk.RequestFailedError:
@@ -300,66 +347,8 @@ class TJEGameController():
     def one_indices(self, bitfield: int, total_bits: int) -> list[int]:
         return [(total_bits-1)-i for i in range(bitfield.bit_length()) if bitfield & (1 << i)]
 
-    # Valid levels: 0–25
-    def level_to_collected_items_address(self, level: int) -> Optional[int]:
-        if level < 0 or level > 25:
-            return None
-        return RAM_ADDRS.COLLECTED_ITEMS + level * 4
-
-    # Valid slots: 0–31
-    def floor_item_slot_to_ram_address(self, slot: int) -> Optional[int]:
-        if slot < 0 or slot > 31:
-            return None
-        return RAM_ADDRS.FLOOR_ITEMS + slot * 8
-
-    # Valid slots: 0–15
-    def inventory_slot_to_ram_address(self, slot: int) -> Optional[int]:
-        if slot < 0 or slot > 15:
-            return None
-        return RAM_ADDRS.INVENTORY + slot
-
-    # Valid slots: 0–31
-    def dropped_present_slot_to_ram_address(self, slot: int) -> Optional[int]:
-        if slot < 0 or slot > 31:
-            return None
-        return RAM_ADDRS.DROPPED_PRESENTS + slot * 8
-
-    # Valid slots: 0–28
-    def earthling_to_ram_address(self, slot: int) -> Optional[int]:
-        if slot < 0 or slot > 28:
-            return None
-        return RAM_ADDRS.EARTHLINGS + slot*18
-
-    # Valid items: 0–9
-    def triggered_ship_item_to_ram_address(self, item: int) -> Optional[int]:
-        if item < 0 or item > 9:
-            return None
-        return RAM_ADDRS.TRIGGERED_SHIP_ITEMS + item
-
-    # Valid pieces: 0–9
-    def collected_ship_piece_to_ram_address(self, piece: int) -> Optional[int]:
-        if piece < 0 or piece > 9:
-            return None
-        return RAM_ADDRS.COLLECTED_SHIP_PIECES + piece
-
-    # Valid presents: 0x00–0x1B
-    def present_to_identified_ram_address(self, present: int) -> Optional[int]:
-        if present < 0x00 or present > 0x1B:
-            return None
-        return RAM_ADDRS.PRESENTS_WRAPPING + present * 2 + 1
-
-    def level_to_transp_tiles_ram_address(self, level: int) -> Optional[int]:
-        if level < 0 or level > 25:
-            return None
-        return RAM_ADDRS.TRANSP_MAP_MASK + level*7
-
-    def level_to_open_tiles_ram_address(self, level: int) -> Optional[int]:
-        if level < 0 or level > 25:
-            return None
-        return RAM_ADDRS.UNCOVERED_MAP_MASK + level*7
-
     async def get_empty_inv_slot(self, ctx: "BizHawkClientContext") -> Optional[int]:    
-        current_inventory = await self.peek_ram(ctx, RAM_ADDRS.INVENTORY, 16)
+        current_inventory = await self.peek_ram(ctx, get_ram_addr("INVENTORY", self.char), 16)
         if current_inventory:
             split_inventory = [current_inventory[i:i+1] for i in range(len(current_inventory))]
             try:
@@ -370,7 +359,7 @@ class TJEGameController():
             return None
 
     async def get_empty_dropped_present_slot(self, ctx: "BizHawkClientContext") -> Optional[int]:
-        dropped_presents_table = await self.peek_ram(ctx, RAM_ADDRS.DROPPED_PRESENTS, 256)
+        dropped_presents_table = await self.peek_ram(ctx,get_ram_addr("DROPPED_PRESENTS", self.char), 256)
         if dropped_presents_table:
             dropped_present_types = [dropped_presents_table[i:i+8][0:1]
                                      for i in range(0, len(dropped_presents_table), 8)]
@@ -382,7 +371,7 @@ class TJEGameController():
             return None
         
     async def get_empty_floor_item_slot(self, ctx: "BizHawkClientContext") -> Optional[int]:
-        floor_item_table = await self.peek_ram(ctx, RAM_ADDRS.FLOOR_ITEMS, 256)
+        floor_item_table = await self.peek_ram(ctx,  get_slot_addr("FLOOR_ITEMS", self.char), 256)
         if floor_item_table:
             floor_item_types = [floor_item_table[i:i+8][0:1]
                                 for i in range(0, len(floor_item_table), 8)]
@@ -428,12 +417,13 @@ class TJEGameController():
             return False
 
     async def trap_cupid(self, ctx: "BizHawkClientContext", evil=True) -> bool:
-        return (await self.poke_ram(ctx, RAM_ADDRS.CUPID_EFF_TIMER, b"\xF0") and
-                await self.poke_ram(ctx, RAM_ADDRS.CUPID_HEART_REF, b"\xFF") and
-                await self.poke_ram(ctx, RAM_ADDRS.CUPID_EFF_TYPE, random.randint(0, 63 if evil else 3).to_bytes(1)))
+        return (await self.poke_ram(ctx, get_ram_addr("CUPID_EFF_TIMER", self.char), b"\xF0") and
+                await self.poke_ram(ctx, get_ram_addr("CUPID_HEART_REF", self.char), b"\xFF") and
+                await self.poke_ram(ctx, get_ram_addr("CUPID_EFF_TYPE", self.char),
+                                    random.randint(0, 63 if evil else 3).to_bytes(1)))
 
     async def trap_sleep(self, ctx: "BizHawkClientContext") -> bool:
-        return await self.poke_ram(ctx, RAM_ADDRS.TJ_SLEEP_TIMER, b"\01\x2D")
+        return await self.poke_ram(ctx, get_ram_addr("SLEEP_TIMER", self.char), b"\01\x2D")
 
     #endregion
 
@@ -448,9 +438,9 @@ class TJEGameController():
         start_level = 5*self.num_map_reveals - 4
         try:
             revealed_tiles = int.from_bytes(
-                await self.peek_ram(ctx, self.level_to_open_tiles_ram_address(start_level), 7*5))
+                await self.peek_ram(ctx, get_slot_addr("UNCOVERED_MAP_MASK", start_level, self.char), 7*5))
             payload = (revealed_tiles ^ int.from_bytes(b"\x00\x7E\x7E\x7E\x7E\x7E\x00"*5)).to_bytes(35)
-            await self.poke_ram(ctx, self.level_to_transp_tiles_ram_address(start_level), payload)
+            await self.poke_ram(ctx, get_slot_addr("TRANSP_MAP_MASK", start_level, self.char), payload)
         except bizhawk.RequestFailedError:
             return False
         return True
@@ -501,12 +491,12 @@ class TJEGameController():
 
     async def identify_present(self, ctx: "BizHawkClientContext", present_id: int) -> bool:
         present = ITEM_ID_TO_CODE[present_id]
-        await self.poke_ram(ctx, self.present_to_identified_ram_address(present), b"\x01")
+        await self.poke_ram(ctx, get_slot_addr("PRESENTS_IDENTIFIED", present, self.char), b"\x01")
         return True
 
     async def award_ship_piece(self, ctx: "BizHawkClientContext", ship_piece_id: int) -> bool:
-        slot = SHIP_PIECE_IDS.index(ship_piece_id)
-        await self.poke_ram(ctx, self.collected_ship_piece_to_ram_address(slot), COLLECTED_SHIP_ITEM)
+        piece = SHIP_PIECE_IDS.index(ship_piece_id)
+        await self.poke_ram(ctx, get_slot_addr("COLLECTED_SHIP_PIECES", piece, self.char), COLLECTED_SHIP_ITEM)
         self.num_ship_pieces_owned += 1
         if DEBUG: print(f"Currently have {self.num_ship_pieces_owned} ship pieces")
         if self.current_level == 24:
@@ -519,8 +509,8 @@ class TJEGameController():
         if self.game_state not in SPAWN_BLOCKING_STATES:
             slot = await self.get_empty_floor_item_slot(ctx)
             if slot is not None and self.current_level is not None:
-                toejam_position = await self.peek_ram(ctx, RAM_ADDRS.TJ_POSITION, 4)
-                await self.poke_ram(ctx, self.floor_item_slot_to_ram_address(slot),
+                toejam_position = await self.peek_ram(ctx, get_ram_addr("POSITION", self.char), 4)
+                await self.poke_ram(ctx, get_slot_addr("FLOOR_ITEMS", slot, self.char),
                     struct.pack(">BBBB", ITEM_ID_TO_CODE[item_id], self.current_level, 0, 0) + toejam_position)
                 return True
             else:
@@ -532,7 +522,7 @@ class TJEGameController():
     async def spawn_in_inventory(self, ctx: "BizHawkClientContext", pres_id: int) -> bool:
         slot = await self.get_empty_inv_slot(ctx)
         if slot is not None:
-            await self.poke_ram(ctx, self.inventory_slot_to_ram_address(slot), ITEM_ID_TO_CODE[pres_id].to_bytes(1))
+            await self.poke_ram(ctx, get_slot_addr("INVENTORY", slot, self.char), ITEM_ID_TO_CODE[pres_id].to_bytes(1))
             return True
         else:
             return await self.spawn_present_as_dropped(ctx, pres_id)
@@ -541,8 +531,8 @@ class TJEGameController():
         if self.game_state not in SPAWN_BLOCKING_STATES:
             slot = await self.get_empty_dropped_present_slot(ctx)
             if slot is not None and self.current_level is not None:
-                toejam_position = await self.peek_ram(ctx, RAM_ADDRS.TJ_POSITION, 4)
-                success = await self.poke_ram(ctx, self.dropped_present_slot_to_ram_address(slot),
+                toejam_position = await self.peek_ram(ctx, get_ram_addr("POSITION", self.char), 4)
+                success = await self.poke_ram(ctx, get_slot_addr("DROPPED_PRESENTS", slot, self.char),
                     struct.pack(">BBBB", ITEM_ID_TO_CODE[pres_id], self.current_level, 0, 0) + toejam_position)
                 return success
             else:
@@ -556,9 +546,6 @@ class TJEGameController():
 
     def is_paused(self) -> bool:
         return self.paused
-
-    def is_dead(self) -> bool:
-        return (self.game_state == TJEGameState.GHOST)
 
     def is_awaiting_load(self) -> bool:
         return (self.load_delay is not None)
@@ -594,7 +581,7 @@ class TJEGameController():
 
     async def handle_level_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
         #self.current_level, previous_level = int.from_bytes(new_data), int.from_bytes(old_data)
-        toejam_state = await self.peek_ram(ctx, RAM_ADDRS.TJ_STATE, 1)
+        toejam_state = await self.peek_ram(ctx, get_ram_addr("STATE", self.char), 1)
         # Special handling for menu, aka "level -1"
         self.current_level = int.from_bytes(new_data) if toejam_state != b"\x00" else -1
         if self.current_level == -1:
@@ -645,7 +632,8 @@ class TJEGameController():
             lock = False
             if DEBUG: print(f"Unlocking level {self.current_level}")
         if lock is not None:
-            await self.poke_ram(ctx, RAM_ADDRS.END_ELEVATOR_STATE, ELEVATOR_LOCKED if lock else ELEVATOR_UNLOCKED)
+            await self.poke_ram(ctx, get_ram_addr("END_ELEVATOR_STATE", self.char),
+                                ELEVATOR_LOCKED if lock else ELEVATOR_UNLOCKED)
 
     async def recheck_elevator_unlock(self, ctx: "BizHawkClientContext"):
         await self.handle_elevator_state_change(ctx, b"\x00", b"\x0A")
@@ -657,39 +645,42 @@ class TJEGameController():
         else:
             try:
                 try:
-                    toejam_state = await self.peek_ram(ctx, RAM_ADDRS.TJ_STATE, 1)
+                    player_state = await self.peek_ram(ctx, get_ram_addr("STATE", self.char), 1)
                     #toejam_lives = await self.peek_ram(ctx, RAM_ADDRS.TJ_LIVES, 1)
-                    toejam_sprite = int.from_bytes(await self.peek_ram(ctx, RAM_ADDRS.TJ_SPRITE, 1))
-                    menu_flag = await self.peek_ram(ctx, RAM_ADDRS.TJ_MENU_FLAG, 1)
-                    fall_state = await self.peek_ram(ctx, RAM_ADDRS.TJ_FALL_STATE, 1)
-                    unfall_flag = await self.peek_ram(ctx, RAM_ADDRS.TJ_UNFALL_FLAG, 1)
-                    global_elevator_state = await self.peek_ram(ctx, RAM_ADDRS.GLOBAL_ELEVATOR_STATE, 1)
-                    toejam_z = int.from_bytes(
-                        (await self.peek_ram(ctx, RAM_ADDRS.TJ_POSITION, 6))[4:6], byteorder="big", signed=True)
+                    player_sprite = int.from_bytes(
+                        await self.peek_ram(ctx, get_ram_addr("SPRITE", self.char), 1))
+                    #menu_flag = await self.peek_ram(ctx, RAM_ADDRS.TJ_MENU_FLAG, 1)
+                    fall_state = await self.peek_ram(ctx, get_ram_addr("FALL_STATE", self.char), 1)
+                    unfall_flag = await self.peek_ram(ctx, get_ram_addr("UNFALL_FLAG", self.char), 1)
+                    global_elevator_state = await self.peek_ram(ctx,
+                                                                get_ram_addr("GLOBAL_ELEVATOR_STATE", self.char), 1)
+                    player_z = int.from_bytes((
+                        await self.peek_ram(ctx,get_ram_addr("POSITION", self.char), 6))[4:6],
+                        byteorder="big", signed=True)
                 except TypeError:
                     return
 
-                self.is_playing: bool = (toejam_state != b"\x00")
+                self.is_playing: bool = (player_state != b"\x00")
 
                 if self.is_playing:
-                    if toejam_sprite in TJ_GHOST_SPRITES:
+                    if player_sprite in SPRITES_GHOST:
                         self.game_state = TJEGameState.GHOST
                     else:
                         match global_elevator_state:
                             case b"\x00": # Not in an elevator
-                                if menu_flag == b"\x01":
+                                if player_state == b"\x0B": #menu_flag == b"\x01":
                                     self.game_state = TJEGameState.IN_INVENTORY
                                 # Deepest possible falling into sand is -16;
                                 # highest Z reachable with icarus wings is < 64
                                 # The "bummer" state 0x41 is sometimes only detectable for a handful of frames
                                 # so Z checking is a necessity
-                                elif (toejam_state == TOEJAM_STATE_LOAD_DOWN or toejam_z < -32 or toejam_z > 96):
+                                elif (player_state == STATE_LOAD_DOWN or player_z < -32 or player_z > 96):
                                     self.game_state = TJEGameState.TRAVELLING_DOWN
                                 elif unfall_flag != b"\x00":
                                     self.game_state = TJEGameState.UNFALLING
-                                elif fall_state != b"\x00" or toejam_z > 0 or toejam_sprite in TJ_HITOPS_JUMP_SPRITES:
+                                elif fall_state != b"\x00" or player_z > 0 or player_sprite in SPRITES_HITOPS_JUMP:
                                     self.game_state = TJEGameState.IN_AIR
-                                elif toejam_sprite in TJ_SWIMMING_SPRITES:
+                                elif player_sprite in SPRITES_WATER:
                                     self.game_state = TJEGameState.IN_WATER
                                 else:
                                     self.game_state = TJEGameState.NORMAL
