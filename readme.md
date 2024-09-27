@@ -41,15 +41,22 @@ Additions over the base game include:
 
 ### Instructions
 
-1. Locate your Toejam & Earl REV 02 ROM. If you own the Steam version, you can right-click it in your library, select Manage → Browse Local Files and locate `ToeJamEarl.SGD` in the `uncompressed ROMs` folder.
+1. Locate your Toejam & Earl REV 02 ROM. If you own the Steam version, you can right-click it in your library, select Manage → Browse Local Files and locate `ToeJamEarl.SGD` in the `uncompressed ROMs` folder. Copy that file to the root of your Archipelago directory.
 
-2. Place the downloaded `tje.apworld` file into the `worlds` subfolder of your Archipelago installation.
+2. Add these lines to `host.yaml` so the client knows where your ROM file is (changing the name if needed):
 
-3. Create a YAML. You can use [the example](https://github.com/IgnisUmbrae/TJE-Archipelago/blob/main/docs/example.yaml) as a quickstart. Add this to the `Players` subfolder if you're hosting locally, or upload it to the host otherwise.
+```
+tje_options:
+  rom_file: "ToeJamEarl.SGD"
+```
 
-4. Now you or the host can generate a world. Archipelago will also generate a patch with the extension `.aptje`; the easiest way to use this is via the Patch function in the launcher, which will apply the patch to the ROM and automatically launch BizHawk along with the client. (You may be asked to locate one or both of these.)
+3. Place the downloaded `tje.apworld` file into the `worlds` subfolder of your Archipelago installation.
 
-5. BizHawk will also pop up its Lua scripting window, in which you'll need to enable the script `connector_bizhawk_generic` by double clicking it. Now everything will connect together.
+4. Create a YAML. You can use [the example](https://github.com/IgnisUmbrae/TJE-Archipelago/blob/main/docs/example.yaml) as a quickstart. Add this to the `Players` subfolder if you're hosting locally, or upload it to the host otherwise.
+
+5. Now you or the host can generate a world. Archipelago will also generate a patch with the extension `.aptje`; the easiest way to use this is via the Patch function in the launcher, which will apply the patch to the ROM and automatically launch BizHawk along with the client. (You may be asked to locate one or both of these.)
+
+6. BizHawk will also pop up its Lua scripting window, in which you'll need to enable the script `connector_bizhawk_generic` by double clicking it. Now everything will connect together. It's recommended not to begin the game until the client has successfully connected to both BizHawk and the AP host.
 
 ## Questions, feedback, etc
 
