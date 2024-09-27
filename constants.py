@@ -132,7 +132,7 @@ PLAYER_RAM_ADDRS: dict[tuple[int, int]] = {
     "GLOBAL_ELEVATOR_STATE": (0xDA6A, 0x1),
     "INVENTORY": (0xDAC2, 0x10),
     "CUPID_HEART_REF": (0xE1DC, 0x1),
-    "CUPID_EFF_TIMER": (0xE1DF, 0x1),
+    "CUPID_EFF_TIMER": (0xE1DF, 0x2),
     "CUPID_EFF_TYPE": (0xE1E2, 0x1)
 }
 
