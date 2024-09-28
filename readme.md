@@ -27,6 +27,7 @@ Additions over the base game include:
 ## Caveats
 
 - Item handling is currently entirely remote except for starting presents. In particular this means that every item in the game appears as an AP logo.
+- Resuming after closing the client (e.g. in asyncs) is currently a mess, and will imperfectly restore the game state.
 - Neither Earl nor 2-player mode is currently supported.
 - Hints are yet to be implemented and locations are generically-named, so in multiworlds it's recommended to play with `restrict_prog_items: yes` to avoid having to scour the map for a singular progression item in a weird location.
 
