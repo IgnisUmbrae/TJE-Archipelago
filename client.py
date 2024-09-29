@@ -5,7 +5,6 @@ import worlds._bizhawk as bizhawk
 from worlds._bizhawk.client import BizHawkClient
 from NetUtils import ClientStatus, NetworkItem
 
-from .constants import DEBUG
 from .ram import TJEGameController
 from .items import EDIBLE_IDS, PRESENT_IDS, INSTATRAP_IDS
 from .locations import LOCATION_NAME_TO_ID
@@ -55,8 +54,8 @@ class TJEClient(BizHawkClient):
         self.game_controller = TJEGameController(self)
         self.num_items_received = 0
 
-        self.edible_queue = SpawnQueue(cooldown=3)
-        self.present_queue = SpawnQueue(cooldown=2)
+        self.edible_queue = SpawnQueue(cooldown=2)
+        self.present_queue = SpawnQueue(cooldown=1)
         self.trap_queue = SpawnQueue(cooldown=1)
         self.misc_queue = SpawnQueue(cooldown=1)
 
@@ -89,7 +88,7 @@ class TJEClient(BizHawkClient):
             self.game_controller.handle_slot_data(args["slot_data"])
 
     async def goal_in(self, ctx: "BizHawkClientContext") -> None:
-        if DEBUG: print("Finished game!")
+        logger.debug("Finished game!")
         await ctx.send_msgs([{
             "cmd": "StatusUpdate",
             "status": ClientStatus.CLIENT_GOAL
@@ -108,7 +107,7 @@ class TJEClient(BizHawkClient):
         except KeyError:
             return False
 
-        if DEBUG: logger.debug("Triggering location: %s", name)
+        logger.debug("Triggering location: %s", name)
         await ctx.send_msgs([{
             "cmd": "LocationChecks",
             "locations": [loc_id]
@@ -117,14 +116,6 @@ class TJEClient(BizHawkClient):
 
     async def handle_items(self, ctx: "BizHawkClientContext") -> None:
         await self.handle_new_items(ctx)
-
-        if DEBUG:
-            edibles_waiting = len(self.edible_queue.queue)
-            presents_waiting = len(self.present_queue.queue)
-            if edibles_waiting > 0:
-                print(f"{edibles_waiting} edibles waiting to spawn")
-            if presents_waiting > 0:
-                print(f"{presents_waiting} presents waiting to spawn")
 
         await self.handle_queue(ctx, self.edible_queue)
         await self.handle_queue(ctx, self.present_queue)
