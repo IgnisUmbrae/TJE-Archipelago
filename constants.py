@@ -151,7 +151,12 @@ GLOBAL_RAM_ADDRS: dict[int] = {
     "TRIGGERED_SHIP_ITEMS": 0xE212,
     "COLLECTED_SHIP_PIECES": 0xF444,
     "UNCOVERED_MAP_MASK": 0x91EC,
-    "TRANSP_MAP_MASK": 0x92A2
+    "TRANSP_MAP_MASK": 0x92A2,
+    # Special AP addresses
+    "AP_CHARACTER": 0xF000,
+    "AP_AUTO_PRESENT": 0xF555,
+    "AP_AUTO_NO_POINTS": 0xF556,
+    "AP_CUPID_TRAP": 0xF557
 }
 
 def get_slot_addr(name: str, slot: int, player: int = 0) -> int | None:

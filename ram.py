@@ -411,11 +411,8 @@ class TJEGameController():
         else:
             return False
 
-    async def trap_cupid(self, ctx: "BizHawkClientContext", evil=True) -> bool:
-        return (await self.poke_ram(ctx, get_ram_addr("CUPID_EFF_TIMER", self.char), b"\xF0") and
-                await self.poke_ram(ctx, get_ram_addr("CUPID_HEART_REF", self.char), b"\xFF") and
-                await self.poke_ram(ctx, get_ram_addr("CUPID_EFF_TYPE", self.char),
-                                    random.randint(0, 63 if evil else 3).to_bytes(1)))
+    async def trap_cupid(self, ctx: "BizHawkClientContext") -> bool:
+        return (await self.poke_ram(ctx, get_ram_addr("AP_CUPID_TRAP", self.char), b"\x01"))
 
     async def trap_sleep(self, ctx: "BizHawkClientContext") -> bool:
         return (await self.poke_ram(ctx, get_ram_addr("SPRITE", self.char), b"\x00") and
