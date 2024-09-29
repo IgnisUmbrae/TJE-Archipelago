@@ -190,6 +190,9 @@ class TJEGameController():
                 level = MonitorLevel.BOTH
                 self.char = 2
 
+        # Will not work for 2-player!
+        self.poke_ram(ctx, get_ram_addr("AP_CHARACTER"), self.char.to_bytes(1))
+
         self.monitors = [
             AddressMonitor(
                 "Floor item",
@@ -406,6 +409,12 @@ class TJEGameController():
                     return await self.trap_cupid(ctx)
                 case "Sleep Trap":
                     return await self.trap_sleep(ctx)
+                case "Rocket Skates Trap":
+                    return await self.trap_skates(ctx)
+                case "Earthling Trap":
+                    return await self.trap_earthling(ctx)
+                case "Randomizer Trap":
+                    return await self.trap_randomizer(ctx)
                 case _:
                     pass
         else:
@@ -414,9 +423,33 @@ class TJEGameController():
     async def trap_cupid(self, ctx: "BizHawkClientContext") -> bool:
         return (await self.poke_ram(ctx, get_ram_addr("AP_CUPID_TRAP", self.char), b"\x01"))
 
+    async def trap_skates(self, ctx: "BizHawkClientContext") -> bool:
+        await bizhawk.lock(ctx.bizhawk_ctx)
+        success = (await self.poke_ram(ctx, get_ram_addr("AP_AUTO_NO_POINTS", self.char), b"\x01") and
+                   await self.poke_ram(ctx, get_ram_addr("AP_AUTO_PRESENT", self.char), b"\x05"))
+        await bizhawk.unlock(ctx.bizhawk_ctx)
+        return success
+
+    async def trap_earthling(self, ctx: "BizHawkClientContext") -> bool:
+        await bizhawk.lock(ctx.bizhawk_ctx)
+        success = (await self.poke_ram(ctx, get_ram_addr("AP_AUTO_NO_POINTS", self.char), b"\x01") and
+                   await self.poke_ram(ctx, get_ram_addr("AP_AUTO_PRESENT", self.char), b"\x17"))
+        await bizhawk.unlock(ctx.bizhawk_ctx)
+        return success
+
     async def trap_sleep(self, ctx: "BizHawkClientContext") -> bool:
-        return (await self.poke_ram(ctx, get_ram_addr("SPRITE", self.char), b"\x00") and
-                await self.poke_ram(ctx, get_ram_addr("SLEEP_TIMER", self.char), b"\x01\x2D"))
+        await bizhawk.lock(ctx.bizhawk_ctx)
+        success = (await self.poke_ram(ctx, get_ram_addr("AP_AUTO_NO_POINTS", self.char), b"\x01") and
+                   await self.poke_ram(ctx, get_ram_addr("AP_AUTO_PRESENT", self.char), b"\x18"))
+        await bizhawk.unlock(ctx.bizhawk_ctx)
+        return success
+
+    async def trap_randomizer(self, ctx: "BizHawkClientContext") -> bool:
+        await bizhawk.lock(ctx.bizhawk_ctx)
+        success = (await self.poke_ram(ctx, get_ram_addr("AP_AUTO_NO_POINTS", self.char), b"\x01") and
+                   await self.poke_ram(ctx, get_ram_addr("AP_AUTO_PRESENT", self.char), b"\x12"))
+        await bizhawk.unlock(ctx.bizhawk_ctx)
+        return success
 
     #endregion
 
@@ -598,10 +631,11 @@ class TJEGameController():
     async def handle_ship_item_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
         triggered_levels = [old_data[i] for i in range(10) if new_data[i] != old_data[i]]
         for level in triggered_levels:
-            if DEBUG: print(f"Triggering ship piece on level {level}")
-            success = await self.client.trigger_location(ctx, SHIP_PIECE_LOC_TEMPLATE.format(level))
-            if success:
-                self.collected_ship_item_levels.append(self.current_level)
+            if level in self.ship_item_levels:
+                if DEBUG: print(f"Triggering ship piece on level {level}")
+                success = await self.client.trigger_location(ctx, SHIP_PIECE_LOC_TEMPLATE.format(level))
+                if success:
+                    self.collected_ship_item_levels.append(self.current_level)
 
     async def handle_rank_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
         rank = int.from_bytes(new_data)

@@ -243,11 +243,31 @@ class TrapCupid(Toggle):
 
 class TrapSleep(Toggle):
     """
-    Add sleep traps into the item pool.
+    Add traps that instantly send you to sleep into the item pool.
     """
 
     display_name = "Enable Sleep Traps"
 
+class TrapRocketSkates(Toggle):
+    """
+    Add traps that instantly give you Rocket Skates into the item pool.
+    """
+
+    display_name = "Enable Rocket Skates Traps"
+
+class TrapEarthling(Toggle):
+    """
+    Add traps that spawn Earthlings into the item pool.
+    """
+
+    display_name = "Enable Earthling Traps"
+
+class TrapRandomizer(Toggle):
+    """
+    Add traps that force-randomize all your presents into the item pool.
+    """
+
+    display_name = "Enable Randomizer Traps"
 
 class StartingPresents(Choice):
     """
@@ -338,7 +358,10 @@ tje_option_groups = [
         TrapFood,
         TrapPresents,
         TrapCupid,
-        TrapSleep
+        TrapSleep,
+        TrapRocketSkates,
+        TrapEarthling,
+        TrapRandomizer
     ]),
     OptionGroup("Extra Items/Locations", [
         UpwarpPresent,
@@ -370,6 +393,9 @@ class TJEOptions(PerGameCommonOptions):
     trap_presents: TrapPresents
     trap_cupid: TrapCupid
     trap_sleep: TrapSleep
+    trap_skates: TrapRocketSkates
+    trap_earthling: TrapEarthling
+    trap_randomizer: TrapRandomizer
     map_reveals: MapReveals
     key_type: ElevatorKeyType
     key_gap: ElevatorKeyGap

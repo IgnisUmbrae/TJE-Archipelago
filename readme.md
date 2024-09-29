@@ -23,6 +23,7 @@ Additions over the base game include:
   - Elevator keys, which are required to unlock elevators
   - Map revealers, which uncover the map five levels at a time
   - The Up-Warp present, which replaces Un-Fall and _always_ sends you up one level
+  - Traps that spawn Earthlings, instantly give you Rocket Skates, scramble your controls, and more
 
 ## Caveats
 

@@ -122,7 +122,10 @@ ELEVATOR_KEY_ITEMS : list[TJEItemData] = [
 
 INSTATRAP_ITEMS : list[TJEItemData] = [
     TJEItemData(None, "Cupid Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
-    TJEItemData(None, "Sleep Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0)
+    TJEItemData(None, "Sleep Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
+    TJEItemData(None, "Earthling Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
+    TJEItemData(None, "Rocket Skates Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
+    TJEItemData(None, "Randomizer Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
 ]
 
 MISC_ITEMS : list[TJEItemData] = [
@@ -154,6 +157,8 @@ INSTATRAP_IDS = [ITEM_NAME_TO_ID[item.name] for item in INSTATRAP_ITEMS]
 def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions) -> None:
     item_list: list[TJEItem] = []
 
+    total_locations = sum(item_totals(True, options.min_items.value, options.max_items.value))
+
     create_ship_pieces(multiworld, world, player, item_list)
 
     handle_trap_options(world, options)
@@ -164,9 +169,9 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
     differential = create_rank_items(world, options, item_list) \
                    + create_elevator_keys(world, options, item_list) \
                    + create_map_reveals(world, options, item_list) \
-                   + create_instatraps(world, options, item_list)
+                   + create_instatraps(world, options, total_locations, item_list)
 
-    create_main_items(world, options, item_list, differential)
+    create_main_items(world, options, item_list, total_locations, differential)
     #create_padding_items(world, options, item_list, required_padding)
 
     multiworld.itempool.extend(item_list)
@@ -192,14 +197,19 @@ def create_ship_pieces(multiworld, world, player, item_list) -> None:
     for item in MASTER_ITEM_LIST[:ship_pieces_total]:
         item_list.append(world.create_item(item.name, item.classification))
 
-def create_instatraps(world, options, item_list) -> int:
+def create_instatraps(world, options, total_locations, item_list) -> int:
     instatrap_total = 0
 
-    instatrap_weights = [3 if options.trap_cupid else 0,
-                         1 if options.trap_sleep else 0]
+    instatrap_weights = [
+                        5 if options.trap_cupid else 0,
+                        3 if options.trap_sleep else 0,
+                        5 if options.trap_earthling else 0,
+                        2 if options.trap_skates else 0,
+                        1 if options.trap_randomizer else 0
+                        ]
 
     if sum(instatrap_weights) > 0:
-        instatrap_total = world.random.randint(15, 25)
+        instatrap_total = world.random.randint(round(0.03*total_locations), round(0.06*total_locations))
         item_list.extend([
             world.create_item(id, ItemClassification.trap)
             for id in world.random.choices(INSTATRAP_IDS, weights=instatrap_weights, k=instatrap_total)
@@ -235,8 +245,8 @@ def create_map_reveals(world, options, item_list) -> int:
         return 5
     return 0
 
-def create_main_items(world, options, item_list, differential) -> None:
-    total_locations = sum(item_totals(True, options.min_items.value, options.max_items.value))
+def create_main_items(world, options, item_list, total_locations, differential) -> None:
+
     item_pool_raw = world.generator.generate_item_blob(total_locations - differential)
 
     for item in item_pool_raw:
