@@ -4,16 +4,14 @@ import functools
 from typing import TYPE_CHECKING, Any, Callable, Optional
 from enum import Enum, IntEnum
 
-from requests import get
-
 import worlds._bizhawk as bizhawk
 from worlds._bizhawk import ConnectionStatus
 from worlds._bizhawk.client import BizHawkClient
 
 from .constants import DEBUG, EMPTY_ITEM, COLLECTED_SHIP_ITEM, RANK_NAMES, \
                        SPRITES_GHOST, SPRITES_WATER, SPRITES_HITOPS_JUMP, STATE_LOAD_DOWN, \
-                       ELEVATOR_LOCKED, ELEVATOR_UNLOCKED, END_ELEVATOR_UNLOCKED_STATES, SAVE_DATA_POINTS, add_save_data_points, \
-                       get_slot_addr, get_ram_addr
+                       ELEVATOR_LOCKED, ELEVATOR_UNLOCKED, END_ELEVATOR_UNLOCKED_STATES, SAVE_DATA_POINTS, \
+                       add_save_data_points, get_slot_addr, get_ram_addr
 from .items import ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, \
                     PRESENT_IDS, EDIBLE_IDS, SHIP_PIECE_IDS, KEY_IDS, INSTATRAP_IDS
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, RANK_LOC_TEMPLATE, SHIP_PIECE_LOC_TEMPLATE
@@ -114,7 +112,7 @@ class TickDelay():
     def __init__(self, callback: Callable, delay: int = 3):
         self.callback = callback
         self.delay = delay
-    
+
     async def tick(self):
         self.delay -= 1
         if self.delay == 0: await self.callback()
