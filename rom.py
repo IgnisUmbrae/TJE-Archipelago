@@ -67,13 +67,19 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
             ret_val = 1
             string = (b"\x4F\x6E\x65\x20\x50\x6C\x61\x79\x65\x72\x20\x2D\x2D\x20\x6A"
                       b"\x75\x73\x27\x20\x54\x6F\x65\x6A\x61\x6D\x00")
+            char_init = 0
         case CharacterOption.EARL:
             ret_val = 2
             string = (b"\x4F\x6E\x65\x20\x50\x6C\x61\x79\x65\x72\x20\x2D\x2D\x20\x6A"
                       b"\x75\x73\x27\x20\x45\x61\x72\x6C\x00")
+            char_init = 1
         case CharacterOption.BOTH:
             ret_val = 0
             string = None
+
+    # Initializes special RAM address that keeps track of which character will receive traps
+    patch.write_token(APTokenTypes.WRITE, 0x0010b314, (b"\x20\x7C\x00\xFF\xF0\x00\x10\xBC\x00"
+                                                       + char_init.to_bytes(1) + b"\x4E\x75"))
 
     if string:
         patch.write_token(APTokenTypes.WRITE, 0x000242c5, struct.pack(">B", ret_val))
@@ -91,6 +97,7 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
         patch.write_token(APTokenTypes.WRITE, 0x00010b06, b"\x10\x3C\x00\x18\x4E\x71") # Always up unless level 24/25
         patch.write_token(APTokenTypes.WRITE, 0x00017be6, b"\x4e\x71\x4e\x71") # Always show "item here" hint signs
         patch.write_token(APTokenTypes.WRITE, 0x000abc34, b"\x15\x10\x22\x17\x01\x12\x10") # Change name to Up-Warp
+        patch.write_token(APTokenTypes.WRITE, 0x0000a750, b"\x75\x70\x2D\x77\x61\x72\x70\x20") # And in mailbox
 
     if world.options.game_overs == GameOverOption.DISABLE:
         patch.write_token(APTokenTypes.WRITE, 0x0000bcd0, b"\x4E\x71\x4E\x71") # Skip life subtraction

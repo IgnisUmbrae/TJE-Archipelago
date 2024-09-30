@@ -190,9 +190,6 @@ class TJEGameController():
                 level = MonitorLevel.BOTH
                 self.char = 2
 
-        # Will not work for 2-player!
-        self.poke_ram(ctx, get_ram_addr("AP_CHARACTER"), self.char.to_bytes(1))
-
         self.monitors = [
             AddressMonitor(
                 "Floor item",
