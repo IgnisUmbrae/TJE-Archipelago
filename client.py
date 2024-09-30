@@ -138,7 +138,7 @@ class TJEClient(BizHawkClient):
         queue.tick()
         if queue.can_spawn():
             oldest = queue.oldest()
-            success = await self.game_controller.spawn_item(ctx, oldest.item)
+            success = await self.game_controller.receive_item(ctx, oldest.item)
             if success:
                 queue.mark_spawned(oldest)
 

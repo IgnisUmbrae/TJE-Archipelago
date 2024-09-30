@@ -100,5 +100,6 @@ class TJEWorld(World):
                 "prog_keys": self.options.key_type == ElevatorKeyTypeOption.PROGRESSIVE,
                 "key_levels": self.key_levels,
                 "starting_presents": self.starting_presents,
-                "infinite_lives": self.options.game_overs == GameOverOption.DISABLE
+                "infinite_lives": self.options.game_overs == GameOverOption.DISABLE,
+                "auto_trap_presents": self.options.auto_trap_presents.value
         }

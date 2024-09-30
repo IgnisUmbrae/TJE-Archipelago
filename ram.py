@@ -13,7 +13,7 @@ from .constants import DEBUG, EMPTY_ITEM, COLLECTED_SHIP_ITEM, RANK_NAMES, \
                        ELEVATOR_LOCKED, ELEVATOR_UNLOCKED, END_ELEVATOR_UNLOCKED_STATES, SAVE_DATA_POINTS, \
                        add_save_data_points, get_slot_addr, get_ram_addr
 from .items import ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, \
-                    PRESENT_IDS, EDIBLE_IDS, SHIP_PIECE_IDS, KEY_IDS, INSTATRAP_IDS
+                    PRESENT_IDS, EDIBLE_IDS, SHIP_PIECE_IDS, KEY_IDS, INSTATRAP_IDS, TRAP_PRESENT_IDS
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, RANK_LOC_TEMPLATE, SHIP_PIECE_LOC_TEMPLATE
 
 if TYPE_CHECKING:
@@ -157,11 +157,13 @@ class TJEGameController():
         self.connected = False
         self.load_delay = None
 
-        #self.deathlink = False
+        # Misc
 
         self.paused = False
 
         self.char = 0
+
+        self.auto_trap_presents = False
 
     #region Per-update high-level logic functions
 
@@ -277,6 +279,7 @@ class TJEGameController():
         self.key_levels = slot_data["key_levels"]
         self.prog_keys = slot_data["prog_keys"]
         self.starting_presents = slot_data["starting_presents"]
+        self.auto_trap_presents = slot_data["auto_trap_presents"]
 
     #endregion
 
@@ -364,9 +367,9 @@ class TJEGameController():
                 return None
         else:
             return None
-        
+
     async def get_empty_floor_item_slot(self, ctx: "BizHawkClientContext") -> Optional[int]:
-        floor_item_table = await self.peek_ram(ctx,  get_slot_addr("FLOOR_ITEMS", self.char), 256)
+        floor_item_table = await self.peek_ram(ctx, get_ram_addr("FLOOR_ITEMS", self.char), 256)
         if floor_item_table:
             floor_item_types = [floor_item_table[i:i+8][0:1]
                                 for i in range(0, len(floor_item_table), 8)]
@@ -404,6 +407,8 @@ class TJEGameController():
             match ITEM_ID_TO_NAME[trap_id]:
                 case "Cupid Trap":
                     return await self.trap_cupid(ctx)
+                case "Burp Trap":
+                    return await self.trap_burp(ctx)
                 case "Sleep Trap":
                     return await self.trap_sleep(ctx)
                 case "Rocket Skates Trap":
@@ -419,6 +424,11 @@ class TJEGameController():
 
     async def trap_cupid(self, ctx: "BizHawkClientContext") -> bool:
         return (await self.poke_ram(ctx, get_ram_addr("AP_CUPID_TRAP", self.char), b"\x01"))
+
+    async def trap_burp(self, ctx: "BizHawkClientContext") -> bool:
+        num = random.randint(15,25) # In game seems to be between 12 and 16
+        return (await self.poke_ram(ctx, get_ram_addr("BURP_TIMER", self.char), b"\x10") and
+                await self.poke_ram(ctx, get_ram_addr("BURPS_LEFT", self.char), num.to_bytes(1)))
 
     async def trap_skates(self, ctx: "BizHawkClientContext") -> bool:
         await bizhawk.lock(ctx.bizhawk_ctx)
@@ -488,6 +498,20 @@ class TJEGameController():
 
         return True
 
+    async def receive_item(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
+        if self.auto_trap_presents and item_id in TRAP_PRESENT_IDS:
+            return await self.open_trap_present(ctx, item_id)
+        return await self.spawn_item(ctx, item_id)
+
+    async def open_trap_present(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
+        item_code = ITEM_ID_TO_CODE[item_id]
+        # Locking possibly not required here
+        await bizhawk.lock(ctx.bizhawk_ctx)
+        success = (await self.poke_ram(ctx, get_ram_addr("AP_AUTO_NO_POINTS", self.char), b"\x00") and
+                   await self.poke_ram(ctx, get_ram_addr("AP_AUTO_PRESENT", self.char),item_code.to_bytes(1)))
+        await bizhawk.unlock(ctx.bizhawk_ctx)
+        return success
+
     async def spawn_item(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
         if self.is_playing and self.game_state != TJEGameState.WAITING_FOR_LOAD:
             if item_id in PRESENT_IDS:
@@ -532,10 +556,11 @@ class TJEGameController():
     async def spawn_on_floor(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
         if self.game_state not in SPAWN_BLOCKING_STATES:
             slot = await self.get_empty_floor_item_slot(ctx)
+            print(f"Slot to spawn in: {slot}")
             if slot is not None and self.current_level is not None:
-                toejam_position = await self.peek_ram(ctx, get_ram_addr("POSITION", self.char), 4)
+                player_xy = await self.peek_ram(ctx, get_ram_addr("POSITION", self.char), 4)
                 await self.poke_ram(ctx, get_slot_addr("FLOOR_ITEMS", slot, self.char),
-                    struct.pack(">BBBB", ITEM_ID_TO_CODE[item_id], self.current_level, 0, 0) + toejam_position)
+                    struct.pack(">BBBB", ITEM_ID_TO_CODE[item_id], self.current_level, 0, 0) + player_xy)
                 return True
             else:
                 return False
