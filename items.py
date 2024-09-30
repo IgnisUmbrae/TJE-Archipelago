@@ -122,6 +122,7 @@ ELEVATOR_KEY_ITEMS : list[TJEItemData] = [
 
 INSTATRAP_ITEMS : list[TJEItemData] = [
     TJEItemData(None, "Cupid Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
+    TJEItemData(None, "Burp Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
     TJEItemData(None, "Sleep Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
     TJEItemData(None, "Earthling Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
     TJEItemData(None, "Rocket Skates Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
@@ -151,6 +152,8 @@ PRESENT_IDS = [ITEM_NAME_TO_ID[item.name] for item in BASE_ITEM_LIST if item.typ
 EDIBLE_IDS = [ITEM_NAME_TO_ID[item.name] for item in BASE_ITEM_LIST if item.type == TJEItemType.EDIBLE]
 KEY_IDS = [ITEM_NAME_TO_ID[item.name] for item in ELEVATOR_KEY_ITEMS]
 INSTATRAP_IDS = [ITEM_NAME_TO_ID[item.name] for item in INSTATRAP_ITEMS]
+TRAP_PRESENT_IDS = [ITEM_NAME_TO_ID[item.name] for item in BASE_ITEM_LIST
+                    if item.type == TJEItemType.PRESENT and item.classification == ItemClassification.trap]
 
 #endregion
 
@@ -202,8 +205,9 @@ def create_instatraps(world, options, total_locations, item_list) -> int:
 
     instatrap_weights = [
                         5 if options.trap_cupid else 0,
+                        3 if options.trap_burp else 0,
                         3 if options.trap_sleep else 0,
-                        5 if options.trap_earthling else 0,
+                        4 if options.trap_earthling else 0,
                         2 if options.trap_skates else 0,
                         1 if options.trap_randomizer else 0
                         ]

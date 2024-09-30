@@ -32,6 +32,14 @@ class ElevatorKeyTypeOption(IntEnum):
     PROGRESSIVE = 1
     STATIC = 2
 
+class AutoOpenTrapPresents(DefaultOnToggle):
+    """
+    Whether trap presents should automatically open when received.
+    Recommended to reduce the burden of inventory management.
+    """
+
+    display_name = "Automatically Open Trap Presents"
+
 class Character(Choice):
     """
     Which character you want to play as.
@@ -241,6 +249,13 @@ class TrapCupid(Toggle):
 
     display_name = "Enable Cupid Traps"
 
+class TrapBurp(Toggle):
+    """
+    Add traps that make you constantly burp.
+    """
+
+    display_name = "Enable Burp Traps"
+
 class TrapSleep(Toggle):
     """
     Add traps that instantly send you to sleep into the item pool.
@@ -355,6 +370,7 @@ tje_option_groups = [
         MaxItemCount
     ]),
     OptionGroup("Trap Options", [
+        AutoOpenTrapPresents,
         TrapFood,
         TrapPresents,
         TrapCupid,
@@ -389,9 +405,11 @@ class TJEOptions(PerGameCommonOptions):
     restrict_prog_items: ExcludeItemsFromProgression
     min_items: MinItemCount
     max_items: MaxItemCount
+    auto_trap_presents: AutoOpenTrapPresents
     trap_food: TrapFood
     trap_presents: TrapPresents
     trap_cupid: TrapCupid
+    trap_burp: TrapBurp
     trap_sleep: TrapSleep
     trap_skates: TrapRocketSkates
     trap_earthling: TrapEarthling
