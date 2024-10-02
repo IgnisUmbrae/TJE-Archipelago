@@ -141,8 +141,12 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
         patch.write_token(APTokenTypes.WRITE, 0x000f038, struct.pack(">H", orthog_road_speed))
         patch.write_token(APTokenTypes.WRITE, 0x000f03c, struct.pack(">H", diag_road_speed))
 
+    if world.options.fast_loads:
+        patch.write_token(APTokenTypes.WRITE, 0x00013710, b"\x00\x00")
+        patch.write_token(APTokenTypes.WRITE, 0x0001371a, b"\x80\x00")
+
     if world.options.map_rando != world.options.map_rando.default:
-        # param_failsafe alters the "hidden paths" property of every level type to guarantee that
+        # add_failsafe alters the penultimate property of every level type to guarantee that
         # levels generate successfully; without it, elevator softlocks are possible
         add_failsafe = False
         level_types, new_params = None, None

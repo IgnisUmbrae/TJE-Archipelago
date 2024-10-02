@@ -37,6 +37,13 @@ class AutoOpenOption(IntEnum):
     NO_RANDOMIZER = 1
     ALL = 2
 
+class FastLoads(Toggle):
+    """
+    Massively speeds up loading by forcing the game to stop the elevator as soon as the next level is ready.
+    """
+
+    display_name = "Fast Loads"
+
 class AutoOpenTrapPresents(Choice):
     """
     Whether trap presents should automatically open when received.
@@ -404,7 +411,8 @@ tje_option_groups = [
         SleepWhenIdle,
         WalkSpeedBoost,
         ExtendedPresentTimers,
-        FreeEarthlingServices
+        FreeEarthlingServices,
+        FastLoads
     ]),
     OptionGroup("World Generation", [
         MapRandomization
@@ -436,5 +444,6 @@ class TJEOptions(PerGameCommonOptions):
     walk_speed: WalkSpeedBoost
     present_timers: ExtendedPresentTimers
     free_earthling_services: FreeEarthlingServices
+    fast_loads: FastLoads
     map_rando: MapRandomization
     character: Character
