@@ -8,9 +8,10 @@ import Utils
 from settings import get_settings
 from worlds.Files import APProcedurePatch, APTokenMixin, APTokenTypes
 
-from .constants import EMPTY_PRESENT, INITIAL_PRESENT_ADDRS, BASE_LEVEL_TYPES
+from .constants import EMPTY_PRESENT, INITIAL_PRESENT_ADDRS, BASE_LEVEL_TYPES, \
+                       PCM_SFX_ADDRS, PCM_SFX_ADDRS_MUSIC, PCM_SFX_USAGE_ADDRS, PCM_SFX_USAGE_ADDRS_MUSIC, PSG_SFX, PSG_SFX_USAGE_ADDRS
 from .items import ITEM_ID_TO_CODE
-from .options import CharacterOption, StartingPresentOption, GameOverOption, MapRandomizationOption
+from .options import CharacterOption, SoundRandoOption, StartingPresentOption, GameOverOption, MapRandomizationOption
 
 if TYPE_CHECKING:
     from . import TJEWorld
@@ -144,6 +145,21 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
     if world.options.fast_loads:
         patch.write_token(APTokenTypes.WRITE, 0x00013710, b"\x00\x00")
         patch.write_token(APTokenTypes.WRITE, 0x0001371a, b"\x80\x00")
+
+    if world.options.sound_rando != world.options.sound_rando.default:
+        if world.options.sound_rando == SoundRandoOption.ALL:
+            PCM_SFX_ADDRS.extend(PCM_SFX_ADDRS_MUSIC)
+            PCM_SFX_USAGE_ADDRS.extend(PCM_SFX_USAGE_ADDRS_MUSIC)
+        world.random.shuffle(PCM_SFX_ADDRS)
+        for i, sfx_addr in enumerate(PCM_SFX_ADDRS):
+            for rom_addr in PCM_SFX_USAGE_ADDRS[i]:
+                # +2 to jump over the operation
+                patch.write_token(APTokenTypes.WRITE, rom_addr + 2, sfx_addr.to_bytes(4))
+
+        world.random.shuffle(PSG_SFX)
+        for i, sfx_addr in enumerate(PSG_SFX):
+            for rom_addr in PSG_SFX_USAGE_ADDRS[i]:
+                patch.write_token(APTokenTypes.WRITE, rom_addr + 3, sfx_addr.to_bytes(1))
 
     if world.options.map_rando != world.options.map_rando.default:
         # add_failsafe alters the penultimate property of every level type to guarantee that

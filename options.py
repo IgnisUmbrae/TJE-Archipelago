@@ -37,6 +37,28 @@ class AutoOpenOption(IntEnum):
     NO_RANDOMIZER = 1
     ALL = 2
 
+class SoundRandoOption(IntEnum):
+    NONE = 0
+    MOST = 1
+    ALL = 2
+
+class SoundRando(Choice):
+    """
+    Randomizes all PCM and PSG sound effects in the game. For sanity's sake, the menu blip will always be left alone.
+
+    None: No randomization.
+    Most: Randomizes all PCM and PSG sound effects except the four that affect the music.
+    All: Also randomizes the four sounds used in the music (clap, kick, record scratch and snare).
+    """
+
+    display_name = "Sound Randomization Level"
+
+    option_none = SoundRandoOption.NONE.value
+    option_most = SoundRandoOption.MOST.value
+    option_all = SoundRandoOption.ALL.value
+
+    default = option_none
+
 class FastLoads(Toggle):
     """
     Massively speeds up loading by forcing the game to stop the elevator as soon as the next level is ready.
@@ -412,7 +434,8 @@ tje_option_groups = [
         WalkSpeedBoost,
         ExtendedPresentTimers,
         FreeEarthlingServices,
-        FastLoads
+        FastLoads,
+        SoundRando
     ]),
     OptionGroup("World Generation", [
         MapRandomization
@@ -445,5 +468,6 @@ class TJEOptions(PerGameCommonOptions):
     present_timers: ExtendedPresentTimers
     free_earthling_services: FreeEarthlingServices
     fast_loads: FastLoads
+    sound_rando: SoundRando
     map_rando: MapRandomization
     character: Character
