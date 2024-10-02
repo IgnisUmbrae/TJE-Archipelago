@@ -67,11 +67,15 @@ class TJEClient(BizHawkClient):
 
     async def validate_rom(self, ctx: "BizHawkClientContext") -> bool:
         try:
-            rom_name = await self.peek_rom(ctx, 0x150, 13).decode("ascii")
-            version = await self.peek_rom(ctx, 0x18c, 2).decode("ascii")
+            rom_name = (await self.peek_rom(ctx, 0x150, 13)).decode("ascii")
+            version = (await self.peek_rom(ctx, 0x18c, 2)).decode("ascii")
         except (UnicodeDecodeError, bizhawk.RequestFailedError, bizhawk.NotConnectedError):
             return False
-        if rom_name != "TOEJAM & EARL" or version != "02":
+        if rom_name != "TOEJAM & EARL":
+            logger.error("Selected ROM is not a ToeJam & Earl ROM")
+            return False
+        elif version != "02":
+            logger.error("Selected ToeJam & Earl ROM appears to be REV00, not REV02")
             return False
 
         ctx.game = self.game
@@ -85,25 +89,23 @@ class TJEClient(BizHawkClient):
 
     async def setup_game_controller(self, ctx: "BizHawkClientContext") -> bool:
         try:
-            char = int.from_bytes((await bizhawk.read(ctx.bizhawk_ctx, [(0x000242c5, 1, "MD CART")]))[0])
+            char = int.from_bytes(await self.peek_rom(ctx, 0x000242c5, 1))
             self.game_controller.add_monitors(ctx, char)
             self.game_controller.create_save_points()
 
-            key_type = int.from_bytes((await bizhawk.read(ctx.bizhawk_ctx, [(0x001f0000, 1, "MD CART")]))[0])
-            self.auto_trap_presents = bool.from_bytes(
-                (await bizhawk.read(ctx.bizhawk_ctx, [(0x001f0001, 1, "MD CART")]))[0])
+            key_type = int.from_bytes(await self.peek_rom(ctx, 0x001f0000, 1))
+            self.auto_trap_presents = bool.from_bytes(await self.peek_rom(ctx, 0x001f0001, 1))
 
-            key_count = int.from_bytes((await bizhawk.read(ctx.bizhawk_ctx, [(0x001f0010, 1, "MD CART")]))[0])
-            key_levels = struct.unpack(f">{key_count}B",
-                                       (await bizhawk.read(ctx.bizhawk_ctx, [(0x001f0011, key_count, "MD CART")]))[0])
+            key_count = int.from_bytes(await self.peek_rom(ctx, 0x001f0010, 1))
+            key_levels = struct.unpack(f">{key_count}B", await self.peek_rom(ctx, 0x001f0011, key_count))
 
-            ship_item_levels = struct.unpack(">10B",
-                                             (await bizhawk.read(ctx.bizhawk_ctx, [(0x00097738, 10, "MD CART")]))[0])
+            ship_item_levels = struct.unpack(">10B", await self.peek_rom(ctx, 0x00097738, 10))
 
             self.game_controller.initialize_slot_data(ship_item_levels, key_levels, key_type, self.auto_trap_presents)
 
             return True
         except (bizhawk.RequestFailedError, bizhawk.NotConnectedError):
+            logger.error("Failed to initialize game controller")
             return False
 
     async def goal_in(self, ctx: "BizHawkClientContext") -> None:
