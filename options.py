@@ -32,13 +32,25 @@ class ElevatorKeyTypeOption(IntEnum):
     PROGRESSIVE = 1
     STATIC = 2
 
-class AutoOpenTrapPresents(DefaultOnToggle):
+class AutoOpenOption(IntEnum):
+    NONE = 0
+    NO_RANDOMIZER = 1
+    ALL = 2
+
+class AutoOpenTrapPresents(Choice):
     """
     Whether trap presents should automatically open when received.
     Recommended to reduce the burden of inventory management.
+    Auto-opening randomizers may cause the game to softlock in certain circumstances; be prepared to rewind.
     """
 
     display_name = "Automatically Open Trap Presents"
+
+    option_none = AutoOpenOption.NONE.value
+    option_no_randomizer = AutoOpenOption.NO_RANDOMIZER.value
+    option_all = AutoOpenOption.ALL.value
+
+    default = option_no_randomizer
 
 class Character(Choice):
     """
@@ -332,7 +344,7 @@ class WalkSpeedBoost(NamedRange):
     }
 
     default = 100
-#
+
     display_name = "Walking Speed Boost"
 
 class ExtendedPresentTimers(NamedRange):

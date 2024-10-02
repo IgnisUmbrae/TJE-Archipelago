@@ -499,8 +499,9 @@ class TJEGameController():
         return True
 
     async def receive_item(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
-        if self.auto_trap_presents and item_id in TRAP_PRESENT_IDS:
-            return await self.open_trap_present(ctx, item_id)
+        if self.auto_trap_presents > 0 and item_id in TRAP_PRESENT_IDS:
+            if not (self.auto_trap_presents == 1 and item_id == ITEM_NAME_TO_ID["Randomizer"]):
+                return await self.open_trap_present(ctx, item_id)
         return await self.spawn_item(ctx, item_id)
 
     async def open_trap_present(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
