@@ -80,7 +80,7 @@ class TJEClient(BizHawkClient):
 
         ctx.game = self.game
         ctx.items_handling = 0b011 # Initial inventory handled in patch; everything else remote
-        ctx.want_slot_data = True
+        ctx.want_slot_data = False
         ctx.watcher_timeout = 0.125
 
         success = await self.setup_game_controller(ctx)
