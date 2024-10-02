@@ -93,12 +93,3 @@ class TJEWorld(World):
 
         out_file_name = self.multiworld.get_out_file_name_base(self.player)
         patch.write(os.path.join(output_directory, f"{out_file_name}{patch.patch_file_ending}"))
-
-    def fill_slot_data(self) -> dict[str, Any]:
-        return {
-                # "ship_item_levels": self.ship_item_levels,
-                # "prog_keys": self.options.key_type == ElevatorKeyTypeOption.PROGRESSIVE,
-                # "key_levels": self.key_levels,
-                # "infinite_lives": self.options.game_overs == GameOverOption.DISABLE,
-                # "auto_trap_presents": self.options.auto_trap_presents.value
-        }
