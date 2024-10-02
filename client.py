@@ -7,7 +7,7 @@ from worlds._bizhawk.client import BizHawkClient
 from NetUtils import ClientStatus, NetworkItem
 
 from .ram import TJEGameController
-from .items import EDIBLE_IDS, PRESENT_IDS, INSTATRAP_IDS
+from .items import EDIBLE_IDS, PRESENT_IDS, INSTATRAP_IDS, TRAP_PRESENT_IDS
 from .locations import LOCATION_NAME_TO_ID
 
 if TYPE_CHECKING:
@@ -62,10 +62,13 @@ class TJEClient(BizHawkClient):
 
         self.ticks = 0
 
+    async def peek_rom(self, ctx: "BizHawkClientContext", address: int, size: int) -> bytes:
+        return (await bizhawk.read(ctx.bizhawk_ctx, [(address, size, "MD CART")]))[0]
+
     async def validate_rom(self, ctx: "BizHawkClientContext") -> bool:
         try:
-            rom_name = ((await bizhawk.read(ctx.bizhawk_ctx, [(0x150, 13, "MD CART")]))[0]).decode("ascii")
-            version = ((await bizhawk.read(ctx.bizhawk_ctx, [(0x18c, 2, "MD CART")]))[0]).decode("ascii")
+            rom_name = await self.peek_rom(ctx, 0x150, 13).decode("ascii")
+            version = await self.peek_rom(ctx, 0x18c, 2).decode("ascii")
         except (UnicodeDecodeError, bizhawk.RequestFailedError, bizhawk.NotConnectedError):
             return False
         if rom_name != "TOEJAM & EARL" or version != "02":
@@ -87,7 +90,8 @@ class TJEClient(BizHawkClient):
             self.game_controller.create_save_points()
 
             key_type = int.from_bytes((await bizhawk.read(ctx.bizhawk_ctx, [(0x001f0000, 1, "MD CART")]))[0])
-            auto_trap_presents = bool.from_bytes((await bizhawk.read(ctx.bizhawk_ctx, [(0x001f0001, 1, "MD CART")]))[0])
+            self.auto_trap_presents = bool.from_bytes(
+                (await bizhawk.read(ctx.bizhawk_ctx, [(0x001f0001, 1, "MD CART")]))[0])
 
             key_count = int.from_bytes((await bizhawk.read(ctx.bizhawk_ctx, [(0x001f0010, 1, "MD CART")]))[0])
             key_levels = struct.unpack(f">{key_count}B",
@@ -96,16 +100,11 @@ class TJEClient(BizHawkClient):
             ship_item_levels = struct.unpack(">10B",
                                              (await bizhawk.read(ctx.bizhawk_ctx, [(0x00097738, 10, "MD CART")]))[0])
 
-            self.game_controller.initialize_slot_data(ship_item_levels, key_levels, key_type, auto_trap_presents)
+            self.game_controller.initialize_slot_data(ship_item_levels, key_levels, key_type, self.auto_trap_presents)
 
             return True
         except (bizhawk.RequestFailedError, bizhawk.NotConnectedError):
             return False
-
-    # def on_package(self, ctx: "BizHawkClientContext", cmd: str, args: dict) -> None:
-    #     super().on_package(ctx, cmd, args)
-    #     if cmd == "Connected":
-    #         self.game_controller.handle_slot_data(args["slot_data"])
 
     async def goal_in(self, ctx: "BizHawkClientContext") -> None:
         logger.debug("Finished game!")
@@ -147,7 +146,11 @@ class TJEClient(BizHawkClient):
         # Sort items into the appropriate queues
         if num_new > 0:
             for nwi in ctx.items_received[-num_new:]:
-                if nwi.item in PRESENT_IDS: self.present_queue.add(nwi)
+                if nwi.item in PRESENT_IDS:
+                    if self.auto_trap_presents and nwi.item in TRAP_PRESENT_IDS:
+                        self.trap_queue.add(nwi)
+                    else:
+                        self.present_queue.add(nwi)
                 elif nwi.item in EDIBLE_IDS: self.edible_queue.add(nwi)
                 elif nwi.item in INSTATRAP_IDS: self.trap_queue.add(nwi)
                 else: self.misc_queue.add(nwi)
