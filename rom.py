@@ -57,7 +57,7 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
 
     patch.write_token(APTokenTypes.WRITE, 0x00097704, struct.pack(">26H", *world.seeds))
 
-    patch.write_token(APTokenTypes.WRITE, 0x00097738, struct.pack(">10B", *world.ship_piece_levels))
+    patch.write_token(APTokenTypes.WRITE, 0x00097738, struct.pack(">10B", *world.ship_item_levels))
 
     # "Who" menu: only one item / TJ or Earl only / text change
     # Menu return options: 0 for 2-player, 1 for TJ only, 2 for Earl only
@@ -181,5 +181,14 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
     if world.options.max_items != world.options.max_items.default:
         patch.write_token(APTokenTypes.WRITE, 0x00014c2f, struct.pack(">B", world.options.max_items.value))
         patch.write_token(APTokenTypes.WRITE, 0x00014c33, struct.pack(">B", world.options.max_items.value))
+
+    # Store data required by client
+
+    patch.write_token(APTokenTypes.WRITE, 0x001f0000, struct.pack(">B", world.options.key_type.value))
+    patch.write_token(APTokenTypes.WRITE, 0x001f0001, struct.pack(">B", world.options.auto_trap_presents.value))
+
+    num_key_levels = len(world.key_levels)
+    patch.write_token(APTokenTypes.WRITE, 0x001f0010, struct.pack(">B", num_key_levels))
+    patch.write_token(APTokenTypes.WRITE, 0x001f0011, struct.pack(f">{num_key_levels}B", *world.key_levels))
 
     patch.write_file("token_data.bin", patch.get_token_binary())

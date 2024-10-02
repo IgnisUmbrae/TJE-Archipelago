@@ -141,12 +141,9 @@ class TJEGameController():
 
         # Key-related
 
+        self.prog_keys = False
         self.key_levels: Optional[list[int]] = None
         self.unlocked_levels: list[int] = []
-
-        # Present-related
-
-        self.starting_presents = []
 
         # Map-related
 
@@ -273,13 +270,11 @@ class TJEGameController():
             add_save_data_points(0)
             add_save_data_points(1)
 
-    def handle_slot_data(self, slot_data : dict[str, Any]):
-        if DEBUG: print("Got slot data!")
-        self.ship_item_levels = slot_data["ship_piece_levels"]
-        self.key_levels = slot_data["key_levels"]
-        self.prog_keys = slot_data["prog_keys"]
-        self.starting_presents = slot_data["starting_presents"]
-        self.auto_trap_presents = slot_data["auto_trap_presents"]
+    def initialize_slot_data(self, ship_item_levels, key_levels, key_type, auto_trap_presents):
+        self.ship_item_levels = ship_item_levels
+        self.key_levels = key_levels
+        self.prog_keys = (key_type == 1)
+        self.auto_trap_presents = auto_trap_presents
 
     #endregion
 
@@ -602,7 +597,7 @@ class TJEGameController():
 
     def is_on_menu(self) -> bool:
         return (self.game_state == TJEGameState.MAIN_MENU or self.current_level == -1)
-    
+
     def is_ship_piece_level(self) -> bool:
         return (self.current_level in self.ship_item_levels and
                 self.current_level not in self.collected_ship_item_levels)

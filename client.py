@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 import logging
+import struct
 
 import worlds._bizhawk as bizhawk
 from worlds._bizhawk.client import BizHawkClient
@@ -75,17 +76,36 @@ class TJEClient(BizHawkClient):
         ctx.want_slot_data = True
         ctx.watcher_timeout = 0.125
 
-        char = int.from_bytes((await bizhawk.read(ctx.bizhawk_ctx, [(0x000242c5, 1, "MD CART")]))[0])
+        success = await self.setup_game_controller(ctx)
 
-        self.game_controller.add_monitors(ctx, char)
-        self.game_controller.create_save_points()
+        return success
 
-        return True
+    async def setup_game_controller(self, ctx: "BizHawkClientContext") -> bool:
+        try:
+            char = int.from_bytes((await bizhawk.read(ctx.bizhawk_ctx, [(0x000242c5, 1, "MD CART")]))[0])
+            self.game_controller.add_monitors(ctx, char)
+            self.game_controller.create_save_points()
 
-    def on_package(self, ctx: "BizHawkClientContext", cmd: str, args: dict) -> None:
-        super().on_package(ctx, cmd, args)
-        if cmd == "Connected":
-            self.game_controller.handle_slot_data(args["slot_data"])
+            key_type = int.from_bytes((await bizhawk.read(ctx.bizhawk_ctx, [(0x001f0000, 1, "MD CART")]))[0])
+            auto_trap_presents = bool.from_bytes((await bizhawk.read(ctx.bizhawk_ctx, [(0x001f0001, 1, "MD CART")]))[0])
+
+            key_count = int.from_bytes((await bizhawk.read(ctx.bizhawk_ctx, [(0x001f0010, 1, "MD CART")]))[0])
+            key_levels = struct.unpack(f">{key_count}B",
+                                       (await bizhawk.read(ctx.bizhawk_ctx, [(0x001f0011, key_count, "MD CART")]))[0])
+
+            ship_item_levels = struct.unpack(">10B",
+                                             (await bizhawk.read(ctx.bizhawk_ctx, [(0x00097738, 10, "MD CART")]))[0])
+
+            self.game_controller.initialize_slot_data(ship_item_levels, key_levels, key_type, auto_trap_presents)
+
+            return True
+        except (bizhawk.RequestFailedError, bizhawk.NotConnectedError):
+            return False
+
+    # def on_package(self, ctx: "BizHawkClientContext", cmd: str, args: dict) -> None:
+    #     super().on_package(ctx, cmd, args)
+    #     if cmd == "Connected":
+    #         self.game_controller.handle_slot_data(args["slot_data"])
 
     async def goal_in(self, ctx: "BizHawkClientContext") -> None:
         logger.debug("Finished game!")

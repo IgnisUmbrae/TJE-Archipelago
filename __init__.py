@@ -50,7 +50,7 @@ class TJEWorld(World):
             self.key_levels = get_key_levels(self.options.key_gap.value)
         else:
             self.key_levels = []
-        self.ship_piece_levels = self.generator.generate_ship_piece_levels()
+        self.ship_item_levels = self.generator.generate_ship_piece_levels()
         if self.options.upwarp_present:
             self.generator.fewer_upwarps()
 
@@ -96,10 +96,9 @@ class TJEWorld(World):
 
     def fill_slot_data(self) -> dict[str, Any]:
         return {
-                "ship_piece_levels": self.ship_piece_levels,
-                "prog_keys": self.options.key_type == ElevatorKeyTypeOption.PROGRESSIVE,
-                "key_levels": self.key_levels,
-                "starting_presents": self.starting_presents,
-                "infinite_lives": self.options.game_overs == GameOverOption.DISABLE,
-                "auto_trap_presents": self.options.auto_trap_presents.value
+                # "ship_item_levels": self.ship_item_levels,
+                # "prog_keys": self.options.key_type == ElevatorKeyTypeOption.PROGRESSIVE,
+                # "key_levels": self.key_levels,
+                # "infinite_lives": self.options.game_overs == GameOverOption.DISABLE,
+                # "auto_trap_presents": self.options.auto_trap_presents.value
         }

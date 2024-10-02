@@ -118,7 +118,7 @@ def add_floor_items(world, player,  options: TJEOptions, level_regions):
 
 def add_ship_pieces(world, player, level_regions):
     for loc_data in SHIP_PIECE_LOCATIONS:
-        if loc_data.level in world.ship_piece_levels:
+        if loc_data.level in world.ship_item_levels:
             new_loc = TJELocation(player, loc_data.name, world.location_name_to_id[loc_data.name],
                                   level_regions[loc_data.level])
             new_loc.progress_type = LocationProgressType.PRIORITY
