@@ -338,7 +338,7 @@ class WalkSpeedBoost(NamedRange):
     special_range_names = {
         "highest": 150,
         "higher": 125,
-        "normal": 100,
+        "base": 100,
         "lower": 75,
         "lowest": 50
     }
@@ -358,7 +358,7 @@ class ExtendedPresentTimers(NamedRange):
     special_range_names = {
         "highest": 150,
         "higher": 125,
-        "normal": 100,
+        "base": 100,
         "lower": 75,
         "lowest": 50
     }
