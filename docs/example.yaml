@@ -9,7 +9,11 @@ ToeJam and Earl:
   trap_presents: yes
   trap_food: yes
   trap_cupid: yes
+  trap_burp: yes
   trap_sleep: no
+  trap_earthling: no
+  trap_skates: yes
+  auto_trap_presents: no_randomizer
   starting_presents: hitops
   restrict_prog_items: no
   key_type: progressive
@@ -22,5 +26,7 @@ ToeJam and Earl:
   present_timers: higher
   walk_speed: higher
   map_rando: full_random
+  fast_loads: yes
   min_items: 12
-  max_items: 15
+  max_items: 20
+  character: toejam
