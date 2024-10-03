@@ -1,14 +1,15 @@
 import random
 import struct
 import functools
-from typing import TYPE_CHECKING, Any, Callable, Optional
+from logging import Logger
+from typing import TYPE_CHECKING, Callable, Optional
 from enum import Enum, IntEnum
 
 import worlds._bizhawk as bizhawk
 from worlds._bizhawk import ConnectionStatus
 from worlds._bizhawk.client import BizHawkClient
 
-from .constants import DEBUG, EMPTY_ITEM, COLLECTED_SHIP_ITEM, RANK_NAMES, \
+from .constants import EMPTY_ITEM, COLLECTED_SHIP_ITEM, RANK_NAMES, \
                        SPRITES_GHOST, SPRITES_WATER, SPRITES_HITOPS_JUMP, STATE_LOAD_DOWN, \
                        ELEVATOR_LOCKED, ELEVATOR_UNLOCKED, END_ELEVATOR_UNLOCKED_STATES, SAVE_DATA_POINTS, \
                        add_save_data_points, get_slot_addr, get_ram_addr
@@ -50,7 +51,7 @@ class MonitorLevel(IntEnum):
 
 class AddressMonitor():
     def __init__(self, name: str, addr_name: str, size: int, level: MonitorLevel, enable_test_fn: Callable,
-                 on_trigger_fn: Callable, parent: "TJEGameController", ctx : "BizHawkClientContext", enabled=False):
+                 on_trigger_fn: Callable, parent: "TJEGameController", ctx: "BizHawkClientContext", enabled=False):
         self.name = name
         self.parent = parent
         self.on_trigger = on_trigger_fn
@@ -63,12 +64,15 @@ class AddressMonitor():
 
         self.enable_test = enable_test_fn
         self.enabled = enabled
-        if DEBUG: print("{} monitoring {}".format(self.name, "enabled" if self.enabled else "disabled"))
+        self.log_state()
 
         self.addr_name = addr_name
         self.size = size
 
         self.set_monitor_level(level)
+
+    def log_state(self):
+        self.parent.logger.debug("%s monitoring %s", self.name, "enabled" if self.enabled else "disabled")
 
     def set_monitor_level(self, level: MonitorLevel):
         self.monitor_level = level
@@ -87,9 +91,8 @@ class AddressMonitor():
 
     def check_enabledness(self):
         new_state = self.monitor_addrs and self.enable_test()
-        if DEBUG:
-            if self.enabled != new_state:
-                print("{} monitoring {}".format(self.name, "enabled" if new_state else "disabled"))
+        if self.enabled != new_state:
+            self.log_state()
         self.enabled = new_state
         if not self.enabled:
             self.reset_data()
@@ -118,10 +121,11 @@ class TickDelay():
         if self.delay == 0: await self.callback()
 
 class TJEGameController():
-    def __init__(self, client: "BizHawkClient"):
+    def __init__(self, client: "BizHawkClient", logger: Logger):
+        self.logger = logger
         self.client = client
 
-        if DEBUG: print("Resetting game…")
+        self.logger.debug("Resetting game…")
 
         self.save_data: dict[str, bytes] | None = None
 
@@ -281,7 +285,7 @@ class TJEGameController():
     #region Saving and loading functions
 
     async def load_save_data(self, ctx: "BizHawkClientContext") -> None:
-        if DEBUG: print("Loading save data…")
+        self.logger.debug("Loading save data…")
         if self.save_data is not None:
             try:
                 await bizhawk.lock(ctx.bizhawk_ctx)
@@ -302,13 +306,13 @@ class TJEGameController():
 
                 await bizhawk.unlock(ctx.bizhawk_ctx)
             except bizhawk.RequestFailedError:
-                if DEBUG: print("Failed to load save data!")
+                self.logger.debug("Failed to load save data!")
             finally:
                 self.load_delay = None
                 self.game_state = TJEGameState.NORMAL
 
     async def update_save_data(self, ctx: "BizHawkClientContext") -> None:
-        if DEBUG: print("Updating save data…")
+        self.logger.debug("Updating save data…")
         try:
             await bizhawk.display_message(ctx.bizhawk_ctx, "AP CLIENT: Updating save data")
             await bizhawk.lock(ctx.bizhawk_ctx)
@@ -316,7 +320,7 @@ class TJEGameController():
             for point in SAVE_DATA_POINTS:
                 self.save_data[point.name] = await self.peek_ram(ctx, point.address, point.size)
         except bizhawk.RequestFailedError:
-            if DEBUG: print("Failed to update save data!")
+            self.logger.debug("Failed to update save data!")
         finally:
             await bizhawk.unlock(ctx.bizhawk_ctx)
 
@@ -398,7 +402,7 @@ class TJEGameController():
 
     async def receive_trap(self, ctx: "BizHawkClientContext", trap_id: int) -> bool:
         if self.is_playing:
-            if DEBUG: print(f"Activating {ITEM_ID_TO_NAME[trap_id]}")
+            self.logger.debug("Activating %s", ITEM_ID_TO_NAME[trap_id])
             match ITEM_ID_TO_NAME[trap_id]:
                 case "Cupid Trap":
                     return await self.trap_cupid(ctx)
@@ -458,7 +462,7 @@ class TJEGameController():
     #region Spawning functions (also receipt of ethereal items)
 
     async def receive_map_reveal(self, ctx: "BizHawkClientContext") -> bool:
-        if DEBUG: print("Got a map reveal!")
+        self.logger.debug("Got a map reveal!")
         if self.num_map_reveals >= 5:
             return True
 
@@ -474,8 +478,7 @@ class TJEGameController():
         return True
 
     async def receive_key(self, ctx: "BizHawkClientContext", key_id: int) -> bool:
-        if DEBUG:
-            print("Got a key!")
+        self.logger.debug("Got a key!")
         if self.prog_keys:
             num_keys = len(self.unlocked_levels)
             try:
@@ -486,7 +489,7 @@ class TJEGameController():
             level = KEY_IDS.index(key_id) + 2
 
         if level is not None:
-            if DEBUG: print(f"Key unlocks level {level}")
+            self.logger.debug(f"Key unlocks level {level}")
             self.unlocked_levels.append(level)
             if self.current_level == level:
                 await self.recheck_elevator_unlock(ctx)
@@ -534,7 +537,7 @@ class TJEGameController():
 
     async def identify_present(self, ctx: "BizHawkClientContext", present_id: int) -> bool:
         present = ITEM_ID_TO_CODE[present_id]
-        if DEBUG: print(f"Identifying present {present}")
+        self.logger.debug(f"Identifying present {present}")
         await self.poke_ram(ctx, get_slot_addr("PRESENTS_IDENTIFIED", present, self.char), b"\x01")
         return True
 
@@ -542,7 +545,7 @@ class TJEGameController():
         piece = SHIP_PIECE_IDS.index(ship_piece_id)
         await self.poke_ram(ctx, get_slot_addr("COLLECTED_SHIP_PIECES", piece, self.char), COLLECTED_SHIP_ITEM)
         self.num_ship_pieces_owned += 1
-        if DEBUG: print(f"Currently have {self.num_ship_pieces_owned} ship pieces")
+        self.logger.debug("Currently have %i ship pieces", self.num_ship_pieces_owned)
         if self.current_level == 24:
             await self.recheck_elevator_unlock(ctx)
         return True
@@ -612,11 +615,11 @@ class TJEGameController():
         new_data, old_data = int.from_bytes(new_data), int.from_bytes(old_data)
         if new_data & 0x80:
             if not self.paused and not self.game_state == TJEGameState.IN_INVENTORY:#not previous_inputs & 0x80:
-                if DEBUG: print("Game paused; saving")
+                self.logger.debug("Game paused")
                 await self.update_save_data(ctx)
                 self.paused = True
         elif old_data & 0x80:
-            if DEBUG: print("Game unpaused")
+            self.logger.debug("Game unpaused")
             self.paused = False
 
     async def handle_game_over_flag(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
@@ -628,9 +631,9 @@ class TJEGameController():
         # Special handling for menu, aka "level -1"
         self.current_level = int.from_bytes(new_data) if toejam_state != b"\x00" else -1
         if self.current_level == -1:
-            if DEBUG: print("Reboot detected; force unpausing")
+            self.logger.debug("Reboot detected; force unpausing")
             self.paused = False
-        if DEBUG: print(f"Level changed to {self.current_level}")
+        self.logger.debug("Level changed to %i", self.current_level)
 
         if self.current_level == 1 and self.game_state == TJEGameState.MAIN_MENU and self.save_data is not None:
             self.load_delay = TickDelay(functools.partial(self.load_save_data, ctx), 8)
@@ -650,7 +653,7 @@ class TJEGameController():
         triggered_levels = [old_data[i] for i in range(10) if new_data[i] != old_data[i]]
         for level in triggered_levels:
             if level in self.ship_item_levels:
-                if DEBUG: print(f"Triggering ship piece on level {level}")
+                self.logger.debug("Triggering ship piece on level %i", level)
                 success = await self.client.trigger_location(ctx, SHIP_PIECE_LOC_TEMPLATE.format(level))
                 if success:
                     self.collected_ship_item_levels.append(self.current_level)
@@ -667,12 +670,12 @@ class TJEGameController():
         # Should be locked, currently unlocked
         if not should_be_unlocked and new_data in END_ELEVATOR_UNLOCKED_STATES:
             lock = True
-            if DEBUG: print(f"Locking level {self.current_level}")
+            self.logger.debug("Locking level %i", self.current_level)
         # Should be unlocked, currently locked, currently not in elevator (prevents being trolled by door)
         elif (should_be_unlocked and new_data not in END_ELEVATOR_UNLOCKED_STATES
                 and self.game_state not in [TJEGameState.IN_ELEVATOR]):
             lock = False
-            if DEBUG: print(f"Unlocking level {self.current_level}")
+            self.logger.debug("Unlocking level %i", self.current_level)
         if lock is not None:
             await self.poke_ram(ctx, get_ram_addr("END_ELEVATOR_STATE", self.char),
                                 ELEVATOR_LOCKED if lock else ELEVATOR_UNLOCKED)
@@ -734,8 +737,7 @@ class TJEGameController():
             except (bizhawk.RequestFailedError, bizhawk.NotConnectedError):
                 pass
 
-        if DEBUG:
-            if old_state != self.game_state:
-                print(f"Game state changed to {self.game_state}")
+        if old_state != self.game_state:
+            self.logger.debug("Game state changed to %s", self.game_state.name)
 
     #endregion

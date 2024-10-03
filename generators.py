@@ -105,7 +105,8 @@ class TJEGenerator():
     #     return self.random.choices(PADDING_LIST, weights=PADDING_WEIGHTS, k=number)
 
     def generate_items_for_level(self, level : int, singleplayer : bool = True) -> list[int]:
-        if level <= 0: return []
+        if level <= 0:
+            return []
         num_items = num_items_on_level(level, singleplayer=singleplayer)
         return [self.get_random_item(level_one=(level == 1)) for _ in range(num_items)]
 

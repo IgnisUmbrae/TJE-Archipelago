@@ -13,8 +13,6 @@ from .locations import LOCATION_NAME_TO_ID
 if TYPE_CHECKING:
     from worlds._bizhawk.context import BizHawkClientContext
 
-logger = logging.getLogger("Client")
-
 class SpawnQueue():
     def __init__(self, cooldown : int = 5):
         self.queue : list[NetworkItem] = []
@@ -52,8 +50,11 @@ class TJEClient(BizHawkClient):
     def __init__(self):
         super().__init__()
 
-        self.game_controller = TJEGameController(self)
+        self.logger = logging.getLogger("Client")
+
+        self.game_controller = TJEGameController(self, self.logger)
         self.num_items_received = 0
+        self.auto_trap_presents = False
 
         self.edible_queue = SpawnQueue(cooldown=2)
         self.present_queue = SpawnQueue(cooldown=1)
@@ -72,10 +73,10 @@ class TJEClient(BizHawkClient):
         except (UnicodeDecodeError, bizhawk.RequestFailedError, bizhawk.NotConnectedError):
             return False
         if rom_name != "TOEJAM & EARL":
-            logger.error("Selected ROM is not a ToeJam & Earl ROM")
+            self.logger.error("Selected ROM is not a ToeJam & Earl ROM")
             return False
         elif version != "02":
-            logger.error("Selected ToeJam & Earl ROM appears to be REV00, not REV02")
+            self.logger.error("Selected ToeJam & Earl ROM appears to be REV00, not REV02")
             return False
 
         ctx.game = self.game
@@ -105,11 +106,11 @@ class TJEClient(BizHawkClient):
 
             return True
         except (bizhawk.RequestFailedError, bizhawk.NotConnectedError):
-            logger.error("Failed to initialize game controller")
+            self.logger.error("Failed to initialize game controller")
             return False
 
     async def goal_in(self, ctx: "BizHawkClientContext") -> None:
-        logger.debug("Finished game!")
+        self.logger.debug("Finished game!")
         await ctx.send_msgs([{
             "cmd": "StatusUpdate",
             "status": ClientStatus.CLIENT_GOAL
@@ -128,7 +129,7 @@ class TJEClient(BizHawkClient):
         except KeyError:
             return False
 
-        logger.debug("Triggering location: %s", name)
+        self.logger.debug("Triggering location: %s", name)
         await ctx.send_msgs([{
             "cmd": "LocationChecks",
             "locations": [loc_id]
@@ -153,9 +154,12 @@ class TJEClient(BizHawkClient):
                         self.trap_queue.add(nwi)
                     else:
                         self.present_queue.add(nwi)
-                elif nwi.item in EDIBLE_IDS: self.edible_queue.add(nwi)
-                elif nwi.item in INSTATRAP_IDS: self.trap_queue.add(nwi)
-                else: self.misc_queue.add(nwi)
+                elif nwi.item in EDIBLE_IDS:
+                    self.edible_queue.add(nwi)
+                elif nwi.item in INSTATRAP_IDS:
+                    self.trap_queue.add(nwi)
+                else:
+                    self.misc_queue.add(nwi)
 
             self.num_items_received = len(ctx.items_received)
 

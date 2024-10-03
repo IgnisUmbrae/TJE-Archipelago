@@ -3,8 +3,6 @@ from typing import NamedTuple
 
 BASE_TJE_ID = 25101991
 
-DEBUG = True
-
 #region Sound effects
 
 PCM_SFX_ADDRS = [0x00044d8a, 0x000491c8, 0x0004c276, 0x0004d75a, 0x0004dfa0, 0x0004f79a, 0x00051472, 0x00053920,
