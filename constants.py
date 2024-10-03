@@ -1,4 +1,4 @@
-from enum import IntEnum
+from enum import Enum, IntEnum
 from typing import NamedTuple
 
 BASE_TJE_ID = 25101991
@@ -76,6 +76,25 @@ SPRITES_HITOPS_JUMP = [0x70, 0x71, 0x72, 0x73]
 SPRITES_WATER = [0x03, 0x07, 0x22, 0x23, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F,
                        0x30, 0x31, 0x32, 0x33, 0x48, 0x49, 0x4A, 0x4B, 0x4D, 0x64, 0x65, 0x66, 0x67, 0x77, 0x78]
 SPRITES_GHOST = [0x05, 0x06]
+
+class TJEGameState(Enum):
+    WAITING_FOR_LOAD = -1
+    MAIN_MENU = 0
+    NORMAL = 1
+    IN_INVENTORY = 2
+    IN_AIR = 3
+    IN_WATER = 4
+    IN_ELEVATOR = 5
+    ARRIVED = 6
+    TRAVELLING_DOWN = 7
+    UNFALLING = 8
+    GHOST = 9
+
+LOADING_STATES = [TJEGameState.IN_ELEVATOR, TJEGameState.TRAVELLING_DOWN]
+LOADING_STATES_STRICT = LOADING_STATES + [TJEGameState.UNFALLING, TJEGameState.IN_INVENTORY]
+
+SPAWN_BLOCKING_STATES = LOADING_STATES_STRICT + [TJEGameState.IN_AIR, TJEGameState.IN_WATER,
+                                          TJEGameState.GHOST, TJEGameState.MAIN_MENU, TJEGameState.ARRIVED]
 
 #endregion
 
