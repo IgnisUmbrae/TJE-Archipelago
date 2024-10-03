@@ -17,7 +17,7 @@ Additions over the base game include:
 
 - New sprites for AP items, ship pieces and hints
 - Configurable starting presents, game over handling, and more
-- Progress is saved when paused, when travelling between levels (both up and down), and on game over
+- Progress is saved (in the client) when paused, when travelling between levels, and on game over
 - Customize level randomization, numbers of items, and more
 - New items:
   - Elevator keys, which are required to unlock elevators
