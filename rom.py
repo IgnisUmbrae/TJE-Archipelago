@@ -10,9 +10,7 @@ from worlds.Files import APProcedurePatch, APTokenMixin, APTokenTypes
 
 from .constants import EMPTY_PRESENT, INITIAL_PRESENT_ADDRS, BASE_LEVEL_TYPES, PCM_SFX_ADDRS, PCM_SFX_ADDRS_MUSIC, \
                        PCM_SFX_USAGE_ADDRS, PCM_SFX_USAGE_ADDRS_MUSIC, PSG_SFX, PSG_SFX_USAGE_ADDRS
-from .items import EDIBLE_IDS, PRESENT_IDS, ITEM_ID_TO_CODE
-from .generators import item_totals
-from .locations import FLOOR_ITEM_LOC_TEMPLATE
+from .items import ITEM_ID_TO_CODE
 from .options import CharacterOption, SoundRandoOption, StartingPresentOption, GameOverOption, MapRandomizationOption
 
 if TYPE_CHECKING:
