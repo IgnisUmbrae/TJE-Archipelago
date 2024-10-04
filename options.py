@@ -68,9 +68,10 @@ class FastLoads(Toggle):
 
 class AutoOpenTrapPresents(Choice):
     """
-    Whether trap presents should automatically open when received.
+    Whether trap presents should automatically open when received from other players.
+    Presents collected locally will not auto-open.
     Recommended to reduce the burden of inventory management.
-    Auto-opening randomizers may cause the game to softlock in certain circumstances; be prepared to rewind.
+    Auto-opening randomizers may cause the game to softlock in certain circumstances so be prepared to rewind.
     """
 
     display_name = "Automatically Open Trap Presents"
