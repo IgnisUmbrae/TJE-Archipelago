@@ -150,10 +150,10 @@ class TJEClient(BizHawkClient):
         if num_new > 0:
             for nwi in ctx.items_received[-num_new:]:
                 if nwi.item in PRESENT_IDS:
-                    if self.auto_trap_presents and nwi.item in TRAP_PRESENT_IDS:
-                        self.trap_queue.add(nwi)
-                    else:
-                        if nwi.player != ctx.slot: # is remote item; in future: mark as collected, not ignore
+                    if nwi.player != ctx.slot: # is remote item; in future: mark as collected, not ignore
+                        if self.auto_trap_presents and nwi.item in TRAP_PRESENT_IDS:
+                            self.trap_queue.add(nwi)
+                        else:
                             self.present_queue.add(nwi)
                 elif nwi.item in EDIBLE_IDS:
                     if nwi.player != ctx.slot:
