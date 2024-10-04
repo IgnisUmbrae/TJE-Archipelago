@@ -6,9 +6,10 @@ from BaseClasses import CollectionState, ItemClassification
 from worlds.AutoWorld import World, WebWorld
 
 from .client import TJEClient # required to register with BizHawkClient
-from .generators import TJEGenerator, get_key_levels
-from .items import TJEItem, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, create_items, create_starting_presents
-from .locations import LOCATION_NAME_TO_ID
+from .generators import TJEGenerator, get_key_levels, item_totals
+from .items import EDIBLE_IDS, ITEM_ID_TO_CODE, PRESENT_IDS, TJEItem, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, \
+                   create_items, create_starting_presents
+from .locations import FLOOR_ITEM_LOC_TEMPLATE, LOCATION_NAME_TO_ID
 from .options import TJEOptions
 from .regions import create_regions
 from .rom import TJEProcedurePatch, write_tokens
@@ -87,9 +88,32 @@ class TJEWorld(World):
         )
 
     def generate_output(self, output_directory: str):
+        self.create_patchable_item_list()
+        print(self.patchable_item_list)
         patch = TJEProcedurePatch(player=self.player, player_name=self.multiworld.player_name[self.player])
         patch.write_file("base_patch.bsdiff4", pkgutil.get_data(__name__, "data/base_patch.bsdiff4"))
         write_tokens(self, patch)
 
         out_file_name = self.multiworld.get_out_file_name_base(self.player)
         patch.write(os.path.join(output_directory, f"{out_file_name}{patch.patch_file_ending}"))
+
+    def create_patchable_item_list(self):
+        items_per_level = item_totals(True, self.options.min_items.value, self.options.max_items.value)
+        self.patchable_item_list = [0xFF]*28
+        for level in range(1, 26):
+            num = items_per_level[level]
+            for i in range(num):
+                item = self.get_location(FLOOR_ITEM_LOC_TEMPLATE.format(level, i+1)).item
+                if item is None:
+                    item_hex = 0xFF
+                elif item.code in PRESENT_IDS+EDIBLE_IDS:
+                    item_hex = ITEM_ID_TO_CODE[item.code]
+                else:
+                    if item.classification in \
+                        (ItemClassification.progression, ItemClassification.progression_skip_balancing):
+                        item_hex = 0x1D
+                    else:
+                        item_hex = 0x1C
+                self.patchable_item_list.append(item_hex)
+            self.patchable_item_list.extend([0xFF]*(28 - num))
+        assert(len(self.patchable_item_list) == 26*28)

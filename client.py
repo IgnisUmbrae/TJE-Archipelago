@@ -61,8 +61,6 @@ class TJEClient(BizHawkClient):
         self.trap_queue = SpawnQueue(cooldown=1)
         self.misc_queue = SpawnQueue(cooldown=1)
 
-        self.ticks = 0
-
     async def peek_rom(self, ctx: "BizHawkClientContext", address: int, size: int) -> bytes:
         return (await bizhawk.read(ctx.bizhawk_ctx, [(address, size, "MD CART")]))[0]
 
@@ -175,7 +173,6 @@ class TJEClient(BizHawkClient):
                 queue.mark_spawned(oldest)
 
     async def game_watcher(self, ctx: "BizHawkClientContext") -> None:
-        self.ticks += 1
         await self.game_controller.tick(ctx)
 
         if not ctx.finished_game:

@@ -322,7 +322,7 @@ class TJEGameController():
     def one_indices(self, bitfield: int, total_bits: int) -> list[int]:
         return [(total_bits-1)-i for i in range(bitfield.bit_length()) if bitfield & (1 << i)]
 
-    async def get_empty_inv_slot(self, ctx: "BizHawkClientContext") -> Optional[int]:    
+    async def get_empty_inv_slot(self, ctx: "BizHawkClientContext") -> Optional[int]:
         current_inventory = await self.peek_ram(ctx, get_ram_addr("INVENTORY", self.char), 16)
         if current_inventory:
             split_inventory = [current_inventory[i:i+1] for i in range(len(current_inventory))]
@@ -383,21 +383,22 @@ class TJEGameController():
             logger.debug("Attempting to activate %s", ITEM_ID_TO_NAME[trap_id])
             match ITEM_ID_TO_NAME[trap_id]:
                 case "Burp Trap":
-                    return await self.trap_burp(ctx)
+                    success = await self.trap_burp(ctx)
                 case "Cupid Trap":
-                    return await self.trap_cupid(ctx)
+                    success = await self.trap_cupid(ctx)
                 case "Sleep Trap":
-                    return await self.trap_present(ctx, b"\x18")
+                    success = await self.trap_present(ctx, b"\x18")
                 case "Rocket Skates Trap":
-                    return await self.trap_present(ctx, b"\x05")
+                    success = await self.trap_present(ctx, b"\x05")
                 case "Earthling Trap":
-                    return await self.trap_present(ctx, b"\x17")
+                    success = await self.trap_present(ctx, b"\x17")
                 case "Randomizer Trap":
-                    return await self.trap_present(ctx, b"\x12")
+                    success = await self.trap_present(ctx, b"\x12")
                 case _:
-                    pass
-        else:
-            return False
+                    logger.error("Attempted to activate a non-existent trap")
+                    success = True
+            return success
+        return False
 
     async def is_present_trap_waiting(self, ctx: "BizHawkClientContext") -> bool:
         return (await self.peek_ram(ctx, get_ram_addr("AP_AUTO_PRESENT", self.char), 1)) != b"\xFF"

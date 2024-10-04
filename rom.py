@@ -215,21 +215,6 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
 
     # Store list of item types
 
-    items_per_level = item_totals(True, world.options.min_items.value, world.options.max_items.value)
-    data = [0xFF]*28
-    for level in range(1, 26):
-        num = items_per_level[level]
-        for i in range(num):
-            item = world.get_location(FLOOR_ITEM_LOC_TEMPLATE.format(level, i+1)).item
-            if item is None:
-                item_hex = 0xFF
-            elif item.code in PRESENT_IDS+EDIBLE_IDS:
-                item_hex = ITEM_ID_TO_CODE[item.code]
-            else:
-                item_hex = 0x1B # Special AP item code
-            data.append(item_hex)
-        data.extend([0xFF]*(28 - num))
-    assert(len(data) == 26*28)
-    patch.write_token(APTokenTypes.WRITE, 0x001a0000, struct.pack(f">{26*28}B", *data))
+    patch.write_token(APTokenTypes.WRITE, 0x001a0000, struct.pack(f">{26*28}B", *world.patchable_item_list))
 
     patch.write_file("token_data.bin", patch.get_token_binary())
