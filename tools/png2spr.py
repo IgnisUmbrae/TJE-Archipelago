@@ -1,7 +1,8 @@
-from PIL import Image
-from PIL.ImageColor import getrgb as rgb
 import sys
 from pathlib import Path
+
+from PIL import Image
+from PIL.ImageColor import getrgb as rgb
 
 type Palette = dict[int, tuple[int]]
 
