@@ -7,7 +7,7 @@ from worlds.AutoWorld import World, WebWorld
 
 from .client import TJEClient # required to register with BizHawkClient
 from .generators import TJEGenerator, get_key_levels, item_totals
-from .items import EDIBLE_IDS, ITEM_ID_TO_CODE, PRESENT_IDS, TJEItem, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, \
+from .items import EDIBLE_IDS, ITEM_ID_TO_CODE, KEY_IDS, PRESENT_IDS, TJEItem, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, \
                    create_items, create_starting_presents
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, LOCATION_NAME_TO_ID
 from .options import TJEOptions
@@ -89,7 +89,6 @@ class TJEWorld(World):
 
     def generate_output(self, output_directory: str):
         self.create_patchable_item_list()
-        print(self.patchable_item_list)
         patch = TJEProcedurePatch(player=self.player, player_name=self.multiworld.player_name[self.player])
         patch.write_file("base_patch.bsdiff4", pkgutil.get_data(__name__, "data/base_patch.bsdiff4"))
         write_tokens(self, patch)
@@ -108,6 +107,8 @@ class TJEWorld(World):
                     item_hex = 0xFF
                 elif item.code in PRESENT_IDS+EDIBLE_IDS:
                     item_hex = ITEM_ID_TO_CODE[item.code]
+                elif item.code in KEY_IDS:
+                    item_hex = 0x1E
                 else:
                     if item.classification in \
                         (ItemClassification.progression, ItemClassification.progression_skip_balancing):
