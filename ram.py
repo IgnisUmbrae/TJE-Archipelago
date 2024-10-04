@@ -387,13 +387,13 @@ class TJEGameController():
                 case "Cupid Trap":
                     return await self.trap_cupid(ctx)
                 case "Sleep Trap":
-                    return await self.trap_sleep(ctx)
+                    return await self.trap_present(ctx, b"\x18")
                 case "Rocket Skates Trap":
-                    return await self.trap_skates(ctx)
+                    return await self.trap_present(ctx, b"\x05")
                 case "Earthling Trap":
-                    return await self.trap_earthling(ctx)
+                    return await self.trap_present(ctx, b"\x17")
                 case "Randomizer Trap":
-                    return await self.trap_randomizer(ctx)
+                    return await self.trap_present(ctx, b"\x12")
                 case _:
                     pass
         else:
@@ -410,39 +410,12 @@ class TJEGameController():
         return (await self.poke_ram(ctx, get_ram_addr("BURP_TIMER", self.char), b"\x10") and
                 await self.poke_ram(ctx, get_ram_addr("BURPS_LEFT", self.char), num.to_bytes(1)))
 
-    async def trap_skates(self, ctx: "BizHawkClientContext") -> bool:
+    async def trap_present(self, ctx: "BizHawkClientContext", present_code: bytes) -> bool:
         if await self.is_present_trap_waiting(ctx):
             return False
         await bizhawk.lock(ctx.bizhawk_ctx)
         success = (await self.poke_ram(ctx, get_ram_addr("AP_AUTO_NO_POINTS", self.char), b"\x01") and
-                   await self.poke_ram(ctx, get_ram_addr("AP_AUTO_PRESENT", self.char), b"\x05"))
-        await bizhawk.unlock(ctx.bizhawk_ctx)
-        return success
-
-    async def trap_earthling(self, ctx: "BizHawkClientContext") -> bool:
-        if await self.is_present_trap_waiting(ctx):
-            return False
-        await bizhawk.lock(ctx.bizhawk_ctx)
-        success = (await self.poke_ram(ctx, get_ram_addr("AP_AUTO_NO_POINTS", self.char), b"\x01") and
-                   await self.poke_ram(ctx, get_ram_addr("AP_AUTO_PRESENT", self.char), b"\x17"))
-        await bizhawk.unlock(ctx.bizhawk_ctx)
-        return success
-
-    async def trap_sleep(self, ctx: "BizHawkClientContext") -> bool:
-        if await self.is_present_trap_waiting(ctx):
-            return False
-        await bizhawk.lock(ctx.bizhawk_ctx)
-        success = (await self.poke_ram(ctx, get_ram_addr("AP_AUTO_NO_POINTS", self.char), b"\x01") and
-                   await self.poke_ram(ctx, get_ram_addr("AP_AUTO_PRESENT", self.char), b"\x18"))
-        await bizhawk.unlock(ctx.bizhawk_ctx)
-        return success
-
-    async def trap_randomizer(self, ctx: "BizHawkClientContext") -> bool:
-        if await self.is_present_trap_waiting(ctx):
-            return False
-        await bizhawk.lock(ctx.bizhawk_ctx)
-        success = (await self.poke_ram(ctx, get_ram_addr("AP_AUTO_NO_POINTS", self.char), b"\x01") and
-                   await self.poke_ram(ctx, get_ram_addr("AP_AUTO_PRESENT", self.char), b"\x12"))
+                   await self.poke_ram(ctx, get_ram_addr("AP_AUTO_PRESENT", self.char), present_code))
         await bizhawk.unlock(ctx.bizhawk_ctx)
         return success
 
