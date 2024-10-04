@@ -80,7 +80,7 @@ class TJEClient(BizHawkClient):
             return False
 
         ctx.game = self.game
-        ctx.items_handling = 0b011 # Initial inventory handled in patch; everything else remote
+        ctx.items_handling = 0b001 # Remote items only; everything else local
         ctx.want_slot_data = False
         ctx.watcher_timeout = 0.125
 

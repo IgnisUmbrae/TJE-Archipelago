@@ -9,7 +9,7 @@ from .client import TJEClient # required to register with BizHawkClient
 from .generators import TJEGenerator, get_key_levels
 from .items import TJEItem, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, create_items, create_starting_presents
 from .locations import LOCATION_NAME_TO_ID
-from .options import GameOverOption, ElevatorKeyTypeOption, TJEOptions
+from .options import TJEOptions
 from .regions import create_regions
 from .rom import TJEProcedurePatch, write_tokens
 
