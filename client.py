@@ -80,7 +80,7 @@ class TJEClient(BizHawkClient):
             return False
 
         ctx.game = self.game
-        ctx.items_handling = 0b001 # Remote items only; everything else local
+        ctx.items_handling = 0b011 # Initial inventory handled locally; everything else remote
         ctx.want_slot_data = False
         ctx.watcher_timeout = 0.125
 
@@ -153,9 +153,11 @@ class TJEClient(BizHawkClient):
                     if self.auto_trap_presents and nwi.item in TRAP_PRESENT_IDS:
                         self.trap_queue.add(nwi)
                     else:
-                        self.present_queue.add(nwi)
+                        if nwi.player != ctx.slot: # is remote item; in future: mark as collected, not ignore
+                            self.present_queue.add(nwi)
                 elif nwi.item in EDIBLE_IDS:
-                    self.edible_queue.add(nwi)
+                    if nwi.player != ctx.slot:
+                        self.edible_queue.add(nwi)
                 elif nwi.item in INSTATRAP_IDS:
                     self.trap_queue.add(nwi)
                 else:
