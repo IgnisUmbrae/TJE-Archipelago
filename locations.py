@@ -48,3 +48,8 @@ LOCATION_NAME_TO_ID : dict[str, int] = {
     loc.name: id
     for id, loc in enumerate(MASTER_LOCATION_LIST, BASE_TJE_ID)
 }
+
+LOCATION_ID_TO_NAME : dict[int, str] = {
+    id: name
+    for name, id in LOCATION_NAME_TO_ID.items()
+}

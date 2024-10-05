@@ -7,7 +7,7 @@ from worlds.AutoWorld import World, WebWorld
 
 from .client import TJEClient # required to register with BizHawkClient
 from .generators import TJEGenerator, get_key_levels, item_totals
-from .items import EDIBLE_IDS, ITEM_ID_TO_CODE, KEY_IDS, PRESENT_IDS, TJEItem, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, \
+from .items import EDIBLE_IDS, ITEM_ID_TO_CODE, ITEM_ID_TO_NAME, KEY_IDS, PRESENT_IDS, TJEItem, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, \
                    create_items, create_starting_presents
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, LOCATION_NAME_TO_ID
 from .options import TJEOptions
@@ -102,13 +102,13 @@ class TJEWorld(World):
         for level in range(1, 26):
             num = items_per_level[level]
             for i in range(num):
-                item = self.get_location(FLOOR_ITEM_LOC_TEMPLATE.format(level, i+1)).item
-                if item is None:
+                item_id = self.get_location(FLOOR_ITEM_LOC_TEMPLATE.format(level, i+1)).item.code
+                if item_id is None:
                     item_hex = 0xFF
-                elif item in ITEM_ID_TO_CODE:
-                    item_hex = ITEM_ID_TO_CODE[item]
+                elif item_id in ITEM_ID_TO_CODE:
+                    item_hex = ITEM_ID_TO_CODE[item_id]
                 else:
-                    if item.classification in \
+                    if item_id.classification in \
                         (ItemClassification.progression, ItemClassification.progression_skip_balancing):
                         item_hex = 0x1D # Progression AP item
                     else:

@@ -50,8 +50,10 @@ class AddressMonitor():
 
         self.set_monitor_level(level)
 
-    def log_state(self):
-        logger.debug("%s monitoring %s", self.name, "enabled" if self.enabled else "disabled")
+    def log_state(self, state=None):
+        if not state:
+            state = self.enabled
+        logger.debug("%s monitoring %s", self.name, "enabled" if state else "disabled")
 
     def set_monitor_level(self, level: MonitorLevel):
         self.monitor_level = level
@@ -71,7 +73,7 @@ class AddressMonitor():
     def check_enabledness(self):
         new_state = self.monitor_addrs and self.enable_test()
         if self.enabled != new_state:
-            self.log_state()
+            self.log_state(new_state)
         self.enabled = new_state
         if not self.enabled:
             self.reset_data()

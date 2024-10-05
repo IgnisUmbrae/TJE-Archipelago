@@ -8,7 +8,7 @@ from NetUtils import ClientStatus, NetworkItem
 
 from .ram import TJEGameController
 from .items import EDIBLE_IDS, ITEM_ID_TO_NAME, PRESENT_IDS, INSTATRAP_IDS, TRAP_PRESENT_IDS
-from .locations import LOCATION_NAME_TO_ID
+from .locations import LOCATION_ID_TO_NAME, LOCATION_NAME_TO_ID
 
 if TYPE_CHECKING:
     from worlds._bizhawk.context import BizHawkClientContext
@@ -142,20 +142,29 @@ class TJEClient(BizHawkClient):
         await self.handle_queue(ctx, self.misc_queue)
         await self.handle_queue(ctx, self.trap_queue)
 
+    # Determines whether an item should be spawned by the client or left to the game's own code to award
+    def spawn_as_local(self, ctx: "BizHawkClientContext", nwi: NetworkItem) -> bool:
+        is_remote = (nwi.player != ctx.slot)
+        loc_name = LOCATION_ID_TO_NAME[nwi.location]
+        print(loc_name)
+        return (not is_remote and ("Promoted" in loc_name or "Ship Piece" in loc_name))
+
     async def handle_new_items(self, ctx: "BizHawkClientContext") -> None:
         num_new = len(ctx.items_received) - self.num_items_received
         # Sort items into the appropriate queues
         if num_new > 0:
+            logger.debug("Received %i new items", num_new)
             for nwi in ctx.items_received[-num_new:]:
+                local_spawn = self.spawn_as_local(ctx, nwi)
                 if nwi.item in PRESENT_IDS:
-                    if nwi.player != ctx.slot: # is remote item; in future: mark as collected, not ignore
+                    if local_spawn:
                         if (self.auto_trap_presents > 0 and nwi.item in TRAP_PRESENT_IDS and
                             not (self.auto_trap_presents == 1 and ITEM_ID_TO_NAME[nwi.item] == "Randomizer")):
                             self.trap_queue.add(nwi)
                         else:
                             self.present_queue.add(nwi)
                 elif nwi.item in EDIBLE_IDS:
-                    if nwi.player != ctx.slot:
+                    if local_spawn:
                         self.edible_queue.add(nwi)
                 elif nwi.item in INSTATRAP_IDS:
                     self.trap_queue.add(nwi)
@@ -168,6 +177,7 @@ class TJEClient(BizHawkClient):
         queue.tick()
         if queue.can_spawn():
             oldest = queue.oldest()
+            logger.debug("Sending item: %s", ITEM_ID_TO_NAME[oldest.item])
             success = await self.game_controller.receive_item(ctx, oldest.item)
             if success:
                 queue.mark_spawned(oldest)
