@@ -94,43 +94,43 @@ BASE_ITEM_LIST: list[TJEItemData] = [
 ]
 
 ELEVATOR_KEY_ITEMS : list[TJEItemData] = [
-    TJEItemData(None, "Level 2 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(None, "Level 3 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(None, "Level 4 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(None, "Level 5 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(None, "Level 6 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(None, "Level 7 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(None, "Level 8 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(None, "Level 9 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(None, "Level 10 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(None, "Level 11 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(None, "Level 12 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(None, "Level 13 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(None, "Level 14 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(None, "Level 15 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(None, "Level 16 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(None, "Level 17 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(None, "Level 18 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(None, "Level 19 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(None, "Level 20 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(None, "Level 21 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(None, "Level 22 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(None, "Level 23 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(None, "Level 24 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(None, "Progressive Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0)
+    TJEItemData(0x1D, "Level 2 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
+    TJEItemData(0x1D, "Level 3 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
+    TJEItemData(0x1D, "Level 4 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
+    TJEItemData(0x1D, "Level 5 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
+    TJEItemData(0x1D, "Level 6 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
+    TJEItemData(0x1D, "Level 7 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
+    TJEItemData(0x1D, "Level 8 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
+    TJEItemData(0x1D, "Level 9 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
+    TJEItemData(0x1D, "Level 10 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
+    TJEItemData(0x1D, "Level 11 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
+    TJEItemData(0x1D, "Level 12 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
+    TJEItemData(0x1D, "Level 13 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
+    TJEItemData(0x1D, "Level 14 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
+    TJEItemData(0x1D, "Level 15 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
+    TJEItemData(0x1D, "Level 16 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
+    TJEItemData(0x1D, "Level 17 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
+    TJEItemData(0x1D, "Level 18 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
+    TJEItemData(0x1D, "Level 19 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
+    TJEItemData(0x1D, "Level 20 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
+    TJEItemData(0x1D, "Level 21 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
+    TJEItemData(0x1D, "Level 22 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
+    TJEItemData(0x1D, "Level 23 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
+    TJEItemData(0x1D, "Level 24 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
+    TJEItemData(0x1D, "Progressive Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0)
 ]
 
 INSTATRAP_ITEMS : list[TJEItemData] = [
-    TJEItemData(None, "Cupid Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
-    TJEItemData(None, "Burp Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
-    TJEItemData(None, "Sleep Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
-    TJEItemData(None, "Earthling Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
-    TJEItemData(None, "Rocket Skates Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
-    TJEItemData(None, "Randomizer Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
+    TJEItemData(0x1C, "Cupid Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
+    TJEItemData(0x1C, "Burp Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
+    TJEItemData(0x1C, "Sleep Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
+    TJEItemData(0x1C, "Earthling Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
+    TJEItemData(0x1C, "Rocket Skates Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
+    TJEItemData(0x1C, "Randomizer Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
 ]
 
 MISC_ITEMS : list[TJEItemData] = [
-    TJEItemData(None, "Progressive Map Reveal", TJEItemType.ETHEREAL, ItemClassification.useful, 0)
+    TJEItemData(0x1E, "Progressive Map Reveal", TJEItemType.ETHEREAL, ItemClassification.useful, 0)
 ]
 
 MASTER_ITEM_LIST = BASE_ITEM_LIST + ELEVATOR_KEY_ITEMS + INSTATRAP_ITEMS + MISC_ITEMS
@@ -145,7 +145,7 @@ ITEM_CODE_TO_ID = {code: id for id, code in enumerate(
 ITEM_ID_TO_CODE = {v: k for k, v in ITEM_CODE_TO_ID.items()}
 
 ITEM_CODE_TO_NAME = {item.code: item.name for item in MASTER_ITEM_LIST}
-ITEM_NAME_TO_CODE = {v: k for k, v in ITEM_CODE_TO_NAME.items()}
+ITEM_NAME_TO_CODE = {item.name: item.code for item in MASTER_ITEM_LIST}
 
 SHIP_PIECE_IDS = [ITEM_NAME_TO_ID[item.name] for item in BASE_ITEM_LIST if item.type == TJEItemType.SHIP_PIECE]
 PRESENT_IDS = [ITEM_NAME_TO_ID[item.name] for item in BASE_ITEM_LIST if item.type == TJEItemType.PRESENT]
@@ -266,9 +266,9 @@ def create_starting_presents(world, multiworld : MultiWorld, options: TJEOptions
         case StartingPresentOption.NONE:
             world.starting_presents = []
         case StartingPresentOption.HITOPS:
-            world.starting_presents = [ITEM_NAME_TO_ID["Super Hitops"]]*8
+            world.starting_presents = [ITEM_NAME_TO_ID["Bonus Hitops"]]*8
         case StartingPresentOption.MIX:
-            world.starting_presents = [ITEM_NAME_TO_ID["Icarus Wings"], ITEM_NAME_TO_ID["Super Hitops"],
+            world.starting_presents = [ITEM_NAME_TO_ID["Icarus Wings"], ITEM_NAME_TO_ID["Bonus Hitops"],
                                        ITEM_NAME_TO_ID["Spring Shoes"], ITEM_NAME_TO_ID["Rocket Skates"]]*2
         case StartingPresentOption.ANY_GOOD:
             world.starting_presents = [ITEM_CODE_TO_ID[p]
