@@ -48,20 +48,20 @@ PALETTE_02 : Palette = {
 
 PALETTE_03 : Palette = {
     0: rgb("#FFFFFF00"),
-    1: rgb("#00AA00FF"),
-    2: rgb("#008800FF"),
-    3: rgb("#006600FF"),
-    4: rgb("#EEAA00FF"),
-    5: rgb("#EE8800FF"),
-    6: rgb("#CC6600FF"),
-    7: rgb("#AA4400FF"),
-    8: rgb("#222222FF"),
-    9: rgb("#EEEE00FF"),
-    10: rgb("#AAAA00FF"),
-    11: rgb("#EEAAEEFF"),
-    12: rgb("#CC00CCFF"),
-    13: rgb("#660066FF"),
-    14: rgb("#220044FF"),
+    1: rgb("#660000FF"),
+    2: rgb("#EE0000FF"),
+    3: rgb("#EE4444FF"),
+    4: rgb("#442200FF"),
+    5: rgb("#AA4400FF"),
+    6: rgb("#EE6600FF"),
+    7: rgb("#EE8844FF"),
+    8: rgb("#000000FF"),
+    9: rgb("#444444FF"),
+    10: rgb("#AAAAAAFF"),
+    11: rgb("#EEEEEEFF"),
+    12: rgb("#000066FF"),
+    13: rgb("#0000EEFF"),
+    14: None, #rgb("#EEEEEEFF"), # This is blended with the background tiles for a translucency effect
     15: rgb("#000000FF")
 }
 
