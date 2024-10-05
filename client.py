@@ -144,7 +144,8 @@ class TJEClient(BizHawkClient):
 
     # Determines whether an item should be spawned by the client or left to the game's own code to award
     # Rank checks and ship pieces are currently unable to award items purely via ROM
-    def spawn_as_local(self, ctx: "BizHawkClientContext", nwi: NetworkItem) -> bool:
+    def spawn_from_remote(self, ctx: "BizHawkClientContext", nwi: NetworkItem) -> bool:
+        if nwi.location == -1: return True
         is_remote = (nwi.player != ctx.slot)
         loc_name = LOCATION_ID_TO_NAME[nwi.location]
         return (not is_remote and ("Promoted" in loc_name or "Ship Piece" in loc_name))
@@ -155,16 +156,16 @@ class TJEClient(BizHawkClient):
         if num_new > 0:
             logger.debug("Received %i new items", num_new)
             for nwi in ctx.items_received[-num_new:]:
-                local_spawn = self.spawn_as_local(ctx, nwi)
+                spawn_from_remote = self.spawn_from_remote(ctx, nwi)
                 if nwi.item in PRESENT_IDS:
-                    if local_spawn:
+                    if spawn_from_remote:
                         if (self.auto_trap_presents > 0 and nwi.item in TRAP_PRESENT_IDS and
                             not (self.auto_trap_presents == 1 and ITEM_ID_TO_NAME[nwi.item] == "Randomizer")):
                             self.trap_queue.add(nwi)
                         else:
                             self.present_queue.add(nwi)
                 elif nwi.item in EDIBLE_IDS:
-                    if local_spawn:
+                    if spawn_from_remote:
                         self.edible_queue.add(nwi)
                 elif nwi.item in INSTATRAP_IDS:
                     self.trap_queue.add(nwi)
