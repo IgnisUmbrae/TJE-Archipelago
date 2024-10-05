@@ -102,13 +102,13 @@ class TJEWorld(World):
         for level in range(1, 26):
             num = items_per_level[level]
             for i in range(num):
-                item_id = self.get_location(FLOOR_ITEM_LOC_TEMPLATE.format(level, i+1)).item.code
-                if item_id is None:
+                item = self.get_location(FLOOR_ITEM_LOC_TEMPLATE.format(level, i+1)).item
+                if item.code is None:
                     item_hex = 0xFF
-                elif item_id in ITEM_ID_TO_CODE:
-                    item_hex = ITEM_ID_TO_CODE[item_id]
+                elif item.code in ITEM_ID_TO_CODE:
+                    item_hex = ITEM_ID_TO_CODE[item.code]
                 else:
-                    if item_id.classification in \
+                    if item.classification in \
                         (ItemClassification.progression, ItemClassification.progression_skip_balancing):
                         item_hex = 0x1D # Progression AP item
                     else:
