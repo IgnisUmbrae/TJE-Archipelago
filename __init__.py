@@ -105,16 +105,14 @@ class TJEWorld(World):
                 item = self.get_location(FLOOR_ITEM_LOC_TEMPLATE.format(level, i+1)).item
                 if item is None:
                     item_hex = 0xFF
-                elif item.code in PRESENT_IDS+EDIBLE_IDS:
-                    item_hex = ITEM_ID_TO_CODE[item.code]
-                elif item.code in KEY_IDS:
-                    item_hex = 0x1E
+                elif item in ITEM_ID_TO_CODE:
+                    item_hex = ITEM_ID_TO_CODE[item]
                 else:
                     if item.classification in \
                         (ItemClassification.progression, ItemClassification.progression_skip_balancing):
-                        item_hex = 0x1D
+                        item_hex = 0x1D # Progression AP item
                     else:
-                        item_hex = 0x1C
+                        item_hex = 0x1C # Regular AP item
                 self.patchable_item_list.append(item_hex)
             self.patchable_item_list.extend([0xFF]*(28 - num))
         assert(len(self.patchable_item_list) == 26*28)

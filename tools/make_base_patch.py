@@ -33,6 +33,7 @@ STATIC_ROM_PATCHES: list[tuple[int, bytes]] = [
     (0x00100000, read_bin(SPRITE_PATH / "apitem-v2.bin")),
     (0x00100f20, read_bin(SPRITE_PATH / "apitem-important.bin")),
     (0x00101040, read_bin(SPRITE_PATH / "key.bin")),
+    (0x00101160, read_bin(SPRITE_PATH / "map_reveal.bin")),
 
     # Relocate present sprite table
     (0x00105000, b"\x00\x0A\xA1\x10\x00\x0A\xA1\x8E\x00\x0A\xA2\x10\x00\x0A\xA2\xA4\x00\x0A\xA3\x02\x00\x0A\xA3"
@@ -43,14 +44,16 @@ STATIC_ROM_PATCHES: list[tuple[int, bytes]] = [
 
     # Add new entries to sprite table
 
-    (0x00105070, b"\x00\x10\x50\x80"),
-    (0x00105074, b"\x00\x10\x50\x8e"),
-    (0x00105078, b"\x00\x10\x50\x9c"),
+    (0x00105070, b"\x00\x10\x51\x80"),
+    (0x00105074, b"\x00\x10\x51\x8e"),
+    (0x00105078, b"\x00\x10\x51\x9c"),
+    (0x0010508c, b"\x00\x10\x51\xaa"),
 
     # Add new sprite headers
-    (0x00105080, b"\x01\x00\x00\x00\x03\x03\xF6\xEF\xF2\x42\x00\x10\x00\x00"),
-    (0x0010508e, b"\x01\x00\x00\x00\x03\x03\xF6\xEF\xF2\x42\x00\x10\x0f\x20"),
-    (0x0010509c, b"\x01\x00\x00\x00\x03\x03\xF6\xEF\xF2\x42\x00\x10\x10\x40"),
+    (0x00105180, b"\x01\x00\x00\x00\x03\x03\xF6\xEF\xF2\x42\x00\x10\x00\x00"),
+    (0x0010518e, b"\x01\x00\x00\x00\x03\x03\xF6\xEF\xF2\x42\x00\x10\x0f\x20"),
+    (0x0010519c, b"\x01\x00\x00\x00\x03\x03\xF6\xEF\xF2\x42\x00\x10\x10\x40"),
+    (0x001051aa, b"\x01\x00\x00\x00\x03\x03\xF6\xEF\xF2\x42\x00\x10\x11\x60"),
 
     # Patch all references to sprite table
 
