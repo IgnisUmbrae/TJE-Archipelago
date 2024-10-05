@@ -143,10 +143,10 @@ class TJEClient(BizHawkClient):
         await self.handle_queue(ctx, self.trap_queue)
 
     # Determines whether an item should be spawned by the client or left to the game's own code to award
+    # Rank checks and ship pieces are currently unable to award items purely via ROM
     def spawn_as_local(self, ctx: "BizHawkClientContext", nwi: NetworkItem) -> bool:
         is_remote = (nwi.player != ctx.slot)
         loc_name = LOCATION_ID_TO_NAME[nwi.location]
-        print(loc_name)
         return (not is_remote and ("Promoted" in loc_name or "Ship Piece" in loc_name))
 
     async def handle_new_items(self, ctx: "BizHawkClientContext") -> None:

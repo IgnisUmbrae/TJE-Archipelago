@@ -4,7 +4,7 @@ from BaseClasses import Region, MultiWorld, LocationProgressType, ItemClassifica
 from worlds.generic.Rules import forbid_item, add_rule
 
 from .constants import RANK_NAMES, RANK_THRESHOLDS
-from .items import TJEItem
+from .items import EDIBLE_IDS, ITEM_ID_TO_NAME, TJEItem
 from .generators import expected_map_points_on_level, item_totals
 from .options import ElevatorKeyTypeOption, TJEOptions
 from .locations import TJELocation, FLOOR_ITEM_LOCATIONS, SHIP_PIECE_LOCATIONS, RANK_LOC_TEMPLATE
@@ -57,7 +57,7 @@ def create_regions(multiworld: MultiWorld, player: int, options: TJEOptions):
     add_ship_pieces(world, player, level_regions)
     handle_final_ship_piece(multiworld, player)
 
-    restrict_lv1_presents(level_regions)
+    restrict_lv1_items(level_regions)
 
     handle_key_options(multiworld, world, player, options)
     handle_rank_options(multiworld, world, player, options, level_regions)
@@ -73,10 +73,11 @@ def connect_regions_basic(level_regions):
 
 #region Misc
 
-def restrict_lv1_presents(level_regions):
+def restrict_lv1_items(level_regions):
+    banned = ["Icarus Wings", "Innertube", "Rocket Skates", "Mystery Present", "Randomizer", "Total Bummer"] + \
+             [ITEM_ID_TO_NAME[food] for food in EDIBLE_IDS[:-1]]
     for loc in level_regions[1].get_locations()[:4]:
-        loc.item_rule = lambda i: i not in ["Icarus Wings", "Innertube", "Rocket Skates",
-                                            "Mystery Present", "Randomizer", "Total Bummer"]
+        loc.item_rule = lambda i: i not in banned
 
 #endregion
 
