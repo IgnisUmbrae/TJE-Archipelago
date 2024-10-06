@@ -101,6 +101,13 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
     for i in range(8):
         patch.write_token(APTokenTypes.WRITE, INITIAL_PRESENT_ADDRS[i], presents[i])
 
+    if world.options.max_rank_check.value > 0:
+        # Stop moles stealing Promotion presents
+        patch.write_token(APTokenTypes.WRITE, 0x0002203e, b"\x4E\xF9\x00\x10\xBB\x00\x4E\x71\x4E\x71\x4E\x71\x4E\x71"
+                                                          b"\x4E\x71\x4E\x71\x4E\x71")
+        patch.write_token(APTokenTypes.WRITE, 0x0010bb00, b"\x30\x03\x48\xC0\xE9\x80\x22\x45\x20\x49\x32\x02\xD1\xC0"
+                                                          b"\x1C\x30\x10\x00\x48\x86\x0C\x46\x00\x0B\x67\x06\x4E\xF9"
+                                                          b"\x00\x02\x20\x52\x4E\xF9\x00\x02\x21\x7C\x00")
     if world.options.upwarp_present:
         # Jump to new function
         patch.write_token(APTokenTypes.WRITE, 0x00010b06, b"\x4E\xF9\x00\x10\xB9\x00\x4e\x71\x4e\x71\x4e\x71")
