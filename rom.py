@@ -68,15 +68,19 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
             ret_val = 1
             string = (b"\x4F\x6E\x65\x20\x50\x6C\x61\x79\x65\x72\x20\x2D\x2D\x20\x6A"
                       b"\x75\x73\x27\x20\x54\x6F\x65\x6A\x61\x6D\x00")
+            
             char_init = 0
+            no_2player = True
         case CharacterOption.EARL:
             ret_val = 2
             string = (b"\x4F\x6E\x65\x20\x50\x6C\x61\x79\x65\x72\x20\x2D\x2D\x20\x6A"
                       b"\x75\x73\x27\x20\x45\x61\x72\x6C\x00")
             char_init = 1
+            no_2player = True
         case CharacterOption.BOTH:
             ret_val = 0
             string = None
+            no_2player = False
 
     # Initializes special RAM address that keeps track of which character will receive traps
     patch.write_token(APTokenTypes.WRITE, 0x0010b314, (b"\x20\x7C\x00\xFF\xF0\x00\x10\xBC\x00"
@@ -85,6 +89,9 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
     if string:
         patch.write_token(APTokenTypes.WRITE, 0x000242c5, struct.pack(">B", ret_val))
         patch.write_token(APTokenTypes.WRITE, 0x000242d6, string)
+
+    if no_2player:
+        patch.write_token(APTokenTypes.WRITE, 0x00011218, b"\x4E\x71\x4E\x71\x4E\x71")
 
     if world.options.starting_presents == StartingPresentOption.NONE:
         presents = [EMPTY_PRESENT]*8
