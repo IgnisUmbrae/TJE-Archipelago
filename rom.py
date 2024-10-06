@@ -102,7 +102,14 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
         patch.write_token(APTokenTypes.WRITE, INITIAL_PRESENT_ADDRS[i], presents[i])
 
     if world.options.upwarp_present:
-        patch.write_token(APTokenTypes.WRITE, 0x00010b06, b"\x10\x3C\x00\x18\x4E\x71") # Always up unless level 24/25
+        # Jump to new function
+        patch.write_token(APTokenTypes.WRITE, 0x00010b06, b"\x4E\xF9\x00\x10\xB9\x00\x4e\x71\x4e\x71\x4e\x71")
+        # New Up-Warp handling function
+        patch.write_token(APTokenTypes.WRITE, 0x0010b900, b"\x70\x18\xB0\x2A\x00\x4C\x6E\x26\x70\x19\xB0\x2A\x00\x4C"
+                                                          b"\x67\x24\x20\x7C\x00\xFF\xF4\x44\x42\x44\x12\x30\x40\x00"
+                                                          b"\xB2\x3C\x00\xFF\x67\x12\x4E\x71\x4E\x71\x52\x44\x0C\x44"
+                                                          b"\x00\x09\x6D\xEA\x4E\xF9\x00\x01\x0B\x12\x4E\xF9\x00\x01"
+                                                          b"\x0B\x24")
         patch.write_token(APTokenTypes.WRITE, 0x00017be6, b"\x4e\x71\x4e\x71") # Always show "item here" hint signs
         patch.write_token(APTokenTypes.WRITE, 0x000abc34, b"\x15\x10\x22\x17\x01\x12\x10") # Change name to Up-Warp
         patch.write_token(APTokenTypes.WRITE, 0x0000a750, b"\x75\x70\x2D\x77\x61\x72\x70\x20") # And in mailbox
