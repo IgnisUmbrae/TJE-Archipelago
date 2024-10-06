@@ -33,7 +33,7 @@ STATIC_ROM_PATCHES: list[tuple[int, bytes]] = [
     # Add new AP present sprites
     (0x00100000, read_bin(SPRITE_PATH / "apitem-v2.bin")),
     (0x00100f20, read_bin(SPRITE_PATH / "apitem-important.bin")),
-    (0x00101040, read_bin(SPRITE_PATH / "elevatorkeycard-arrow.bin")),
+    (0x00101040, read_bin(SPRITE_PATH / "elevatorkeycard-arrow-v2.bin")),
     (0x00101160, read_bin(SPRITE_PATH / "map.bin")),
     (0x00101280, read_bin(SPRITE_PATH / "shippiece-v2.bin")),
 
