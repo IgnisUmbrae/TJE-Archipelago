@@ -17,7 +17,7 @@ Additions over the base game include:
 
 - New sprites for AP items, ship pieces and hints
 - Configurable starting presents, game over handling, and more
-- Progress is saved (in the client) when paused, when travelling between levels, and on game over
+- Progress is saved in the client when paused, when travelling between levels, and on game over
 - Customize level randomization, numbers of items, and more
 - New items:
   - Elevator keys, which are required to unlock elevators
@@ -27,7 +27,7 @@ Additions over the base game include:
 
 ## Caveats
 
-- Resuming after closing the client (e.g. in asyncs) is currently a mess, and will imperfectly restore the game state.
+- Resuming after _closing_ the client (e.g. in asyncs) is currently a mess, and will imperfectly restore the game state.
 - 2-player mode is not currently supported.
 - Hints are yet to be implemented and locations are generically-named, so in multiworlds it's recommended to play with `restrict_prog_items: yes` to avoid having to scour the map for a singular progression item in a weird location.
 
