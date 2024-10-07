@@ -186,6 +186,11 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
         # Patch menu handler to allow extra scrolling
         patch.write_token(APTokenTypes.WRITE, 0x0000979c+3, b"\x1D")
 
+        # Remember scroll position
+        #patch.write_token(APTokenTypes.WRITE, 0x0000a2f2, b"\x4E\x71\x4E\x71")
+        #patch.write_token(APTokenTypes.WRITE, 0x0000a300, b"\x4E\x71\x4E\x71")
+        patch.write_token(APTokenTypes.WRITE, 0x0000a30e, b"\x4E\x71\x4E\x71")
+
     if world.options.sound_rando != world.options.sound_rando.default:
         if world.options.sound_rando == SoundRandoOption.ALL:
             PCM_SFX_ADDRS.extend(PCM_SFX_ADDRS_MUSIC)
