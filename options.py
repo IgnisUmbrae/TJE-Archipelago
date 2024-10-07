@@ -42,6 +42,13 @@ class SoundRandoOption(IntEnum):
     MOST = 1
     ALL = 2
 
+class ExpandedInventory(DefaultOnToggle):
+    """
+    Expands the inventory to 64 slots (4× the base). Recommended.
+    """
+
+    display_name = "Expanded Inventory"
+
 class SoundRando(Choice):
     """
     Randomizes all PCM and PSG sound effects in the game. For sanity's sake, the menu blip will always be left alone.
@@ -408,6 +415,7 @@ tje_option_groups = [
     OptionGroup("Basic Items/Locations", [
         StartingPresents,
         ExcludeItemsFromProgression,
+        MapRandomization,
         MinItemCount,
         MaxItemCount
     ]),
@@ -436,10 +444,10 @@ tje_option_groups = [
         ExtendedPresentTimers,
         FreeEarthlingServices,
         FastLoads,
-        SoundRando
+        ExpandedInventory
     ]),
-    OptionGroup("World Generation", [
-        MapRandomization
+    OptionGroup("Misc", [
+        SoundRando
     ])
 ]
 
@@ -447,6 +455,7 @@ tje_option_groups = [
 class TJEOptions(PerGameCommonOptions):
     starting_presents: StartingPresents
     restrict_prog_items: ExcludeItemsFromProgression
+    map_rando: MapRandomization
     min_items: MinItemCount
     max_items: MaxItemCount
     auto_trap_presents: AutoOpenTrapPresents
@@ -463,12 +472,12 @@ class TJEOptions(PerGameCommonOptions):
     key_gap: ElevatorKeyGap
     max_rank_check: MaxRankCheck
     upwarp_present: UpwarpPresent
+    character: Character
     game_overs: GameOvers
     sleep_when_idle: SleepWhenIdle
     walk_speed: WalkSpeedBoost
     present_timers: ExtendedPresentTimers
     free_earthling_services: FreeEarthlingServices
     fast_loads: FastLoads
+    expanded_inventory: ExpandedInventory
     sound_rando: SoundRando
-    map_rando: MapRandomization
-    character: Character

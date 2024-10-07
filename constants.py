@@ -43,6 +43,24 @@ PSG_SFX_USAGE_ADDRS = [
 
 #endregion
 
+#region Inventory-related ROM addresses
+
+INV_REF_ADDRS = (0x0000934a+2, 0x000097aa+2, 0x000099a8+2, 0x000099ca+2, 0x00009b02+2, 0x00009c10+2,
+                       0x00009c98+2, 0x00009d76+2, 0x00009dcc+2, 0x0000a23a+2, 0x0000a460+2, 0x00014310+2,
+                       0x0010a0e0+2, 0x0010a0f8+2, 0x0001ac24+4, 0x00021fba+2, 0x0002227a+2, 0x0010a902+2)
+
+INV_SIZE_ADDRS = (0x00009396+3, 0x00009c04+3, 0x00009c34+3, 0x00009ce0+3, 0x00014320+5, 0x00014328+3,
+                  0x0010a12a+3, 0x0010a130+3, 0x00021fd8+3)
+
+INV_SIZE_ADDRS_INITIAL = (0x000143c2+5, 0x000143c8+5, 0x000143d6+5, 0x000143dc+5)
+
+INV_SIZE_ADDRS_ASL_D0 = (0x00009358, 0x0000936c, 0x00009380, 0x000097a8, 0x00009a0c, 0x00009a64, 0x00009a8e,
+                         0x00009a9c, 0x00009abc, 0x00009ad6, 0x00009b68, 0x00009b7c, 0x00009b8a, 0x00009baa,
+                         0x00009bc4, 0x00009c0e, 0x00009c96, 0x00009d74, 0x00009dca, 0x0000a238, 0x0000a45e,
+                         0x0010a0de, 0x0010a0f6, 0x00021fc6, 0x00022042, 0x0002205a, 0x0002207e, 0x00022278)
+
+#endregion
+
 #region Floor items and ship pieces
 
 TREES = [b"\x51", b"\x52", b"\x53"]

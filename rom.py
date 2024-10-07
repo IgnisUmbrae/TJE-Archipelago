@@ -8,7 +8,7 @@ import Utils
 from settings import get_settings
 from worlds.Files import APProcedurePatch, APTokenMixin, APTokenTypes
 
-from .constants import EMPTY_PRESENT, INITIAL_PRESENT_ADDRS, BASE_LEVEL_TYPES, PCM_SFX_ADDRS, PCM_SFX_ADDRS_MUSIC, \
+from .constants import EMPTY_PRESENT, INITIAL_PRESENT_ADDRS, BASE_LEVEL_TYPES, INV_REF_ADDRS, INV_SIZE_ADDRS, INV_SIZE_ADDRS_ASL_D0, INV_SIZE_ADDRS_INITIAL, PCM_SFX_ADDRS, PCM_SFX_ADDRS_MUSIC, \
                        PCM_SFX_USAGE_ADDRS, PCM_SFX_USAGE_ADDRS_MUSIC, PSG_SFX, PSG_SFX_USAGE_ADDRS
 from .items import ITEM_ID_TO_CODE
 from .options import CharacterOption, SoundRandoOption, StartingPresentOption, GameOverOption, MapRandomizationOption
@@ -166,6 +166,25 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
     if world.options.fast_loads:
         patch.write_token(APTokenTypes.WRITE, 0x00013710, b"\x00\x00")
         patch.write_token(APTokenTypes.WRITE, 0x0001371a, b"\x80\x00")
+
+    if world.options.expanded_inventory:
+        for addr in INV_REF_ADDRS:
+            patch.write_token(APTokenTypes.WRITE, addr, b"\x00\xff\xf2\x80")
+        for addr in INV_SIZE_ADDRS:
+            patch.write_token(APTokenTypes.WRITE, addr, b"\x40")
+        for i, addr in enumerate(INV_SIZE_ADDRS_INITIAL):
+            patch.write_token(APTokenTypes.WRITE, addr, (0x40+i).to_bytes(1))
+        for addr in INV_SIZE_ADDRS_ASL_D0:
+            patch.write_token(APTokenTypes.WRITE, addr, b"\xED\x80")
+        patch.write_token(APTokenTypes.WRITE, 0x000099a6, b"\xED\x81") # using D1
+        patch.write_token(APTokenTypes.WRITE, 0x00022068, b"\xED\x82") # using D2
+
+        # Make presents scooch up properly on opening and dropping
+        patch.write_token(APTokenTypes.WRITE, 0x00009ab2+3, b"\x3F")
+        patch.write_token(APTokenTypes.WRITE, 0x00009ba0+3, b"\x3F")
+
+        # Patch menu handler to allow extra scrolling
+        patch.write_token(APTokenTypes.WRITE, 0x0000979c+3, b"\x1D")
 
     if world.options.sound_rando != world.options.sound_rando.default:
         if world.options.sound_rando == SoundRandoOption.ALL:
