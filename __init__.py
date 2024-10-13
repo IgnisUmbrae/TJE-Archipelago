@@ -64,10 +64,6 @@ class TJEWorld(World):
         data = ITEM_NAME_TO_DATA[name]
         classification = new_classification if new_classification else data.classification
 
-        # Required to ensure all items can be on excluded locations
-        if self.options.restrict_prog_items and classification == ItemClassification.useful:
-            classification = ItemClassification.filler
-
         item = TJEItem(name, classification, self.item_name_to_id[name], self.player)
         if name == "Promotion":
             item.rank_value = 1

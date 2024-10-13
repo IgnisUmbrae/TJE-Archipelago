@@ -68,7 +68,7 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
             ret_val = 1
             string = (b"\x4F\x6E\x65\x20\x50\x6C\x61\x79\x65\x72\x20\x2D\x2D\x20\x6A"
                       b"\x75\x73\x27\x20\x54\x6F\x65\x6A\x61\x6D\x00")
-            
+
             char_init = 0
             no_2player = True
         case CharacterOption.EARL:
@@ -92,6 +92,9 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
 
     if no_2player:
         patch.write_token(APTokenTypes.WRITE, 0x00011218, b"\x4E\x71\x4E\x71\x4E\x71")
+
+    if world.options.islandless:
+        patch.write_token(APTokenTypes.WRITE, 0x00003e80, b"\x70\x00") # 0% chance of space island, down from 7%
 
     if world.options.starting_presents == StartingPresentOption.NONE:
         presents = [EMPTY_PRESENT]*8

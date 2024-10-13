@@ -42,9 +42,20 @@ class SoundRandoOption(IntEnum):
     MOST = 1
     ALL = 2
 
+class Islandless(DefaultOnToggle):
+    """
+    Prevents the game from creating tiny islands out in space, guaranteeing that every item will be accessible.
+    Does not affect islands in water.
+    Disabling this is *not recommended* as it will more often than not result in frustrating, incompletable worlds
+    where crucial progression items spawn in the middle of nowhere.    
+    """
+
+    display_name = "Islandless"
+
 class ExpandedInventory(DefaultOnToggle):
     """
-    Expands the inventory to 64 slots (4× the base). Recommended.
+    Expands the inventory to 64 slots (4× the base).
+    The game will also remember how far you scrolled the inventory down when you reopen it.
     """
 
     display_name = "Expanded Inventory"
@@ -215,15 +226,6 @@ class ElevatorKeyGap(NamedRange):
     }
 
     default = 4
-
-class ExcludeItemsFromProgression(Toggle):
-    """
-    Whether regular items on the floor can be progression items.
-    If enabled, only ship pieces and other priority checks (e.g. ranks) can have them.
-    Very likely to make world generation impossible if combined with elevator keys etc.
-    """
-
-    display_name = "Restrict Progression Item Locations"
 
 class MaxRankCheck(NamedRange):
     """
@@ -414,7 +416,7 @@ class FreeEarthlingServices(Toggle):
 tje_option_groups = [
     OptionGroup("Basic Items/Locations", [
         StartingPresents,
-        ExcludeItemsFromProgression,
+        Islandless,
         MapRandomization,
         MinItemCount,
         MaxItemCount
@@ -454,7 +456,7 @@ tje_option_groups = [
 @dataclass
 class TJEOptions(PerGameCommonOptions):
     starting_presents: StartingPresents
-    restrict_prog_items: ExcludeItemsFromProgression
+    islandless: Islandless
     map_rando: MapRandomization
     min_items: MinItemCount
     max_items: MaxItemCount

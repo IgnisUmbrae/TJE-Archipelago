@@ -6,6 +6,7 @@ name: Bro
 game: ToeJam and Earl
 ToeJam and Earl:
   game_overs: drop_down
+  islandless: yes
   trap_presents: yes
   trap_food: yes
   trap_cupid: yes
@@ -15,7 +16,6 @@ ToeJam and Earl:
   trap_skates: yes
   auto_trap_presents: no_randomizer
   starting_presents: hitops
-  restrict_prog_items: no
   key_type: progressive
   key_gap: 4
   upwarp_present: yes

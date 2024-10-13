@@ -112,7 +112,7 @@ def add_floor_items(world, player,  options: TJEOptions, level_regions):
         for loc_data in FLOOR_ITEM_LOCATIONS[i][:per_level_limits[i]]:
             new_loc = TJELocation(player, loc_data.name, world.location_name_to_id[loc_data.name],
                                   level_regions[loc_data.level])
-            if loc_data.level == 1 or options.restrict_prog_items:
+            if loc_data.level == 1:
                 new_loc.progress_type = LocationProgressType.EXCLUDED
             locs_to_add.append(new_loc)
         level_regions[i].locations.extend(locs_to_add)
