@@ -9,10 +9,10 @@ import worlds._bizhawk as bizhawk
 from worlds._bizhawk import ConnectionStatus
 from worlds._bizhawk.client import BizHawkClient
 
-from .constants import EMPTY_ITEM, COLLECTED_SHIP_ITEM, RANK_NAMES, SPRITES_GHOST, SPRITES_WATER, SPRITES_HITOPS_JUMP, \
+from .constants import EMPTY_ITEM, COLLECTED_SHIP_ITEM, PLAYER_SLOT_STRUCTURES, RANK_NAMES, SPRITES_GHOST, SPRITES_WATER, SPRITES_HITOPS_JUMP, \
                        STATE_LOAD_DOWN, ELEVATOR_LOCKED, ELEVATOR_UNLOCKED, END_ELEVATOR_UNLOCKED_STATES, \
-                       SAVE_DATA_POINTS, add_save_data_points, get_slot_addr, get_ram_addr, TJEGameState, \
-                       LOADING_STATES, SPAWN_BLOCKING_STATES
+                       SAVE_DATA_POINTS, add_save_data_points, get_slot_addr, get_ram_addr, expand_inv_constants, \
+                       TJEGameState, LOADING_STATES, SPAWN_BLOCKING_STATES
 from .items import ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, \
                     PRESENT_IDS, EDIBLE_IDS, SHIP_PIECE_IDS, KEY_IDS, INSTATRAP_IDS, TRAP_PRESENT_IDS
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, RANK_LOC_TEMPLATE, SHIP_PIECE_LOC_TEMPLATE
@@ -247,18 +247,21 @@ class TJEGameController():
             )
         ]
 
-    def create_save_points(self):
+    def create_save_points(self, expanded_inv: bool):
         if self.char < 2:
-            add_save_data_points(self.char)
+            add_save_data_points(self.char, expanded_inv)
         else:
-            add_save_data_points(0)
-            add_save_data_points(1)
+            add_save_data_points(0, expanded_inv)
+            add_save_data_points(1, expanded_inv)
 
-    def initialize_slot_data(self, ship_item_levels, key_levels, key_type, auto_trap_presents):
+    def initialize_slot_data(self, ship_item_levels: list[int], key_levels: list[int],
+                             prog_keys: bool, auto_trap_presents: bool, expanded_inv: bool):
         self.ship_item_levels = ship_item_levels
         self.key_levels = key_levels
-        self.prog_keys = (key_type == 1)
+        self.prog_keys = prog_keys
         self.auto_trap_presents = auto_trap_presents
+        if expanded_inv:
+            expand_inv_constants()
 
     #endregion
 

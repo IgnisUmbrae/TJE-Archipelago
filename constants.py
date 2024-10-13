@@ -269,6 +269,10 @@ PLAYER_SLOT_STRUCTURES: dict[SlotStructure] = {
     "INVENTORY": SlotStructure(15, 1, 0)
 }
 
+def expand_inv_constants() -> None:
+    PLAYER_SLOT_STRUCTURES["INVENTORY"] = SlotStructure(63, 1, 0)
+    PLAYER_RAM_ADDRS["PLAYER_RAM_ADDRS"] = (0xF280, 0x40)
+
 #endregion
 
 #region Save data–related
@@ -287,7 +291,7 @@ SAVE_DATA_POINTS: list[DataPoint] = [
     DataPoint("Map masks", GLOBAL_RAM_ADDRS["UNCOVERED_MAP_MASK"], 364),
 ]
 
-def add_save_data_points(player: int = 0) -> None:
+def add_save_data_points(player: int = 0, expanded_inv: bool = False) -> None:
     SAVE_DATA_POINTS.extend([
         DataPoint("Highest level reached", get_ram_addr("HIGHEST_LEVEL_REACHED", player), 1),
 
@@ -296,7 +300,7 @@ def add_save_data_points(player: int = 0) -> None:
         DataPoint("Bucks", get_ram_addr("BUCKS", player), 1),
         DataPoint("Lives", get_ram_addr("LIVES", player), 1),
 
-        DataPoint("Inventory", get_ram_addr("INVENTORY", player), 16),
+        DataPoint("Inventory", get_ram_addr("INVENTORY", player), 64 if expanded_inv else 16),
 
         DataPoint("Max health", get_ram_addr("HP_DISPLAY", player), 1),
         DataPoint("Health", get_ram_addr("HEALTH", player), 1),

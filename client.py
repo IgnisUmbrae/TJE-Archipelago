@@ -89,10 +89,8 @@ class TJEClient(BizHawkClient):
     async def setup_game_controller(self, ctx: "BizHawkClientContext") -> bool:
         try:
             char = int.from_bytes(await self.peek_rom(ctx, 0x000242c5, 1))
-            self.game_controller.add_monitors(ctx, char)
-            self.game_controller.create_save_points()
 
-            key_type = int.from_bytes(await self.peek_rom(ctx, 0x001f0000, 1))
+            prog_keys = int.from_bytes(await self.peek_rom(ctx, 0x001f0000, 1)) == 1
             self.auto_trap_presents = int.from_bytes(await self.peek_rom(ctx, 0x001f0001, 1))
 
             key_count = int.from_bytes(await self.peek_rom(ctx, 0x001f0010, 1))
@@ -100,7 +98,12 @@ class TJEClient(BizHawkClient):
 
             ship_item_levels = struct.unpack(">10B", await self.peek_rom(ctx, 0x00097738, 10))
 
-            self.game_controller.initialize_slot_data(ship_item_levels, key_levels, key_type, self.auto_trap_presents)
+            expanded_inv = int.from_bytes(await self.peek_rom(ctx, 0x0000979c+3, 1)) == 0x1D
+
+            self.game_controller.initialize_slot_data(ship_item_levels, key_levels,
+                                                      prog_keys, self.auto_trap_presents, expanded_inv)
+            self.game_controller.add_monitors(ctx, char)
+            self.game_controller.create_save_points(expanded_inv)
 
             return True
         except (bizhawk.RequestFailedError, bizhawk.NotConnectedError):
@@ -145,6 +148,7 @@ class TJEClient(BizHawkClient):
     # Determines whether an item should be spawned by the client or left to the game's own code to award
     # Rank checks and ship pieces are currently unable to award items purely via ROM
     def spawn_from_remote(self, ctx: "BizHawkClientContext", nwi: NetworkItem) -> bool:
+        #!getitem'ed or remote
         if nwi.location == -1 or nwi.player != ctx.slot:
             return True
         loc_name = LOCATION_ID_TO_NAME[nwi.location]
