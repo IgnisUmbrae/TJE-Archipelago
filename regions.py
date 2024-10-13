@@ -75,7 +75,7 @@ def connect_regions_basic(level_regions):
 
 def restrict_lv1_items(level_regions):
     banned = set(["Icarus Wings", "Innertube", "Rocket Skates", "Mystery Present", "Randomizer", "Total Bummer"] + \
-             [ITEM_ID_TO_NAME[food] for food in EDIBLE_IDS[:-1]])
+             [ITEM_ID_TO_NAME[food] for food in EDIBLE_IDS[:-1]] + ["Rocket Skates Trap"])
     for loc in level_regions[1].get_locations()[:4]:
         loc.item_rule = lambda item: item.name not in banned
 
