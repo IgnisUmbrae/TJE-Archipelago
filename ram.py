@@ -9,7 +9,7 @@ import worlds._bizhawk as bizhawk
 from worlds._bizhawk import ConnectionStatus
 from worlds._bizhawk.client import BizHawkClient
 
-from .constants import EMPTY_ITEM, COLLECTED_SHIP_ITEM, PLAYER_SLOT_STRUCTURES, RANK_NAMES, SPRITES_GHOST, SPRITES_WATER, SPRITES_HITOPS_JUMP, \
+from .constants import EMPTY_ITEM, COLLECTED_SHIP_ITEM, RANK_NAMES, SPRITES_GHOST, SPRITES_WATER, SPRITES_HITOPS_JUMP, \
                        STATE_LOAD_DOWN, ELEVATOR_LOCKED, ELEVATOR_UNLOCKED, END_ELEVATOR_UNLOCKED_STATES, \
                        SAVE_DATA_POINTS, add_save_data_points, get_slot_addr, get_ram_addr, expand_inv_constants, \
                        TJEGameState, LOADING_STATES, SPAWN_BLOCKING_STATES
@@ -145,6 +145,7 @@ class TJEGameController():
         self.char = 0
 
         self.auto_trap_presents = False
+        self.expanded_inv = False
 
     #region Per-update high-level logic functions
 
@@ -247,12 +248,12 @@ class TJEGameController():
             )
         ]
 
-    def create_save_points(self, expanded_inv: bool):
+    def create_save_points(self):
         if self.char < 2:
-            add_save_data_points(self.char, expanded_inv)
+            add_save_data_points(self.char, self.expanded_inv)
         else:
-            add_save_data_points(0, expanded_inv)
-            add_save_data_points(1, expanded_inv)
+            add_save_data_points(0, self.expanded_inv)
+            add_save_data_points(1, self.expanded_inv)
 
     def initialize_slot_data(self, ship_item_levels: list[int], key_levels: list[int],
                              prog_keys: bool, auto_trap_presents: bool, expanded_inv: bool):
@@ -260,7 +261,8 @@ class TJEGameController():
         self.key_levels = key_levels
         self.prog_keys = prog_keys
         self.auto_trap_presents = auto_trap_presents
-        if expanded_inv:
+        self.expanded_inv = expanded_inv
+        if self.expanded_inv:
             expand_inv_constants()
 
     #endregion
@@ -328,7 +330,8 @@ class TJEGameController():
         return [(total_bits-1)-i for i in range(bitfield.bit_length()) if bitfield & (1 << i)]
 
     async def get_empty_inv_slot(self, ctx: "BizHawkClientContext") -> Optional[int]:
-        current_inventory = await self.peek_ram(ctx, get_ram_addr("INVENTORY", self.char), 16)
+        current_inventory = await self.peek_ram(ctx, get_ram_addr("INVENTORY", self.char),
+                                                64 if self.expanded_inv else 16)
         if current_inventory:
             split_inventory = [current_inventory[i:i+1] for i in range(len(current_inventory))]
             try:
@@ -544,6 +547,7 @@ class TJEGameController():
             return await self.spawn_present_as_dropped(ctx, pres_id)
 
     async def spawn_present_as_dropped(self, ctx: "BizHawkClientContext", pres_id: int) -> bool:
+        logger.debug("Spawning present on floor (no room in inventory)")
         if self.game_state not in SPAWN_BLOCKING_STATES:
             slot = await self.get_empty_dropped_present_slot(ctx)
             if slot is not None and self.current_level is not None:

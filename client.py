@@ -103,7 +103,7 @@ class TJEClient(BizHawkClient):
             self.game_controller.initialize_slot_data(ship_item_levels, key_levels,
                                                       prog_keys, self.auto_trap_presents, expanded_inv)
             self.game_controller.add_monitors(ctx, char)
-            self.game_controller.create_save_points(expanded_inv)
+            self.game_controller.create_save_points()
 
             return True
         except (bizhawk.RequestFailedError, bizhawk.NotConnectedError):

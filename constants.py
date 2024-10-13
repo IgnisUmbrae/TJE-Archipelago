@@ -271,7 +271,7 @@ PLAYER_SLOT_STRUCTURES: dict[SlotStructure] = {
 
 def expand_inv_constants() -> None:
     PLAYER_SLOT_STRUCTURES["INVENTORY"] = SlotStructure(63, 1, 0)
-    PLAYER_RAM_ADDRS["PLAYER_RAM_ADDRS"] = (0xF280, 0x40)
+    PLAYER_RAM_ADDRS["INVENTORY"] = (0xF280, 0x40)
 
 #endregion
 
