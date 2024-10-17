@@ -3,8 +3,6 @@ import copy
 
 import bsdiff4
 
-# The extended ROM is split as follows:
-
 SPRITE_PATH = Path("../data/sprites")
 
 def read_bin(filename: Path) -> bytes:
@@ -16,7 +14,7 @@ STATIC_ROM_PATCHES: list[tuple[int, bytes]] = [
     (0x000001a5, b"\x1f"),
 
     ### Initialization setup ###
-    
+
     # Add jumps to all new initialization routines
     (0x0001f9a6, b"\x4E\xB9\x00\x10\xA5\x00\x4E\xB9\x00\x10\xA9\x00\x4E\xB9\x00\x10\xB3\x00\x4E\x71\x4E\x71\x4E\x71"
                  b"\x4E\x71"),
