@@ -11,32 +11,6 @@ FOOD_WEIGHTS = [1]*len(FOOD_LIST)
 BAD_FOOD_INDICES = set([11, 12, 13, 14, 15])
 A_BUCK = 0x50
 
-# With thanks to James Green for this precomputation
-
-GAP_LISTS = [
-[3,3,3,3,2,2,2,2,2,2],
-[3,3,3,3,3,2,2,2,2,1],
-[3,3,3,3,3,3,2,2,1,1],
-[3,3,3,3,3,3,3,1,1,1],
-[4,3,3,2,2,2,2,2,2,2],
-[4,3,3,3,2,2,2,2,2,1],
-[4,3,3,3,3,2,2,2,1,1],
-[4,3,3,3,3,3,2,1,1,1],
-[4,4,2,2,2,2,2,2,2,2],
-[4,4,3,2,2,2,2,2,2,1],
-[4,4,3,3,2,2,2,2,1,1],
-[4,4,3,3,3,2,2,1,1,1],
-[4,4,3,3,3,3,1,1,1,1],
-[4,4,4,2,2,2,2,2,1,1],
-[4,4,4,3,2,2,2,1,1,1],
-[4,4,4,3,3,2,1,1,1,1],
-[4,4,4,4,2,2,1,1,1,1],
-[4,4,4,4,3,1,1,1,1,1],
-]
-
-# Used to make more evenly-spaced ship piece levels more likely
-GAP_LIST_WEIGHTS = [5 - gaps.count(4) for gaps in GAP_LISTS]
-
 class TJEGenerator():
     def __init__(self, world):
         self.random = world.random
@@ -120,12 +94,13 @@ class TJEGenerator():
         present_list, present_distro = self.get_present_distribution(level_one=False, include_bad=include_bad)
         return self.random.choices(present_list, present_distro, k=4)
 
-    # This doesn't follow the code in the ROM at all, but produces extremely similar results
+    # Follows the same procedure as the ROM but has a slightly different distribution of results
+    # This version avoids all failure states and does not use the game's own RNG function
     def generate_ship_piece_levels(self) -> list[int]:
-        gaps = self.random.choices(GAP_LISTS, GAP_LIST_WEIGHTS, k=1)[0]
-        # This shuffle+flip guarantees that the first piece is on level 2 or 3
-        self.random.shuffle(gaps[:-1])
-        return list(itertools.accumulate(iterable=reversed(gaps), initial=1))[1:]
+        ship_levels = [self.random.randint(i, j) for i, j in [(2, 5), (6, 10), (11, 15), (16, 20), (21, 24)]]
+        ship_levels.extend(self.random.sample(sorted(set(range(2, 25)) - set(ship_levels)), 5))
+        ship_levels[self.random.randint(0, 9)] = 25
+        return sorted(ship_levels)
 
 # Collectible items only; does not include trees
 def num_items_on_level(level: int, singleplayer: bool = True, min_items: int = 12, max_items: int = 28) -> int | None:
@@ -199,11 +174,11 @@ class TJEInternalRNG():
     def test_rng(self):
         pregenned_random_sequence = [self.get_random_number() for _ in range(59)]
         assert(pregenned_random_sequence == [60975, 22016, 20672, 43896, 21923, 16663, 20572, 64074, 13996, 37431,
-                                                  35926, 30713, 35134, 22268, 61038, 47194, 9852, 44328, 8021, 5869,
-                                                  11416, 59367, 64619, 4347, 56933, 62965, 58690, 25646, 12631, 26719,
-                                                  16886, 47427, 62383, 42660, 38736, 16973, 53404, 61022, 38805, 52891,
-                                                  10512, 1809, 4962, 38620, 20783, 9754, 35105, 63580, 36504, 50392,
-                                                  24999, 13250, 11483, 62265, 21191, 36633, 54578, 51549, 7650])
+                                             35926, 30713, 35134, 22268, 61038, 47194, 9852, 44328, 8021, 5869,
+                                             11416, 59367, 64619, 4347, 56933, 62965, 58690, 25646, 12631, 26719,
+                                             16886, 47427, 62383, 42660, 38736, 16973, 53404, 61022, 38805, 52891,
+                                             10512, 1809, 4962, 38620, 20783, 9754, 35105, 63580, 36504, 50392,
+                                             24999, 13250, 11483, 62265, 21191, 36633, 54578, 51549, 7650])
         print("Pre-generated random sequence: OK")
 
     def get_random_number(self) -> int:
@@ -249,8 +224,8 @@ class TJEInternalRNG():
         assert([self.is_mailbox_real(i, seed) for i, seed in enumerate(FIXED_SEEDS)] == FIXED_MAILBOXES)
         print("Mailboxes: OK")
 
-if __name__ == "__main__":
-    tjerng = TJEInternalRNG()
+# if __name__ == "__main__":
+#     tjerng = TJEInternalRNG()
 
-    tjerng.test_rng()
-    tjerng.test_mailboxes()
+#     tjerng.test_rng()
+#     tjerng.test_mailboxes()
