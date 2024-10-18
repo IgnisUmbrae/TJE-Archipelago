@@ -440,7 +440,7 @@ class TJEGameController():
 
         self.num_map_reveals += 1
         start_level = 5*self.num_map_reveals - 4
-        dialogue = (f"Lv{start_level}-{start_level+4} map!","all revealed")
+        dialogue = (f"Lv{start_level}-{start_level+4} map!","let's go")
         try:
             revealed_tiles = int.from_bytes(
                 await self.peek_ram(ctx, get_slot_addr("UNCOVERED_MAP_MASK", start_level, self.char), 7*5))
@@ -464,7 +464,7 @@ class TJEGameController():
         dialogue = (None, None)
         if level is not None:
             logger.debug("Key unlocks level %i", level)
-            dialogue = (f"Lvl {level} key!", "'vator open")
+            dialogue = (f"Lv{level} key!", "'vator open")
             self.unlocked_levels.append(level)
             if self.current_level == level:
                 await self.recheck_elevator_unlock(ctx)
