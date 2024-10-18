@@ -1,4 +1,4 @@
-from typing import Optional, NamedTuple
+from typing import NamedTuple
 from enum import IntEnum
 
 from BaseClasses import Item, ItemClassification, MultiWorld
@@ -27,7 +27,7 @@ class TJEItemType(IntEnum):
     SHIP_PIECE = 3
 
 class TJEItemData(NamedTuple):
-    code: Optional[int]
+    code: int
     name: str
     type: TJEItemType
     classification: ItemClassification
@@ -158,6 +158,29 @@ TRAP_PRESENT_IDS = [ITEM_NAME_TO_ID[item.name] for item in BASE_ITEM_LIST
 
 #endregion
 
+#region Dialogue-related
+
+STATIC_DIALOGUE_LIST: dict[str, tuple[str,str]] = {
+    "Rocketship Windshield": ("Windshield!", "jammin'"),
+    "Left Megawatt Speaker": ("L. speaker!", "jammin'"),
+    "Super Funkomatic Amplamator": ("Amp!", "jammin'"),
+    "Amplamator Connector Fin": ("Amp fin!", "jammin'"),
+    "Forward Stabilizing Unit": ("Front leg!", "jammin'"),
+    "Rear Leg": ("Rear leg!", "jammin'"),
+    "Awesome Snowboard": ("Snowboard!", "jammin'"),
+    "Righteous Rapmaster Capsule": ("Capsule!", "jammin'"),
+    "Right Megawatt Speaker": ("R. speaker!", "jammin'"),
+    "Hyperfunk Thruster": ("Thruster!", "jammin'"),
+    "Cupid Trap": ("Uh-oh...", "cupid trap!"),
+    "Burp Trap": ("Uh-oh...", "burp trap!"),
+    "Sleep Trap": ("Uh-oh...", "study time!"),
+    "Earthling Trap": ("Uh-oh...", "earthling!!"),
+    "Rocket Skates Trap": ("Uh-oh...", "skates trap!"),
+    "Randomizer Trap": ("Uh-oh...", "randomizer!!"),
+}
+
+#endregion
+
 def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions) -> None:
     item_list: list[TJEItem] = []
 
@@ -175,8 +198,7 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
                    + create_map_reveals(world, options, item_list) \
                    + create_instatraps(world, options, total_locations, item_list)
 
-    create_main_items(world, options, item_list, total_locations, differential)
-    #create_padding_items(world, options, item_list, required_padding)
+    create_main_items(world, item_list, total_locations, differential)
 
     multiworld.itempool.extend(item_list)
 
@@ -250,7 +272,7 @@ def create_map_reveals(world, options, item_list) -> int:
         return 5
     return 0
 
-def create_main_items(world, options, item_list, total_locations, differential) -> None:
+def create_main_items(world, item_list, total_locations, differential) -> None:
 
     item_pool_raw = world.generator.generate_item_blob(total_locations - differential)
 

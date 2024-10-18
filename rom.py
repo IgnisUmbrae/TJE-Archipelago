@@ -83,8 +83,7 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
             no_2player = False
 
     # Initializes special RAM address that keeps track of which character will receive traps
-    patch.write_token(APTokenTypes.WRITE, 0x0010b314, (b"\x20\x7C\x00\xFF\xF0\x00\x10\xBC\x00"
-                                                       + char_init.to_bytes(1) + b"\x4E\x75"))
+    patch.write_token(APTokenTypes.WRITE, 0x0010b314, b"\x20\x7C\x00\xFF\xF0\x00\x10\xBC\x00" + char_init.to_bytes(1))
 
     if string:
         patch.write_token(APTokenTypes.WRITE, 0x000242c5, struct.pack(">B", ret_val))

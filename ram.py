@@ -13,7 +13,7 @@ from .constants import EMPTY_ITEM, COLLECTED_SHIP_ITEM, RANK_NAMES, SPRITES_GHOS
                        STATE_LOAD_DOWN, ELEVATOR_LOCKED, ELEVATOR_UNLOCKED, END_ELEVATOR_UNLOCKED_STATES, \
                        SAVE_DATA_POINTS, add_save_data_points, get_slot_addr, get_ram_addr, expand_inv_constants, \
                        TJEGameState, LOADING_STATES, SPAWN_BLOCKING_STATES
-from .items import ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, \
+from .items import ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, STATIC_DIALOGUE_LIST, \
                     PRESENT_IDS, EDIBLE_IDS, SHIP_PIECE_IDS, KEY_IDS, INSTATRAP_IDS, TRAP_PRESENT_IDS
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, RANK_LOC_TEMPLATE, SHIP_PIECE_LOC_TEMPLATE
 
@@ -386,10 +386,11 @@ class TJEGameController():
 
     #region Trap activation functions
 
-    async def receive_trap(self, ctx: "BizHawkClientContext", trap_id: int) -> bool:
+    async def receive_trap(self, ctx: "BizHawkClientContext", trap_id: int) -> tuple[bool, tuple[str, str]]:
         if self.is_playing:
-            logger.debug("Attempting to activate %s", ITEM_ID_TO_NAME[trap_id])
-            match ITEM_ID_TO_NAME[trap_id]:
+            trap_name = ITEM_ID_TO_NAME[trap_id]
+            logger.debug("Attempting to activate %s", trap_name)
+            match trap_name:
                 case "Burp Trap":
                     success = await self.trap_burp(ctx)
                 case "Cupid Trap":
@@ -405,7 +406,7 @@ class TJEGameController():
                 case _:
                     logger.error("Attempted to activate a non-existent trap")
                     success = True
-            return success
+            return success, STATIC_DIALOGUE_LIST[trap_name]
         return False
 
     async def is_present_trap_waiting(self, ctx: "BizHawkClientContext") -> bool:
@@ -432,13 +433,14 @@ class TJEGameController():
 
     #region Spawning functions (also receipt of ethereal items)
 
-    async def receive_map_reveal(self, ctx: "BizHawkClientContext") -> bool:
+    async def receive_map_reveal(self, ctx: "BizHawkClientContext") -> tuple[bool, tuple[str, str]]:
         logger.debug("Got a map reveal!")
         if self.num_map_reveals >= 5:
-            return True
+            return True, (None, None)
 
         self.num_map_reveals += 1
         start_level = 5*self.num_map_reveals - 4
+        dialogue = (f"Lv{start_level}-{start_level+4} map!","all revealed")
         try:
             revealed_tiles = int.from_bytes(
                 await self.peek_ram(ctx, get_slot_addr("UNCOVERED_MAP_MASK", start_level, self.char), 7*5))
@@ -446,9 +448,9 @@ class TJEGameController():
             await self.poke_ram(ctx, get_slot_addr("TRANSP_MAP_MASK", start_level, self.char), payload)
         except bizhawk.RequestFailedError:
             return False
-        return True
+        return True, dialogue
 
-    async def receive_key(self, ctx: "BizHawkClientContext", key_id: int) -> bool:
+    async def receive_key(self, ctx: "BizHawkClientContext", key_id: int) -> tuple[bool, tuple[str, str]]:
         logger.debug("Got a key!")
         if self.prog_keys:
             num_keys = len(self.unlocked_levels)
@@ -459,13 +461,15 @@ class TJEGameController():
         else:
             level = KEY_IDS.index(key_id) + 2
 
+        dialogue = (None, None)
         if level is not None:
-            logger.debug(f"Key unlocks level {level}")
+            logger.debug("Key unlocks level %i", level)
+            dialogue = (f"Lvl {level} key!", "'vator open")
             self.unlocked_levels.append(level)
             if self.current_level == level:
                 await self.recheck_elevator_unlock(ctx)
 
-        return True
+        return True, dialogue
 
     async def receive_item(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
         if self.auto_trap_presents > 0 and item_id in TRAP_PRESENT_IDS:
@@ -484,6 +488,7 @@ class TJEGameController():
 
     async def spawn_item(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
         if self.is_playing and self.game_state != TJEGameState.WAITING_FOR_LOAD:
+            dialogue = (None, None)
             if item_id in PRESENT_IDS:
                 if self.game_state != TJEGameState.IN_INVENTORY:
                     success = await self.spawn_in_inventory(ctx, item_id)
@@ -494,32 +499,42 @@ class TJEGameController():
             elif item_id in EDIBLE_IDS:
                 success = await self.spawn_on_floor(ctx, item_id)
             elif item_id in SHIP_PIECE_IDS:
-                success = await self.award_ship_piece(ctx, item_id)
+                success, dialogue = await self.award_ship_piece(ctx, item_id)
             elif item_id in KEY_IDS:
-                success = await self.receive_key(ctx, item_id)
+                success, dialogue = await self.receive_key(ctx, item_id)
             elif item_id in INSTATRAP_IDS:
-                success = await self.receive_trap(ctx, item_id)
+                success, dialogue = await self.receive_trap(ctx, item_id)
             elif item_id == ITEM_NAME_TO_ID["Progressive Map Reveal"]:
-                success = await self.receive_map_reveal(ctx)
+                success, dialogue = await self.receive_map_reveal(ctx)
             else:
                 success = False
+            if success and dialogue:
+                await self.emit_dialogue(ctx, dialogue)
             return success
         return False
 
+    async def emit_dialogue(self, ctx: "BizHawkClientContext", lines: tuple[str, str]) -> None:
+        if lines[0] is not None and lines[1] is not None:
+            line1 = lines[0].encode("ascii") + b"\x00"*(12 - len(lines[0]))
+            line2 = lines[1].encode("ascii") + b"\x00"*(12 - len(lines[1]))
+            await self.poke_ram(ctx, get_ram_addr("AP_DIALOGUE_LINE1"), line1)
+            await self.poke_ram(ctx, get_ram_addr("AP_DIALOGUE_LINE2"), line2)
+            await self.poke_ram(ctx, get_ram_addr("AP_DIALOGUE_TRIGGER"), b"\x01")
+
     async def identify_present(self, ctx: "BizHawkClientContext", present_id: int) -> bool:
         present = ITEM_ID_TO_CODE[present_id]
-        logger.debug(f"Identifying present {present}")
+        logger.debug("Identifying present %s", present)
         await self.poke_ram(ctx, get_slot_addr("PRESENTS_IDENTIFIED", present, self.char), b"\x01")
         return True
 
-    async def award_ship_piece(self, ctx: "BizHawkClientContext", ship_piece_id: int) -> bool:
+    async def award_ship_piece(self, ctx: "BizHawkClientContext", ship_piece_id: int) -> tuple[bool, tuple[str, str]]:
         piece = SHIP_PIECE_IDS.index(ship_piece_id)
         await self.poke_ram(ctx, get_slot_addr("COLLECTED_SHIP_PIECES", piece, self.char), COLLECTED_SHIP_ITEM)
         self.num_ship_pieces_owned += 1
         logger.debug("Currently have %i ship pieces", self.num_ship_pieces_owned)
         if self.current_level == 24:
             await self.recheck_elevator_unlock(ctx)
-        return True
+        return True, STATIC_DIALOGUE_LIST[ITEM_ID_TO_NAME[ship_piece_id]]
 
     # Spawns any standard floor item at TJ's current position
     # Normally only used to spawn edibles; presents go directly into inventory

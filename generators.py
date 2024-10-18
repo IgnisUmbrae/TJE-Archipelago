@@ -11,6 +11,8 @@ FOOD_WEIGHTS = [1]*len(FOOD_LIST)
 BAD_FOOD_INDICES = set([11, 12, 13, 14, 15])
 A_BUCK = 0x50
 
+
+
 class TJEGenerator():
     def __init__(self, world):
         self.random = world.random
