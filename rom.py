@@ -63,13 +63,12 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
     # "Who" menu: only one item / TJ or Earl only / text change
     # Menu return options: 0 for 2-player, 1 for TJ only, 2 for Earl only
     patch.write_token(APTokenTypes.WRITE, 0x00024327, b"\x01")
+    char_init = 0
     match world.options.character:
         case CharacterOption.TOEJAM:
             ret_val = 1
             string = (b"\x4F\x6E\x65\x20\x50\x6C\x61\x79\x65\x72\x20\x2D\x2D\x20\x6A"
                       b"\x75\x73\x27\x20\x54\x6F\x65\x6A\x61\x6D\x00")
-
-            char_init = 0
             no_2player = True
         case CharacterOption.EARL:
             ret_val = 2
