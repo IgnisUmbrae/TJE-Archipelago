@@ -59,7 +59,7 @@ class TJEGenerator():
 
         return culled_food_list, culled_food_weights
 
-    # Not clear if this actually uniformly randomly chosen in the code
+    # Not clear if this is actually uniformly randomly chosen in the code
     def get_random_food(self, include_bad: bool = True) -> int:
         food_list, food_distro = self.get_food_distribution(include_bad)
         return self.random.choices(food_list, food_distro, k=1)[0]
@@ -68,14 +68,13 @@ class TJEGenerator():
         present_list, present_distro = self.get_present_distribution(level_one, include_bad)
         return self.random.choices(present_list, present_distro, k=1)[0]
 
+    # Follows the high-level logic of the game but does not use the same RNG function
     def get_random_item(self, level_one: bool = False, include_bad: bool = True) -> int:
         if level_one or self.random.random() < 0.5:
             return self.get_random_present(level_one, include_bad)
-        else:
-            if self.random.random() < 0.75:
-                return self.get_random_food(include_bad)
-            else:
-                return A_BUCK
+        if self.random.random() < 0.75:
+            return self.get_random_food(include_bad)
+        return A_BUCK
 
     # def generate_padding_items(self, number : int) -> list[int]:
     #     return self.random.choices(PADDING_LIST, weights=PADDING_WEIGHTS, k=number)
