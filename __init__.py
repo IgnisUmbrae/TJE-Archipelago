@@ -7,7 +7,7 @@ from worlds.AutoWorld import World, WebWorld
 
 from .client import TJEClient # required to register with BizHawkClient
 from .generators import TJEGenerator, get_key_levels, item_totals
-from .items import EDIBLE_IDS, ITEM_ID_TO_CODE, ITEM_ID_TO_NAME, KEY_IDS, PRESENT_IDS, TJEItem, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, \
+from .items import ITEM_ID_TO_CODE, TJEItem, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, \
                    create_items, create_starting_presents
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, LOCATION_NAME_TO_ID
 from .options import TJEOptions
@@ -111,4 +111,4 @@ class TJEWorld(World):
                         item_hex = 0x1C # Regular AP item
                 self.patchable_item_list.append(item_hex)
             self.patchable_item_list.extend([0xFF]*(28 - num))
-        assert(len(self.patchable_item_list) == 26*28)
+        assert len(self.patchable_item_list) == 26*28

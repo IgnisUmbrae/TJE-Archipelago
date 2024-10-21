@@ -148,11 +148,15 @@ class TJEClient(BizHawkClient):
     # Determines whether an item should be spawned by the client or left to the game's own code to award
     # Rank checks and ship pieces are currently unable to award items purely via ROM
     def spawn_from_remote(self, ctx: "BizHawkClientContext", nwi: NetworkItem) -> bool:
-        #!getitem'ed or remote
-        if nwi.location == -1 or nwi.player != ctx.slot:
+        #!getitem'ed / server / remote
+        if nwi.location <= 0 or nwi.player != ctx.slot:
             return True
         loc_name = LOCATION_ID_TO_NAME[nwi.location]
         return "Promoted" in loc_name or "Ship Piece" in loc_name
+
+    def spawn_present_as_trap(self, nwi: NetworkItem) -> bool:
+        return (self.auto_trap_presents > 0 and nwi.item in TRAP_PRESENT_IDS and
+                            not (self.auto_trap_presents == 1 and ITEM_ID_TO_NAME[nwi.item] == "Randomizer"))
 
     async def handle_new_items(self, ctx: "BizHawkClientContext") -> None:
         num_new = len(ctx.items_received) - self.num_items_received
@@ -163,8 +167,7 @@ class TJEClient(BizHawkClient):
                 spawn_from_remote = self.spawn_from_remote(ctx, nwi)
                 if nwi.item in PRESENT_IDS:
                     if spawn_from_remote:
-                        if (self.auto_trap_presents > 0 and nwi.item in TRAP_PRESENT_IDS and
-                            not (self.auto_trap_presents == 1 and ITEM_ID_TO_NAME[nwi.item] == "Randomizer")):
+                        if self.spawn_present_as_trap(nwi):
                             self.trap_queue.add(nwi)
                         else:
                             self.present_queue.add(nwi)
