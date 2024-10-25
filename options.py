@@ -62,7 +62,8 @@ class ExpandedInventory(DefaultOnToggle):
 
 class SoundRando(Choice):
     """
-    Randomizes all PCM and PSG sound effects in the game. For sanity's sake, the menu blip will always be left alone.
+    Randomizes all PCM and PSG sound effects in the game. For sanity's sake, two sounds will never be randomized:
+    the menu blip and the Rocket Skates "blast-off" sound.
 
     None: No randomization.
     Most: Randomizes all PCM and PSG sound effects except the four that affect the music.
@@ -192,7 +193,7 @@ class ElevatorKeyType(Choice):
     Adds elevator keys, new progression items that lock certain elevators until found. These come in two flavours:
 
     - None: No elevator keys.
-    - Progressive: Each elevator key found unlocks an elevator one floor higher.
+    - Progressive: Each elevator key found unlocks an elevator for a higher floor (depending on key gap).
     - Static: Each elevator key is for a specific elevator.
     """
 
@@ -267,7 +268,7 @@ class GameOvers(Choice):
     What to do in the event of a game over.
 
     - Disable: Forces infinite lives so game overs never happen. Also removes Extra Life presents.
-    - Drop Down: Forces the player to fall down one level, after which they respawn normally.
+    - Drop Down: Forces TJ/E to fall down one level, after which they respawn normally.
     - Reset: Return to the title screen, as in the base game. Some progress will be lost.
     """
 
@@ -281,63 +282,63 @@ class GameOvers(Choice):
 
 class TrapPresents(DefaultOnToggle):
     """
-    Include trap presents (Earthling, Total Bummer etc) in the item pool.
+    Includes trap presents (Earthling, Total Bummer etc) in the item pool.
     """
 
     display_name = "Include Trap Presents"
 
 class TrapFood(DefaultOnToggle):
     """
-    Include trap food (Slimy Fungus, Fish Bones etc) in the item pool.
+    Includes trap food (Slimy Fungus, Fish Bones etc) in the item pool.
     """
 
     display_name = "Include Trap Food"
 
 class TrapCupid(Toggle):
     """
-    Add control-scrambling Cupid traps into the item pool.
+    Adds control-scrambling Cupid traps into the item pool.
     """
 
     display_name = "Enable Cupid Traps"
 
 class TrapBurp(Toggle):
     """
-    Add traps that make you constantly burp.
+    Adds traps that make you constantly burp into the item pool.
     """
 
     display_name = "Enable Burp Traps"
 
 class TrapSleep(Toggle):
     """
-    Add traps that instantly send you to sleep into the item pool.
+    Adds traps that instantly send you to sleep into the item pool.
     """
 
     display_name = "Enable Sleep Traps"
 
 class TrapRocketSkates(Toggle):
     """
-    Add traps that instantly give you Rocket Skates into the item pool.
+    Adds traps that instantly give you Rocket Skates into the item pool.
     """
 
     display_name = "Enable Rocket Skates Traps"
 
 class TrapEarthling(Toggle):
     """
-    Add traps that spawn Earthlings into the item pool.
+    Adds traps that spawn Earthlings into the item pool.
     """
 
     display_name = "Enable Earthling Traps"
 
 class TrapRandomizer(Toggle):
     """
-    Add traps that force-randomize all your presents into the item pool.
+    Adds traps that force-randomize all your presents into the item pool.
     """
 
     display_name = "Enable Randomizer Traps"
 
 class StartingPresents(Choice):
     """
-    Toejam's starting presents.
+    TJ/E's starting presents.
 
     - None: No presents at all!
     - Hitops: Four Super Hitops, same as base game
@@ -358,7 +359,7 @@ class StartingPresents(Choice):
 
 class SleepWhenIdle(DefaultOnToggle):
     """
-    Determines whether Toejam will fall asleep if left idle.
+    Whether TJ/E will fall asleep if left idle.
     Defaults to on, as in the base game.
     School books and sleep traps will still work even if this is set to off.
     """
