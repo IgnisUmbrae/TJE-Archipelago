@@ -11,8 +11,6 @@ FOOD_WEIGHTS = [1]*len(FOOD_LIST)
 BAD_FOOD_INDICES = set([11, 12, 13, 14, 15])
 A_BUCK = 0x50
 
-
-
 class TJEGenerator():
     def __init__(self, world):
         self.random = world.random
@@ -226,7 +224,7 @@ class TJEInternalRNG():
         print("Mailboxes: OK")
 
 # if __name__ == "__main__":
-#     tjerng = TJEInternalRNG()
+    # tjerng = TJEInternalRNG()
 
-#     tjerng.test_rng()
-#     tjerng.test_mailboxes()
+    # tjerng.test_rng()
+    # tjerng.test_mailboxes()
