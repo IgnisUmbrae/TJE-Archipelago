@@ -9,7 +9,7 @@ from .options import TJEOptions, ElevatorKeyTypeOption, GameOverOption, Starting
 
 # TO DO: lots of redundancy here; needs a big clean-up
 
-# Extra codes: 1C = AP item; 1D = AP progression item; 1E = elevator key; 1F = map reveal
+# Extra codes: 1C = AP item; 1D = AP progression item; 1E = elevator key; 1F = map reveal; 20 = ground ship piece
 
 #region Item data
 
@@ -95,7 +95,7 @@ BASE_ITEM_LIST: list[TJEItemData] = [
     TJEItemData(0xFF, "Nothing", TJEItemType.ETHEREAL, ItemClassification.filler, 0)
 ]
 
-ELEVATOR_KEY_ITEMS : list[TJEItemData] = [
+ELEVATOR_KEY_ITEMS: list[TJEItemData] = [
     TJEItemData(0x1E, "Level 2 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
     TJEItemData(0x1E, "Level 3 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
     TJEItemData(0x1E, "Level 4 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
@@ -122,7 +122,7 @@ ELEVATOR_KEY_ITEMS : list[TJEItemData] = [
     TJEItemData(0x1E, "Progressive Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0)
 ]
 
-INSTATRAP_ITEMS : list[TJEItemData] = [
+INSTATRAP_ITEMS: list[TJEItemData] = [
     TJEItemData(0x1C, "Cupid Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
     TJEItemData(0x1C, "Burp Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
     TJEItemData(0x1C, "Sleep Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
@@ -131,7 +131,7 @@ INSTATRAP_ITEMS : list[TJEItemData] = [
     TJEItemData(0x1C, "Randomizer Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
 ]
 
-MISC_ITEMS : list[TJEItemData] = [
+MISC_ITEMS: list[TJEItemData] = [
     TJEItemData(0x1F, "Progressive Map Reveal", TJEItemType.ETHEREAL, ItemClassification.useful, 0)
 ]
 
