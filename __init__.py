@@ -112,3 +112,11 @@ class TJEWorld(World):
                 self.patchable_item_list.append(item_hex)
             self.patchable_item_list.extend([0xFF]*(28 - num))
         assert len(self.patchable_item_list) == 26*28
+
+    # For tracker use
+    def fill_slot_data(self) -> dict[str, Any]:
+        return self.options.as_dict("key_gap", "max_rank_check") | {
+            "key_level_access": self.key_levels + [25],
+            "items_per_level": item_totals(True, self.options.min_items.value, self.options.max_items.value),
+            "ship_item_levels": self.ship_item_levels
+        }

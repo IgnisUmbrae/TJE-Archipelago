@@ -118,7 +118,7 @@ class TJEClient(BizHawkClient):
         }])
         self.game_controller.game_complete = True
         ctx.finished_game = True
-        
+
         self.edible_queue.empty()
         self.present_queue.empty()
         self.misc_queue.empty()
