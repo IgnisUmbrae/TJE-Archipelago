@@ -31,6 +31,10 @@ Additions over the base game include:
 - 2-player mode is not currently supported.
 - Hints are yet to be implemented and locations are generically-named.
 
+## Tracker
+
+A tracker developed by GrayGooGlitch is available [on GitHub here](https://github.com/graygooglitch/Toejam-and-Earl-AP-Tracker/) and requires TJE-AP version 0.2.4c or higher.
+
 ## Setup
 
 ### Requirements
@@ -69,4 +73,5 @@ I owe a great debt of gratitude to:
 
 - **slab**, whose hand-labelled disassembly and knowledge of the game's internal workings has been invaluable
 - **DrKelexo**, for being the first to brave the very first release, reams of early feedback, and some stellar spritework
+- **GrayGooGlitch**, for creating the most lovely tracker in apparently no time at all
 - **Everyone** in the ToeJam & Earl section of the Archipelago Discord for their frequent testing, feedback and suggestions
