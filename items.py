@@ -96,29 +96,6 @@ BASE_ITEM_LIST: list[TJEItemData] = [
 ]
 
 ELEVATOR_KEY_ITEMS: list[TJEItemData] = [
-    TJEItemData(0x1E, "Level 2 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(0x1E, "Level 3 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(0x1E, "Level 4 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(0x1E, "Level 5 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(0x1E, "Level 6 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(0x1E, "Level 7 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(0x1E, "Level 8 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(0x1E, "Level 9 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(0x1E, "Level 10 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(0x1E, "Level 11 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(0x1E, "Level 12 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(0x1E, "Level 13 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(0x1E, "Level 14 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(0x1E, "Level 15 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(0x1E, "Level 16 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(0x1E, "Level 17 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(0x1E, "Level 18 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(0x1E, "Level 19 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(0x1E, "Level 20 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(0x1E, "Level 21 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(0x1E, "Level 22 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(0x1E, "Level 23 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
-    TJEItemData(0x1E, "Level 24 Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0),
     TJEItemData(0x1E, "Progressive Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0)
 ]
 
@@ -245,12 +222,8 @@ def create_instatraps(world, options, total_locations, item_list) -> int:
     return instatrap_total
 
 def create_elevator_keys(world, options, item_list) -> int:
-    if options.key_type == ElevatorKeyTypeOption.STATIC:
-        item_list.extend([world.create_item(f"Level {lvl} Elevator Key", ItemClassification.progression)
-                          for lvl in world.key_levels])
-    elif options.key_type == ElevatorKeyTypeOption.PROGRESSIVE:
-        item_list.extend([world.create_item("Progressive Elevator Key", ItemClassification.progression)
-                          for _ in range(len(world.key_levels))])
+    item_list.extend([world.create_item("Progressive Elevator Key", ItemClassification.progression)
+                        for _ in range(len(world.key_levels))])
     return len(world.key_levels)
 
 def create_rank_items(world, options, item_list) -> int:

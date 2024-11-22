@@ -252,10 +252,11 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
         patch.write_token(APTokenTypes.WRITE, 0x00014c2f, struct.pack(">B", world.options.max_items.value))
         patch.write_token(APTokenTypes.WRITE, 0x00014c33, struct.pack(">B", world.options.max_items.value))
 
-    # Store data required by client
+    # Store data required by game/client
 
-    patch.write_token(APTokenTypes.WRITE, 0x001f0000, struct.pack(">B", world.options.key_type.value))
-    patch.write_token(APTokenTypes.WRITE, 0x001f0001, struct.pack(">B", world.options.auto_trap_presents.value))
+    key_gap = world.options.key_gap.value if world.options.elevator_keys else 0
+    patch.write_token(APTokenTypes.WRITE, 0x001f0000, struct.pack(">B", key_gap))
+    patch.write_token(APTokenTypes.WRITE, 0x001f0005, struct.pack(">B", world.options.auto_trap_presents.value))
 
     num_key_levels = len(world.key_levels)
     patch.write_token(APTokenTypes.WRITE, 0x001f0010, struct.pack(">B", num_key_levels))

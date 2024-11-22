@@ -85,12 +85,8 @@ def restrict_lv1_items(level_regions):
 
 def handle_key_options(multiworld, world, player,  options: TJEOptions):
     for i in world.key_levels:
-        if options.key_type == ElevatorKeyTypeOption.STATIC:
-            add_rule(multiworld.get_entrance(f"Level {i} Elevator", player),
-                     lambda state, lvl=i: state.has(f"Level {lvl} Elevator Key", player))
-        elif options.key_type == ElevatorKeyTypeOption.PROGRESSIVE:
-            add_rule(multiworld.get_entrance(f"Level {i} Elevator", player),
-                     lambda state, lvl=i: state.has("Progressive Elevator Key", player, world.key_levels.index(lvl)+1))
+        add_rule(multiworld.get_entrance(f"Level {i} Elevator", player),
+                    lambda state, lvl=i: state.has("Progressive Elevator Key", player, world.key_levels.index(lvl)+1))
 
 def handle_final_ship_piece(multiworld, player):
     add_rule(multiworld.get_entrance("Level 24 Elevator", player),

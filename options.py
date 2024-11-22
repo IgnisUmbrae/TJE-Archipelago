@@ -188,22 +188,12 @@ class MapReveals(Toggle):
 
     display_name = "Map Reveal Items"
 
-class ElevatorKeyType(Choice):
+class ElevatorKeys(DefaultOnToggle):
     """
-    Adds elevator keys, new progression items that lock certain elevators until found. These come in two flavours:
-
-    - None: No elevator keys.
-    - Progressive: Each elevator key found unlocks an elevator for a higher floor (depending on key gap).
-    - Static: Each elevator key is for a specific elevator.
+    Adds progressive elevator keys, new progression items that lock certain elevators until found.
     """
 
-    display_name = "Elevator Key Type"
-
-    option_none = ElevatorKeyTypeOption.NONE.value
-    option_progressive = ElevatorKeyTypeOption.PROGRESSIVE.value
-    option_static = ElevatorKeyTypeOption.STATIC.value
-
-    default = option_progressive
+    display_name = "Elevator Keys"
 
 class ElevatorKeyGap(NamedRange):
     """
@@ -435,7 +425,7 @@ tje_option_groups = [
     OptionGroup("Extra Items/Locations", [
         UpwarpPresent,
         MapReveals,
-        ElevatorKeyType,
+        ElevatorKeys,
         ElevatorKeyGap,
         MaxRankCheck
     ]),
@@ -471,7 +461,7 @@ class TJEOptions(PerGameCommonOptions):
     trap_earthling: TrapEarthling
     trap_randomizer: TrapRandomizer
     map_reveals: MapReveals
-    key_type: ElevatorKeyType
+    elevator_keys: ElevatorKeys
     key_gap: ElevatorKeyGap
     max_rank_check: MaxRankCheck
     upwarp_present: UpwarpPresent

@@ -90,20 +90,15 @@ class TJEClient(BizHawkClient):
         try:
             char = int.from_bytes(await self.peek_rom(ctx, 0x000242c5, 1))
 
-            prog_keys = int.from_bytes(await self.peek_rom(ctx, 0x001f0000, 1)) == 1
-            self.auto_trap_presents = int.from_bytes(await self.peek_rom(ctx, 0x001f0001, 1))
-
-            key_count = int.from_bytes(await self.peek_rom(ctx, 0x001f0010, 1))
-            key_levels = struct.unpack(f">{key_count}B", await self.peek_rom(ctx, 0x001f0011, key_count))
+            self.auto_trap_presents = int.from_bytes(await self.peek_rom(ctx, 0x001f0005, 1))
 
             ship_item_levels = struct.unpack(">10B", await self.peek_rom(ctx, 0x00097738, 10))
 
             expanded_inv = int.from_bytes(await self.peek_rom(ctx, 0x0000979c+3, 1)) == 0x1D
 
-            self.game_controller.initialize_slot_data(ship_item_levels, key_levels,
-                                                      prog_keys, self.auto_trap_presents, expanded_inv)
+            self.game_controller.initialize_slot_data(ship_item_levels, self.auto_trap_presents, expanded_inv)
             self.game_controller.add_monitors(ctx, char)
-            self.game_controller.create_save_points()
+            # self.game_controller.create_save_points()
 
             return True
         except (bizhawk.RequestFailedError, bizhawk.NotConnectedError):
@@ -164,20 +159,19 @@ class TJEClient(BizHawkClient):
         if num_new > 0:
             logger.debug("Received %i new items", num_new)
             for nwi in ctx.items_received[-num_new:]:
-                spawn_from_remote = self.spawn_from_remote(ctx, nwi)
-                if nwi.item in PRESENT_IDS:
-                    if spawn_from_remote:
-                        if self.spawn_present_as_trap(nwi):
-                            self.trap_queue.add(nwi)
-                        else:
-                            self.present_queue.add(nwi)
-                elif nwi.item in EDIBLE_IDS:
-                    if spawn_from_remote:
-                        self.edible_queue.add(nwi)
-                elif nwi.item in INSTATRAP_IDS:
+                if nwi.item in INSTATRAP_IDS:
                     self.trap_queue.add(nwi)
                 else:
-                    self.misc_queue.add(nwi)
+                    if self.spawn_from_remote(ctx, nwi): # non-local item
+                        if nwi.item in PRESENT_IDS:
+                            if self.spawn_present_as_trap(nwi):
+                                self.trap_queue.add(nwi)
+                            else:
+                                self.present_queue.add(nwi)
+                        elif nwi.item in EDIBLE_IDS:
+                            self.edible_queue.add(nwi)
+                        else:
+                            self.misc_queue.add(nwi)
 
             self.num_items_received = len(ctx.items_received)
 
