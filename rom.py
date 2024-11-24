@@ -245,12 +245,12 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
             patch.write_token(APTokenTypes.WRITE, 0x00004518, b"\x4e\x71\x4e\x71\x4e\x71")
 
     if world.options.min_items != world.options.min_items.default:
-        patch.write_token(APTokenTypes.WRITE, 0x00014c1b, struct.pack(">B", world.options.min_items.value))
-        patch.write_token(APTokenTypes.WRITE, 0x00014c1f, struct.pack(">B", world.options.min_items.value))
+        patch.write_token(APTokenTypes.WRITE, 0x00014c1a+1, struct.pack(">B", world.options.min_items.value))
+        patch.write_token(APTokenTypes.WRITE, 0x00014c1e+1, struct.pack(">B", world.options.min_items.value))
 
     if world.options.max_items != world.options.max_items.default:
-        patch.write_token(APTokenTypes.WRITE, 0x00014c2f, struct.pack(">B", world.options.max_items.value))
-        patch.write_token(APTokenTypes.WRITE, 0x00014c33, struct.pack(">B", world.options.max_items.value))
+        patch.write_token(APTokenTypes.WRITE, 0x00014c2c+3, struct.pack(">B", world.options.max_items.value))
+        patch.write_token(APTokenTypes.WRITE, 0x00014c32+1, struct.pack(">B", world.options.max_items.value))
 
     # Store data required by game/client
 
