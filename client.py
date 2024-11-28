@@ -56,7 +56,7 @@ class TJEClient(BizHawkClient):
         self.num_items_received = 0
         self.auto_trap_presents = False
 
-        self.edible_queue = SpawnQueue(cooldown=2)
+        self.edible_queue = SpawnQueue(cooldown=1)
         self.present_queue = SpawnQueue(cooldown=1)
         self.trap_queue = SpawnQueue(cooldown=1)
         self.misc_queue = SpawnQueue(cooldown=1)
