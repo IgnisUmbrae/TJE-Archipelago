@@ -161,9 +161,9 @@ STATIC_DIALOGUE_LIST: dict[str, tuple[str,str]] = {
 def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions) -> None:
     item_list: list[TJEItem] = []
 
-    total_locations = sum(item_totals(True, options.min_items.value, options.max_items.value))
+    total_locations = sum(item_totals(True, options.min_items.value, options.max_items.value, options.last_level.value))
 
-    create_ship_pieces(multiworld, world, player, item_list)
+    create_ship_pieces(multiworld, world, options, player, item_list)
 
     handle_trap_options(world, options)
     handle_gameover_options(world, options)
@@ -189,10 +189,10 @@ def handle_gameover_options(world, options) -> None:
     if options.game_overs == GameOverOption.DISABLE:
         world.generator.forbid_item(ITEM_NAME_TO_CODE["Extra Life"])
 
-def create_ship_pieces(multiworld, world, player, item_list) -> None:
+def create_ship_pieces(multiworld, world, options, player, item_list) -> None:
     ship_pieces_total = 10
 
-    multiworld.get_location("Level 25 - Ship Piece", player).place_locked_item(
+    multiworld.get_location(f"Level {options.last_level.value} - Ship Piece", player).place_locked_item(
         world.create_item("Hyperfunk Thruster", ItemClassification.progression)
     )
     ship_pieces_total -= 1
@@ -226,7 +226,7 @@ def create_elevator_keys(world, options, item_list) -> int:
                         for _ in range(len(world.key_levels))])
     return len(world.key_levels)
 
-def create_rank_items(world, options, item_list) -> int:
+def create_rank_items(world, options: TJEOptions, item_list) -> int:
     differential = 0
     if options.max_rank_check > 0:
         differential -= 8

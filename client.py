@@ -7,7 +7,7 @@ from worlds._bizhawk.client import BizHawkClient
 from NetUtils import ClientStatus, NetworkItem
 
 from .ram import TJEGameController
-from .items import EDIBLE_IDS, ITEM_ID_TO_NAME, PRESENT_IDS, INSTATRAP_IDS, TRAP_PRESENT_IDS
+from .items import EDIBLE_IDS, ITEM_ID_TO_NAME, PRESENT_IDS, INSTATRAP_IDS, SHIP_PIECE_IDS, TRAP_PRESENT_IDS
 from .locations import LOCATION_ID_TO_NAME, LOCATION_NAME_TO_ID
 
 if TYPE_CHECKING:
@@ -161,6 +161,8 @@ class TJEClient(BizHawkClient):
             for nwi in ctx.items_received[-num_new:]:
                 if nwi.item in INSTATRAP_IDS:
                     self.trap_queue.add(nwi)
+                elif nwi.item in SHIP_PIECE_IDS:
+                    self.misc_queue.add(nwi)
                 else:
                     if self.spawn_from_remote(ctx, nwi): # non-local item
                         if nwi.item in PRESENT_IDS:

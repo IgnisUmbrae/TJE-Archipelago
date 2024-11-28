@@ -42,6 +42,20 @@ class SoundRandoOption(IntEnum):
     MOST = 1
     ALL = 2
 
+class LastLevel(Range):
+    """
+    The last level of the game. Set lower for shorter runs.
+    Defaults to 25 (the maximum), as in the base game.
+    Cannot be less than 11 as the game mandates ten levels with ship piece items.
+    """
+
+    display_name = "Last Level"
+
+    range_start = 11
+    range_end = 25
+
+    default = 25
+
 class Islandless(DefaultOnToggle):
     """
     Prevents the game from creating tiny islands out in space, guaranteeing that every item will be accessible.
@@ -221,7 +235,9 @@ class ElevatorKeyGap(NamedRange):
 class MaxRankCheck(NamedRange):
     """
     Enabling this (value > 0) adds eight additional checks, one for each rank.
-    The number means the highest rank that *can* have a progression item. Later ranks are guaranteed not to.
+    The number means the highest rank that *can* have a progression item.
+    Higher ranks will still be checks, but are guaranteed not to have progression items.
+    Moles will not steal Promotion presents if this setting is enabled.
     Set to 0 to disable.
     """
 
@@ -410,7 +426,8 @@ tje_option_groups = [
         Islandless,
         MapRandomization,
         MinItemCount,
-        MaxItemCount
+        MaxItemCount,
+        LastLevel,
     ]),
     OptionGroup("Trap Options", [
         AutoOpenTrapPresents,
@@ -451,6 +468,7 @@ class TJEOptions(PerGameCommonOptions):
     map_rando: MapRandomization
     min_items: MinItemCount
     max_items: MaxItemCount
+    last_level: LastLevel
     auto_trap_presents: AutoOpenTrapPresents
     trap_food: TrapFood
     trap_presents: TrapPresents

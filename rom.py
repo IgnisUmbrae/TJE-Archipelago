@@ -252,6 +252,14 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
         patch.write_token(APTokenTypes.WRITE, 0x00014c2c+3, struct.pack(">B", world.options.max_items.value))
         patch.write_token(APTokenTypes.WRITE, 0x00014c32+1, struct.pack(">B", world.options.max_items.value))
 
+    # Fewer levels
+
+    if world.options.last_level != world.options.last_level.default:
+        for addr in (0x000127e0+3, 0x0010bf2a+3, 0x0010b908+1, 0x0010a72e+1):
+            patch.write_token(APTokenTypes.WRITE, addr, struct.pack(">B", world.options.last_level.value))
+        for addr in (0x0010bd40+4, 0x0010b900+1):
+            patch.write_token(APTokenTypes.WRITE, addr, struct.pack(">B", world.options.last_level.value-1))
+
     # Store data required by game/client
 
     key_gap = world.options.key_gap.value if world.options.elevator_keys else 0
@@ -264,6 +272,7 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
 
     # Store list of item types
 
-    patch.write_token(APTokenTypes.WRITE, 0x001a0000, struct.pack(f">{26*28}B", *world.patchable_item_list))
+    patch.write_token(APTokenTypes.WRITE, 0x001a0000, struct.pack(f">{(world.options.last_level.value+1)*28}B",
+                                                                  *world.patchable_item_list))
 
     patch.write_file("token_data.bin", patch.get_token_binary())

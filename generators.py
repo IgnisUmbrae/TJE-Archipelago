@@ -1,4 +1,7 @@
 import itertools
+from math import floor
+
+#region Constants
 
 PRESENT_LIST = range(0, 0x1B)
 PRESENT_WEIGHTS = [4, 5, 3, 4, 3, 4, 4, 3, 4, 4, 4, 1, 5, 4, 4, 4, 3, 1, 2, 2, 2, 1, 2, 2, 2, 2, 5]
@@ -10,6 +13,25 @@ FOOD_LIST = range(0x40, 0x50)
 FOOD_WEIGHTS = [1]*len(FOOD_LIST)
 BAD_FOOD_INDICES = set([11, 12, 13, 14, 15])
 A_BUCK = 0x50
+
+SHIP_PIECE_RANGES = (
+    [(2, 3), (4, 5), (6, 7), (8, 9), (10, 11)], # max level 12
+    [(2, 3), (4, 5), (6, 8), (9, 10), (11, 12)],
+    [(2, 3), (4, 5), (6, 8), (9, 10), (11, 13)],
+    [(2, 4), (5, 6), (7, 8), (9, 11), (12, 14)],
+    [(2, 4), (5, 7), (8, 9), (10, 12), (13, 15)],
+    [(2, 4), (5, 7), (8, 10), (11, 13), (14, 16)],
+    [(2, 4), (5, 8), (9, 11), (12, 14), (15, 17)],
+    [(2, 4), (5, 8), (9, 12), (13, 15), (16, 18)],
+    [(2, 4), (5, 8), (9, 13), (14, 16), (17, 19)],
+    [(2, 5), (6, 9), (10, 13), (14, 16), (17, 20)],
+    [(2, 5), (6, 9), (10, 13), (14, 17), (18, 21)],
+    [(2, 5), (6, 10), (11, 14), (15, 18), (19, 22)],
+    [(2, 5), (6, 10), (11, 14), (15, 19), (20, 23)],
+    [(2, 5), (6, 10), (11, 15), (16, 20), (21, 24)] # max level 25
+)
+
+#endregion
 
 class TJEGenerator():
     def __init__(self, world):
@@ -93,12 +115,14 @@ class TJEGenerator():
         present_list, present_distro = self.get_present_distribution(level_one=False, include_bad=include_bad)
         return self.random.choices(present_list, present_distro, k=4)
 
-    # Follows the same procedure as the ROM but has a slightly different distribution of results
-    # This version avoids all failure states and does not use the game's own RNG function
-    def generate_ship_piece_levels(self) -> list[int]:
-        ship_levels = [self.random.randint(i, j) for i, j in [(2, 5), (6, 10), (11, 15), (16, 20), (21, 24)]]
-        ship_levels.extend(self.random.sample(sorted(set(range(2, 25)) - set(ship_levels)), 5))
-        ship_levels[self.random.randint(0, 9)] = 25
+    # Follows the same procedure as the ROM but has a slightly different distribution of results as
+    # this version avoids all failure states and does not use the game's own RNG function
+    def generate_ship_piece_levels(self, last_level: int = 25) -> list[int]:
+        if last_level == 11:
+            return list(range(2,12))
+        ship_levels = [self.random.randint(i, j) for i, j in SHIP_PIECE_RANGES[last_level - 12]]
+        ship_levels.extend(self.random.sample(sorted(set(range(2, last_level)) - set(ship_levels)), 5))
+        ship_levels[self.random.randint(0, 9)] = last_level
         return sorted(ship_levels)
 
 # Collectible items only; does not include trees
@@ -117,8 +141,8 @@ def num_items_on_level(level: int, singleplayer: bool = True, min_items: int = 1
 
     return min(max_items, base + level - 2)
 
-def item_totals(singleplayer: bool = True, min_items: int = 12, max_items: int = 28) -> list[int]:
-    return [num_items_on_level(level, singleplayer, min_items, max_items) for level in range(0, 26)]
+def item_totals(singleplayer: bool = True, min_items: int = 12, max_items: int = 28, last_level: int = 25) -> list[int]:
+    return [num_items_on_level(level, singleplayer, min_items, max_items) for level in range(0, last_level+1)]
 
 def num_trees_on_level(level: int) -> int:
     if level < 0:
@@ -127,18 +151,18 @@ def num_trees_on_level(level: int) -> int:
         return [3, 0][level]
     return 4
 
-def get_key_levels(gap: int) -> list[int] | None:
+def get_key_levels(gap: int, last_level: int = 25) -> list[int] | None:
     match gap:
         case 0:
             return None
         case 1:
-            return list(range(2,25))
+            return list(range(2, last_level))
         case _:
-            return list(range(gap, 25, gap))
+            return list(range(gap, last_level, gap))
 
 # How many points we reasonably expect to be able to get on each level from map exploration alone
 # Values are tentative (lower than what's technically possible, just so logic is a bit nicer)
-def expected_map_points_on_level(level : int) -> int:
+def expected_map_points_on_level(level: int) -> int:
     match level:
         case 0: return 0
         case 1: return 7
@@ -149,7 +173,7 @@ def expected_map_points_on_level(level : int) -> int:
 
 # Half the items on a level are presents on average and they're worth 2 points each
 # Assumes 3/4 of these presents are typically "easy" to collect
-def expected_present_points_on_level(level : int) -> float:
+def expected_present_points_on_level(level: int) -> float:
     return 0.75*num_items_on_level(level)
 
 def expected_point_totals(cumulative=False) -> list[float]:
@@ -222,9 +246,3 @@ class TJEInternalRNG():
 
         assert([self.is_mailbox_real(i, seed) for i, seed in enumerate(FIXED_SEEDS)] == FIXED_MAILBOXES)
         print("Mailboxes: OK")
-
-# if __name__ == "__main__":
-    # tjerng = TJEInternalRNG()
-
-    # tjerng.test_rng()
-    # tjerng.test_mailboxes()

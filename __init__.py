@@ -47,8 +47,9 @@ class TJEWorld(World):
     def generate_early(self) -> None:
         self.seeds = [self.random.getrandbits(16) for _ in range(26)]
         self.generator = TJEGenerator(self)
-        self.key_levels = get_key_levels(self.options.key_gap.value) if self.options.elevator_keys else []
-        self.ship_item_levels = self.generator.generate_ship_piece_levels()
+        self.key_levels = (get_key_levels(self.options.key_gap.value, self.options.last_level.value)
+                           if self.options.elevator_keys else [])
+        self.ship_item_levels = self.generator.generate_ship_piece_levels(self.options.last_level.value)
         if self.options.upwarp_present:
             self.generator.fewer_upwarps()
 
@@ -92,7 +93,7 @@ class TJEWorld(World):
     def create_patchable_item_list(self):
         items_per_level = item_totals(True, self.options.min_items.value, self.options.max_items.value)
         self.patchable_item_list = [0xFF]*28
-        for level in range(1, 26):
+        for level in range(1, self.options.last_level.value+1):
             num = items_per_level[level]
             for i in range(num):
                 item = self.get_location(FLOOR_ITEM_LOC_TEMPLATE.format(level, i+1)).item
@@ -108,12 +109,13 @@ class TJEWorld(World):
                         item_hex = 0x1C # Regular AP item
                 self.patchable_item_list.append(item_hex)
             self.patchable_item_list.extend([0xFF]*(28 - num))
-        assert len(self.patchable_item_list) == 26*28
+        assert len(self.patchable_item_list) == (self.options.last_level.value+1)*28
 
     # For tracker use
     def fill_slot_data(self) -> dict[str, Any]:
         return self.options.as_dict("key_gap", "max_rank_check") | {
-            "key_level_access": self.key_levels + [25],
+            "key_level_access": self.key_levels + [self.options.last_level.value],
             "items_per_level": item_totals(True, self.options.min_items.value, self.options.max_items.value),
-            "ship_item_levels": self.ship_item_levels
+            "ship_item_levels": self.ship_item_levels,
+            "last_level": self.options.last_level.value
         }

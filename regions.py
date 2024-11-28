@@ -51,11 +51,11 @@ def create_regions(multiworld: MultiWorld, player: int, options: TJEOptions):
     level_regions = [Region(level.name, player, multiworld) for level in TJE_LEVEL_LIST]
     menu_region.connect(level_regions[1], "Start game")
 
-    connect_regions_basic(level_regions)
+    connect_regions_basic(level_regions, options)
 
     add_floor_items(world, player, options, level_regions)
     add_ship_pieces(world, player, level_regions)
-    handle_final_ship_piece(multiworld, player)
+    handle_final_ship_piece(multiworld, options, player)
 
     restrict_lv1_items(level_regions)
 
@@ -64,11 +64,11 @@ def create_regions(multiworld: MultiWorld, player: int, options: TJEOptions):
 
     multiworld.regions.extend(level_regions)
 
-def connect_regions_basic(level_regions):
-    for i in range(1, 25):
+def connect_regions_basic(level_regions, options: TJEOptions):
+    for i in range(1, options.last_level.value):
         level_regions[i].connect(level_regions[i+1], f"Level {i} Elevator")
 
-    for i in range(1, 26):
+    for i in range(1, options.last_level.value+1):
         level_regions[i].connect(level_regions[i-1], f"Level {i} Bummer", None)
 
 #region Misc
@@ -88,8 +88,8 @@ def handle_key_options(multiworld, world, player,  options: TJEOptions):
         add_rule(multiworld.get_entrance(f"Level {i} Elevator", player),
                     lambda state, lvl=i: state.has("Progressive Elevator Key", player, world.key_levels.index(lvl)+1))
 
-def handle_final_ship_piece(multiworld, player):
-    add_rule(multiworld.get_entrance("Level 24 Elevator", player),
+def handle_final_ship_piece(multiworld, options: TJEOptions, player):
+    add_rule(multiworld.get_entrance(f"Level {options.last_level.value-1} Elevator", player),
                 lambda state: state.has_group("Ship Pieces", player, 9))
 
 def handle_rank_options(multiworld, world, player,  options: TJEOptions, level_regions):
@@ -97,13 +97,13 @@ def handle_rank_options(multiworld, world, player,  options: TJEOptions, level_r
         menu_region = multiworld.get_region("Menu", player)
         add_rank_events(menu_region, player, options)
         add_rank_checks(menu_region, world, player, options)
-        for i in range(1, 26):
+        for i in range(1, options.last_level.value+1):
             add_reach_level_event(level_regions[i], player, i)
             add_map_points(level_regions[i], player, i)
 
 def add_floor_items(world, player,  options: TJEOptions, level_regions):
     per_level_limits = item_totals(True, options.min_items.value, options.max_items.value)
-    for i in range(1, 26):
+    for i in range(1, options.last_level.value+1):
         locs_to_add: list[TJELocation] = []
         for loc_data in FLOOR_ITEM_LOCATIONS[i][:per_level_limits[i]]:
             new_loc = TJELocation(player, loc_data.name, world.location_name_to_id[loc_data.name],
