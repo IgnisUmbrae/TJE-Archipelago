@@ -180,11 +180,11 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
 
     multiworld.itempool.extend(item_list)
 
-def handle_trap_options(world, options) -> None:
+def handle_trap_options(world, options: TJEOptions) -> None:
     if not options.trap_presents:
         world.generator.forbid_trap_presents()
-    if not options.trap_food:
-        world.generator.forbid_trap_food()
+    if not options.bad_food:
+        world.generator.forbid_bad_food()
 
 def handle_gameover_options(world, options) -> None:
     if options.game_overs == GameOverOption.DISABLE:

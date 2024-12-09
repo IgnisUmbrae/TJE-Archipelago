@@ -6,7 +6,7 @@ from worlds.generic.Rules import forbid_item, add_rule
 from .constants import RANK_NAMES, RANK_THRESHOLDS
 from .items import EDIBLE_IDS, ITEM_ID_TO_NAME, TJEItem
 from .generators import expected_map_points_on_level, item_totals
-from .options import ElevatorKeyTypeOption, TJEOptions
+from .options import TJEOptions
 from .locations import TJELocation, FLOOR_ITEM_LOCATIONS, SHIP_PIECE_LOCATIONS, RANK_LOC_TEMPLATE
 
 class TJERegion(NamedTuple):

@@ -47,7 +47,7 @@ class TJEGenerator():
     def forbid_trap_presents(self):
         self.global_banned_presents |= BAD_PRESENT_INDICES
 
-    def forbid_trap_food(self):
+    def forbid_bad_food(self):
         self.global_banned_food |= BAD_FOOD_INDICES
 
     def fewer_upwarps(self):
