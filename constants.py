@@ -1,4 +1,4 @@
-from enum import Enum, IntEnum
+from enum import IntEnum
 from typing import NamedTuple
 
 BASE_TJE_ID = 25101991
