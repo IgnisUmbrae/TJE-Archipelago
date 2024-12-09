@@ -1,11 +1,12 @@
 from typing import NamedTuple
 from enum import IntEnum
+from math import ceil
 
 from BaseClasses import Item, ItemClassification, MultiWorld
 
 from .constants import BASE_TJE_ID
 from .generators import item_totals
-from .options import TJEOptions, ElevatorKeyTypeOption, GameOverOption, StartingPresentOption
+from .options import TJEOptions, GameOverOption, StartingPresentOption
 
 # TO DO: lots of redundancy here; needs a big clean-up
 
@@ -239,10 +240,11 @@ def create_rank_items(world, options: TJEOptions, item_list) -> int:
         differential += extra_promos
     return differential
 
-def create_map_reveals(world, options, item_list) -> int:
+def create_map_reveals(world, options: TJEOptions, item_list) -> int:
     if options.map_reveals:
-        item_list.extend([world.create_item("Progressive Map Reveal", ItemClassification.useful) for _ in range(5)])
-        return 5
+        num = ceil(options.last_level/5)
+        item_list.extend([world.create_item("Progressive Map Reveal", ItemClassification.useful) for _ in range(num)])
+        return num
     return 0
 
 def create_main_items(world, item_list, total_locations, differential) -> None:
