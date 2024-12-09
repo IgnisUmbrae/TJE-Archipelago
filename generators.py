@@ -124,6 +124,20 @@ class TJEGenerator():
         ship_levels[self.random.randint(0, 9)] = last_level
         return sorted(ship_levels)
 
+    def generate_map_reveal_amounts(self, last_level: int) -> list[int] | None:
+        if last_level < 1:
+            return None
+
+        quot, rem = divmod(last_level, 5)
+        if rem > 0:
+            bump_indices = [0] + self.random.sample(range(1, 5), k=rem-1)
+        else:
+            bump_indices = []
+        amounts = [quot]*5
+        for i in bump_indices:
+            amounts[i] += 1
+        return amounts
+
 # Collectible items only; does not include trees
 def num_items_on_level(level: int, singleplayer: bool = True, min_items: int = 12, max_items: int = 28) -> int | None:
     if level < 0:
