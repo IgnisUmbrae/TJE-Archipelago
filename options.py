@@ -27,11 +27,6 @@ class StartingPresentOption(IntEnum):
     ANY_GOOD = 3
     ANY = 4
 
-class ElevatorKeyTypeOption(IntEnum):
-    NONE = 0
-    PROGRESSIVE = 1
-    STATIC = 2
-
 class AutoOpenOption(IntEnum):
     NONE = 0
     NO_RANDOMIZER = 1
