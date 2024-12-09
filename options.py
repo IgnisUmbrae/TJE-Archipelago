@@ -288,7 +288,7 @@ class TrapPresents(DefaultOnToggle):
 
     display_name = "Include Trap Presents"
 
-class TrapFood(DefaultOnToggle):
+class BadFood(DefaultOnToggle):
     """
     Includes trap food (Slimy Fungus, Fish Bones etc) in the item pool.
     """
@@ -426,7 +426,7 @@ tje_option_groups = [
     ]),
     OptionGroup("Trap Options", [
         AutoOpenTrapPresents,
-        TrapFood,
+        BadFood,
         TrapPresents,
         TrapCupid,
         TrapSleep,
@@ -465,7 +465,7 @@ class TJEOptions(PerGameCommonOptions):
     max_items: MaxItemCount
     last_level: LastLevel
     auto_trap_presents: AutoOpenTrapPresents
-    trap_food: TrapFood
+    bad_food: BadFood
     trap_presents: TrapPresents
     trap_cupid: TrapCupid
     trap_burp: TrapBurp
