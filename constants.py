@@ -77,11 +77,6 @@ EMPTY_PRESENT = b"\xFF"
 
 #region Elevator and rank checks
 
-ELEVATOR_LOCKED = b"\x0A"
-ELEVATOR_UNLOCKED = b"\x00"
-
-END_ELEVATOR_UNLOCKED_STATES = [b"\x00", b"\x01", b"\x02", b"\x03", b"\x04"]
-
 RANK_THRESHOLDS = [40, 100, 180, 280, 400, 540, 700, 880]
 RANK_NAMES = ["Dufus", "Poindexter", "Peanut", "Dude", "Bro", "Homey", "Rapmaster", "Funk Lord"]
 
