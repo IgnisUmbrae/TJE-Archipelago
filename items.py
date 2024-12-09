@@ -190,7 +190,7 @@ def handle_gameover_options(world, options) -> None:
     if options.game_overs == GameOverOption.DISABLE:
         world.generator.forbid_item(ITEM_NAME_TO_CODE["Extra Life"])
 
-def create_ship_pieces(multiworld, world, options, player, item_list) -> None:
+def create_ship_pieces(multiworld, world, options: TJEOptions, player, item_list) -> None:
     ship_pieces_total = 10
 
     multiworld.get_location(f"Level {options.last_level.value} - Ship Piece", player).place_locked_item(
@@ -242,7 +242,7 @@ def create_rank_items(world, options: TJEOptions, item_list) -> int:
 
 def create_map_reveals(world, options: TJEOptions, item_list) -> int:
     if options.map_reveals:
-        num = ceil(options.last_level/5)
+        num = ceil(options.last_level.value/5)
         item_list.extend([world.create_item("Progressive Map Reveal", ItemClassification.useful) for _ in range(num)])
         return num
     return 0
