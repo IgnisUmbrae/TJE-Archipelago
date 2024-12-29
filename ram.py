@@ -385,6 +385,11 @@ class TJEGameController():
     #     return (self.current_level in self.ship_item_levels and
     #             self.current_level not in self.collected_ship_item_levels)
 
+    async def handle_console_reset(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
+        logger.debug("Console reset")
+        self.is_playing = False
+        self.current_level = -1
+
     async def handle_level_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
         await self.update_game_state(ctx)
         # Special handling for menu, aka "level -1"
@@ -403,13 +408,16 @@ class TJEGameController():
                 await self.client.trigger_location(ctx, FLOOR_ITEM_LOC_TEMPLATE.format(level, item_num+1))
 
     async def handle_ship_item_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
-        triggered_levels = [old_data[i] for i in range(10) if new_data[i] != old_data[i] and old_data[i] != 0]
-        for level in triggered_levels:
-            # if level in self.ship_item_levels:
-            logger.debug("Triggering ship piece on level %i", level)
-            success = await self.client.trigger_location(ctx, SHIP_PIECE_LOC_TEMPLATE.format(level))
-            if success:
-                self.collected_ship_item_levels.append(self.current_level)
+        # This is an extra failsafe to avoid trouble during resets
+        await self.update_game_state(ctx)
+        if self.is_playing:
+            triggered_levels = [old_data[i] for i in range(10) if new_data[i] != old_data[i] and old_data[i] != 0]
+            for level in triggered_levels:
+                # if level in self.ship_item_levels:
+                logger.debug("Triggering ship piece on level %i", level)
+                success = await self.client.trigger_location(ctx, SHIP_PIECE_LOC_TEMPLATE.format(level))
+                if success:
+                    self.collected_ship_item_levels.append(self.current_level)
 
     async def handle_rank_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
         rank = int.from_bytes(new_data)
