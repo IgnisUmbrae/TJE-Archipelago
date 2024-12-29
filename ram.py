@@ -403,7 +403,7 @@ class TJEGameController():
                 await self.client.trigger_location(ctx, FLOOR_ITEM_LOC_TEMPLATE.format(level, item_num+1))
 
     async def handle_ship_item_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
-        triggered_levels = [old_data[i] for i in range(10) if new_data[i] != old_data[i]]
+        triggered_levels = [old_data[i] for i in range(10) if new_data[i] != old_data[i] and old_data[i] != 0]
         for level in triggered_levels:
             # if level in self.ship_item_levels:
             logger.debug("Triggering ship piece on level %i", level)
