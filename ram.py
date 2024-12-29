@@ -49,7 +49,7 @@ class AddressMonitor():
         self.set_monitor_level(level)
 
     def log_state(self, state=None):
-        if not state:
+        if state is None:
             state = self.enabled
         logger.debug("%s monitoring %s", self.name, "enabled" if state else "disabled")
 
@@ -419,6 +419,6 @@ class TJEGameController():
 
     async def update_game_state(self, ctx: "BizHawkClientContext") -> None:
         player_state = await self.peek_ram(ctx, get_ram_addr("STATE", self.char), 1)
-        self.is_playing: bool = (player_state != b"\x00")
+        self.is_playing = (player_state != b"\x00")
 
     #endregion
