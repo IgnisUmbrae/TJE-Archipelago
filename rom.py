@@ -1,3 +1,4 @@
+import copy
 import hashlib
 import struct
 import os
@@ -111,9 +112,6 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
         patch.write_token(APTokenTypes.WRITE, 0x0010bb00, b"\x30\x03\x48\xC0\xE9\x80\x22\x45\x20\x49\x32\x02\xD1\xC0"
                                                           b"\x1C\x30\x10\x00\x48\x86\x0C\x46\x00\x0B\x67\x06\x4E\xF9"
                                                           b"\x00\x02\x20\x52\x4E\xF9\x00\x02\x21\x7C\x00")
-        # The ASL at 0x00022042 has been relocated to 0x0010bb04 in our custom code
-        INV_SIZE_ADDRS_ASL_D0.remove(0x00022042)
-        INV_SIZE_ADDRS_ASL_D0.append(0x0010bb04)
 
     if world.options.upwarp_present:
         # Jump to new function
@@ -181,7 +179,16 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
             patch.write_token(APTokenTypes.WRITE, addr, b"\x40")
         for i, addr in enumerate(INV_SIZE_ADDRS_INITIAL):
             patch.write_token(APTokenTypes.WRITE, addr, (0x40+i).to_bytes(1))
-        for addr in INV_SIZE_ADDRS_ASL_D0:
+
+        if world.options.max_rank_check.value > 0:
+            inv_size_addrs_asl_d0 = copy.copy(INV_SIZE_ADDRS_ASL_D0)
+            # The ASL at 0x00022042 has been relocated to 0x0010bb04 in our custom code
+            inv_size_addrs_asl_d0.remove(0x00022042)
+            inv_size_addrs_asl_d0.append(0x0010bb04)
+        else:
+            inv_size_addrs_asl_d0 = INV_SIZE_ADDRS_ASL_D0
+
+        for addr in inv_size_addrs_asl_d0:
             patch.write_token(APTokenTypes.WRITE, addr, b"\xED\x80")
         patch.write_token(APTokenTypes.WRITE, 0x000099a6, b"\xED\x81") # using D1
         patch.write_token(APTokenTypes.WRITE, 0x00022068, b"\xED\x82") # using D2
@@ -200,11 +207,14 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
 
     if world.options.sound_rando != world.options.sound_rando.default:
         if world.options.sound_rando == SoundRandoOption.ALL:
-            PCM_SFX_ADDRS.extend(PCM_SFX_ADDRS_MUSIC)
-            PCM_SFX_USAGE_ADDRS.extend(PCM_SFX_USAGE_ADDRS_MUSIC)
-        world.random.shuffle(PCM_SFX_ADDRS)
-        for i, sfx_addr in enumerate(PCM_SFX_ADDRS):
-            for rom_addr in PCM_SFX_USAGE_ADDRS[i]:
+            pcm_sfx_addrs = PCM_SFX_ADDRS + PCM_SFX_ADDRS_MUSIC
+            pcm_sfx_usage_addrs = PCM_SFX_USAGE_ADDRS + PCM_SFX_USAGE_ADDRS_MUSIC
+        else:
+            pcm_sfx_addrs = PCM_SFX_ADDRS
+            pcm_sfx_usage_addrs = PCM_SFX_USAGE_ADDRS
+        world.random.shuffle(pcm_sfx_addrs)
+        for i, sfx_addr in enumerate(pcm_sfx_addrs):
+            for rom_addr in pcm_sfx_usage_addrs[i]:
                 # +2 to jump over the operation
                 patch.write_token(APTokenTypes.WRITE, rom_addr + 2, sfx_addr.to_bytes(4))
 
