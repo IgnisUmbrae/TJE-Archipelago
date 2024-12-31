@@ -197,11 +197,14 @@ def expected_point_totals(cumulative=False) -> list[float]:
         return totals
     return [round(n) for n in itertools.accumulate(iterable=totals)]
 
-def map_reveal_text(potencies: list[int]) -> list[str]:
+def map_reveal_ranges(potencies: list[int]) -> list[tuple[int, int]]:
     uppers = list(itertools.accumulate(potencies))
     lowers = [1]+[i+1 for i in uppers[:-1]]
+    return zip(lowers, uppers)
+
+def map_reveal_text(potencies: list[int]) -> list[str]:
     return [(MAP_REVEAL_DIALOGUE_TEMPLATE if l != u else MAP_REVEAL_DIALOGUE_TEMPLATE_DEGEN).format(l, u)
-            for l, u in zip(lowers, uppers)]
+            for l, u in map_reveal_ranges(potencies)]
 
 # def sign(num):
 #     return (num > 0) - (num < 0)
