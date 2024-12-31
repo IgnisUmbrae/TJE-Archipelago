@@ -94,15 +94,15 @@ class FastLoads(Toggle):
 
     display_name = "Fast Loads"
 
-class AutoOpenTrapPresents(Choice):
+class AutoOpenBadPresents(Choice):
     """
-    Whether trap presents should automatically open when received from other players.
+    Whether bad presents should automatically open when received from other players.
     Presents collected locally will not auto-open.
     Recommended to reduce the burden of inventory management.
     Auto-opening randomizers may cause the game to softlock in certain circumstances so be prepared to rewind.
     """
 
-    display_name = "Automatically Open Trap Presents"
+    display_name = "Automatically Open Bad Presents"
 
     option_none = AutoOpenOption.NONE.value
     option_no_randomizer = AutoOpenOption.NO_RANDOMIZER.value
@@ -436,8 +436,8 @@ tje_option_groups = [
         MaxItemCount,
         LastLevel,
     ]),
-    OptionGroup("Trap Options", [
-        AutoOpenTrapPresents,
+    OptionGroup("Bad/Trap Options", [
+        AutoOpenBadPresents,
         BadFood,
         BadPresents,
         TrapCupid,
@@ -477,7 +477,7 @@ class TJEOptions(PerGameCommonOptions):
     min_items: MinItemCount
     max_items: MaxItemCount
     last_level: LastLevel
-    auto_trap_presents: AutoOpenTrapPresents
+    auto_bad_presents: AutoOpenBadPresents
     bad_food: BadFood
     bad_presents: BadPresents
     trap_cupid: TrapCupid

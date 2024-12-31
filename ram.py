@@ -117,7 +117,7 @@ class TJEGameController():
 
         self.char = 0
 
-        self.auto_trap_presents = False
+        self.auto_bad_presents = False
         self.expanded_inv = False
 
     #region Per-update high-level logic functions
@@ -190,8 +190,8 @@ class TJEGameController():
             ),
         ]
 
-    def initialize_slot_data(self, auto_trap_presents: bool, expanded_inv: bool):
-        self.auto_trap_presents = auto_trap_presents
+    def initialize_slot_data(self, auto_bad_presents: bool, expanded_inv: bool):
+        self.auto_bad_presents = auto_bad_presents
         self.expanded_inv = expanded_inv
         if self.expanded_inv:
             expand_inv_constants()
@@ -307,8 +307,8 @@ class TJEGameController():
         return (await self.peek_ram(ctx, get_ram_addr("AP_GIVE_ITEM", self.char), 1)) != b"\xFF"
 
     async def receive_item(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
-        if self.auto_trap_presents > 0 and item_id in TRAP_PRESENT_IDS:
-            if not (self.auto_trap_presents == 1 and item_id == ITEM_NAME_TO_ID["Randomizer"]):
+        if self.auto_bad_presents > 0 and item_id in TRAP_PRESENT_IDS:
+            if not (self.auto_bad_presents == 1 and item_id == ITEM_NAME_TO_ID["Randomizer"]):
                 return await self.open_trap_present(ctx, item_id)
         return await self.spawn_item(ctx, item_id)
 

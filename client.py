@@ -54,7 +54,7 @@ class TJEClient(BizHawkClient):
 
         self.game_controller = TJEGameController(self)
         self.num_items_received = 0
-        self.auto_trap_presents = False
+        self.auto_bad_presents = False
 
         self.edible_queue = SpawnQueue(cooldown=1)
         self.present_queue = SpawnQueue(cooldown=1)
@@ -90,13 +90,13 @@ class TJEClient(BizHawkClient):
         try:
             char = int.from_bytes(await self.peek_rom(ctx, 0x000242c5, 1))
 
-            self.auto_trap_presents = int.from_bytes(await self.peek_rom(ctx, 0x001f0005, 1))
+            self.auto_bad_presents = int.from_bytes(await self.peek_rom(ctx, 0x001f0005, 1))
 
             #ship_item_levels = struct.unpack(">10B", await self.peek_rom(ctx, 0x00097738, 10))
 
             expanded_inv = int.from_bytes(await self.peek_rom(ctx, 0x0000979c+3, 1)) == 0x1D
 
-            self.game_controller.initialize_slot_data(self.auto_trap_presents, expanded_inv)
+            self.game_controller.initialize_slot_data(self.auto_bad_presents, expanded_inv)
             self.game_controller.add_monitors(ctx, char)
             # self.game_controller.create_save_points()
 
@@ -150,8 +150,8 @@ class TJEClient(BizHawkClient):
         return "Promoted" in loc_name or "Ship Piece" in loc_name
 
     def spawn_present_as_trap(self, nwi: NetworkItem) -> bool:
-        return (self.auto_trap_presents > 0 and nwi.item in TRAP_PRESENT_IDS and
-                            not (self.auto_trap_presents == 1 and ITEM_ID_TO_NAME[nwi.item] == "Randomizer"))
+        return (self.auto_bad_presents > 0 and nwi.item in TRAP_PRESENT_IDS and
+                            not (self.auto_bad_presents == 1 and ITEM_ID_TO_NAME[nwi.item] == "Randomizer"))
 
     async def handle_new_items(self, ctx: "BizHawkClientContext") -> None:
         num_new = len(ctx.items_received) - self.num_items_received
