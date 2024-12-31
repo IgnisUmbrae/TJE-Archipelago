@@ -10,7 +10,7 @@ from worlds._bizhawk.client import BizHawkClient
 from .constants import EMPTY_ITEM, COLLECTED_SHIP_ITEM, PLAYER_SLOT_STRUCTURES, RANK_NAMES, STATIC_DIALOGUE_LIST, \
                         get_slot_addr, get_ram_addr, expand_inv_constants
 from .items import ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, \
-                    PRESENT_IDS, SHIP_PIECE_IDS,INSTATRAP_IDS, TRAP_PRESENT_IDS
+                    PRESENT_IDS, SHIP_PIECE_IDS,INSTATRAP_IDS, BAD_PRESENT_IDS
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, RANK_LOC_TEMPLATE, SHIP_PIECE_LOC_TEMPLATE
 
 if TYPE_CHECKING:
@@ -307,7 +307,7 @@ class TJEGameController():
         return (await self.peek_ram(ctx, get_ram_addr("AP_GIVE_ITEM", self.char), 1)) != b"\xFF"
 
     async def receive_item(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
-        if self.auto_bad_presents > 0 and item_id in TRAP_PRESENT_IDS:
+        if self.auto_bad_presents > 0 and item_id in BAD_PRESENT_IDS:
             if not (self.auto_bad_presents == 1 and item_id == ITEM_NAME_TO_ID["Randomizer"]):
                 return await self.open_trap_present(ctx, item_id)
         return await self.spawn_item(ctx, item_id)

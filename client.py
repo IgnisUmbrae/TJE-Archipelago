@@ -7,7 +7,7 @@ from worlds._bizhawk.client import BizHawkClient
 from NetUtils import ClientStatus, NetworkItem
 
 from .ram import TJEGameController
-from .items import EDIBLE_IDS, ITEM_ID_TO_NAME, PRESENT_IDS, INSTATRAP_IDS, SHIP_PIECE_IDS, TRAP_PRESENT_IDS
+from .items import EDIBLE_IDS, ITEM_ID_TO_NAME, PRESENT_IDS, INSTATRAP_IDS, SHIP_PIECE_IDS, BAD_PRESENT_IDS
 from .locations import LOCATION_ID_TO_NAME, LOCATION_NAME_TO_ID
 
 if TYPE_CHECKING:
@@ -90,15 +90,11 @@ class TJEClient(BizHawkClient):
         try:
             char = int.from_bytes(await self.peek_rom(ctx, 0x000242c5, 1))
 
-            self.auto_bad_presents = int.from_bytes(await self.peek_rom(ctx, 0x001f0005, 1))
-
-            #ship_item_levels = struct.unpack(">10B", await self.peek_rom(ctx, 0x00097738, 10))
-
+            self.auto_bad_presents = bool.from_bytes(await self.peek_rom(ctx, 0x001f0005, 1))
             expanded_inv = int.from_bytes(await self.peek_rom(ctx, 0x0000979c+3, 1)) == 0x1D
 
             self.game_controller.initialize_slot_data(self.auto_bad_presents, expanded_inv)
             self.game_controller.add_monitors(ctx, char)
-            # self.game_controller.create_save_points()
 
             return True
         except (bizhawk.RequestFailedError, bizhawk.NotConnectedError):
@@ -150,7 +146,7 @@ class TJEClient(BizHawkClient):
         return "Promoted" in loc_name or "Ship Piece" in loc_name
 
     def spawn_present_as_trap(self, nwi: NetworkItem) -> bool:
-        return (self.auto_bad_presents > 0 and nwi.item in TRAP_PRESENT_IDS and
+        return (self.auto_bad_presents > 0 and nwi.item in BAD_PRESENT_IDS and
                             not (self.auto_bad_presents == 1 and ITEM_ID_TO_NAME[nwi.item] == "Randomizer"))
 
     async def handle_new_items(self, ctx: "BizHawkClientContext") -> None:

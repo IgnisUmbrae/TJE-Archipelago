@@ -131,7 +131,7 @@ PRESENT_IDS = [ITEM_NAME_TO_ID[item.name] for item in BASE_ITEM_LIST if item.typ
 EDIBLE_IDS = [ITEM_NAME_TO_ID[item.name] for item in BASE_ITEM_LIST if item.type == TJEItemType.EDIBLE]
 KEY_IDS = [ITEM_NAME_TO_ID[item.name] for item in ELEVATOR_KEY_ITEMS]
 INSTATRAP_IDS = [ITEM_NAME_TO_ID[item.name] for item in INSTATRAP_ITEMS]
-TRAP_PRESENT_IDS = [ITEM_NAME_TO_ID[item.name] for item in BASE_ITEM_LIST
+BAD_PRESENT_IDS = [ITEM_NAME_TO_ID[item.name] for item in BASE_ITEM_LIST
                     if item.type == TJEItemType.PRESENT and item.classification == ItemClassification.trap]
 
 #endregion
