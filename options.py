@@ -188,14 +188,26 @@ class MapRandomization(Choice):
 
 class MapReveals(Toggle):
     """
-    Adds five Progressive Map Reveal items, which reveal maps five levels at a time (1–5, 6–10, etc).
-    Revealed squares are "glass" as if revealed by a telephone, so still give points when fully uncovered.
+    Adds five Progressive Map Reveal items, which reveal 1/5 of the remaining maps at a time.
+    If last_level is 25 (the default), this means 1–5, 6–10, etc. Otherwise these ranges will vary somewhat.
+    In-game dialogue will always explain exactly which maps have been uncovered.
+    Revealed squares will be "glass" as if revealed by a telephone, so still give points when fully uncovered.
     
     Note that because the game isn't able to(? or isn't programmed to) render an entire map full of glass tiles,
     the outer border of each map will be left as is.
     """
 
     display_name = "Map Reveal Items"
+
+class LocalMapReveals(Toggle):
+    """
+    Forces map reveals to be local items and balances placement so that they never appear too late to be useful
+    (assuming you've collected all of them up to that point). Highly recommended for solo games.
+    For example, if a particular map reveal would uncover levels 1–5, it is guaranteed to appear on one of those levels.
+    Map reveals placed on level 1 will be one of the four immediately-accessible items on the starting islands.
+    """
+
+    display_name = "Local Map Reveals"
 
 class ElevatorKeys(DefaultOnToggle):
     """
@@ -474,6 +486,7 @@ class TJEOptions(PerGameCommonOptions):
     trap_earthling: TrapEarthling
     trap_randomizer: TrapRandomizer
     map_reveals: MapReveals
+    local_map_reveals: LocalMapReveals
     elevator_keys: ElevatorKeys
     key_gap: ElevatorKeyGap
     max_rank_check: MaxRankCheck
