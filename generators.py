@@ -46,7 +46,7 @@ class TJEGenerator():
         elif item_code in FOOD_LIST:
             self.global_banned_food.add(FOOD_LIST.index(item_code))
 
-    def forbid_trap_presents(self):
+    def forbid_bad_presents(self):
         self.global_banned_presents |= BAD_PRESENT_INDICES
 
     def forbid_bad_food(self):

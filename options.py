@@ -293,19 +293,19 @@ class GameOvers(Choice):
 
     default = option_drop_down
 
-class TrapPresents(DefaultOnToggle):
+class BadPresents(DefaultOnToggle):
     """
-    Includes trap presents (Earthling, Total Bummer etc) in the item pool.
+    Includes bad presents (Earthling, Total Bummer etc) in the item pool.
     """
 
-    display_name = "Include Trap Presents"
+    display_name = "Include Bad Presents"
 
 class BadFood(DefaultOnToggle):
     """
-    Includes trap food (Slimy Fungus, Fish Bones etc) in the item pool.
+    Includes bad food (Slimy Fungus, Fish Bones etc) in the item pool.
     """
 
-    display_name = "Include Trap Food"
+    display_name = "Include Bad Food"
 
 class TrapCupid(Toggle):
     """
@@ -439,7 +439,7 @@ tje_option_groups = [
     OptionGroup("Trap Options", [
         AutoOpenTrapPresents,
         BadFood,
-        TrapPresents,
+        BadPresents,
         TrapCupid,
         TrapSleep,
         TrapRocketSkates,
@@ -449,6 +449,7 @@ tje_option_groups = [
     OptionGroup("Extra Items/Locations", [
         UpwarpPresent,
         MapReveals,
+        LocalMapReveals,
         ElevatorKeys,
         ElevatorKeyGap,
         MaxRankCheck
@@ -478,7 +479,7 @@ class TJEOptions(PerGameCommonOptions):
     last_level: LastLevel
     auto_trap_presents: AutoOpenTrapPresents
     bad_food: BadFood
-    trap_presents: TrapPresents
+    bad_presents: BadPresents
     trap_cupid: TrapCupid
     trap_burp: TrapBurp
     trap_sleep: TrapSleep
