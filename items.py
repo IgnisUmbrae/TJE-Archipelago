@@ -1,6 +1,5 @@
 from typing import NamedTuple
 from enum import IntEnum
-from math import ceil
 
 from BaseClasses import Item, ItemClassification, MultiWorld
 

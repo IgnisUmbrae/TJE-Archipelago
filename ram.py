@@ -105,18 +105,15 @@ class TJEGameController():
 
         # Ship piece–related
 
-        self.ship_item_levels, self.collected_ship_item_levels = [], []
-
         self.num_ship_pieces_owned = 0
 
         # Saving and loading–related
 
         self.connected = False
-        # self.load_delay = None
 
         # Misc
 
-        #self.paused = False
+        self.monitors = []
 
         self.char = 0
 
@@ -128,7 +125,6 @@ class TJEGameController():
     async def tick(self, ctx: "BizHawkClientContext"):
         self.connected = (ctx.bizhawk_ctx.connection_status == ConnectionStatus.CONNECTED)
         if self.connected:
-            # if self.load_delay is not None: await self.load_delay.tick()
             if not self.game_complete:
                 await self.update_game_state(ctx)
                 for monitor in self.monitors: await monitor.tick()
@@ -156,7 +152,7 @@ class TJEGameController():
                 "COLLECTED_ITEMS",
                 104,
                 MonitorLevel.GLOBAL,
-                lambda: not self.is_on_menu(),# and not self.is_awaiting_load() and not self.is_paused(),
+                lambda: not self.is_on_menu(),
                 self.handle_floor_item_change,
                 self,
                 ctx
@@ -166,7 +162,7 @@ class TJEGameController():
                 "TRIGGERED_SHIP_ITEMS",
                 10,
                 MonitorLevel.GLOBAL,
-                lambda: not self.is_on_menu(),# and not self.is_awaiting_load() and not self.is_paused(),
+                lambda: not self.is_on_menu(),
                 self.handle_ship_item_change,
                 self,
                 ctx
@@ -176,7 +172,7 @@ class TJEGameController():
                 "RANK",
                 1,
                 level,
-                lambda: not self.is_on_menu(),# and not self.is_awaiting_load() and not self.is_paused(),
+                lambda: not self.is_on_menu(),
                 self.handle_rank_change,
                 self,
                 ctx
@@ -186,7 +182,7 @@ class TJEGameController():
                 "LEVEL",
                 1,
                 level,
-                lambda: True, #not self.is_awaiting_load(),
+                lambda: True,
                 self.handle_level_change,
                 self,
                 ctx,
@@ -194,8 +190,7 @@ class TJEGameController():
             ),
         ]
 
-    def initialize_slot_data(self, ship_item_levels: list[int], auto_trap_presents: bool, expanded_inv: bool):
-        self.ship_item_levels = ship_item_levels
+    def initialize_slot_data(self, auto_trap_presents: bool, expanded_inv: bool):
         self.auto_trap_presents = auto_trap_presents
         self.expanded_inv = expanded_inv
         if self.expanded_inv:
@@ -375,22 +370,10 @@ class TJEGameController():
     def is_on_menu(self) -> bool:
         return (not self.is_playing or self.current_level == -1)
 
-    # def is_ship_piece_level(self) -> bool:
-    #     return (self.current_level in self.ship_item_levels and
-    #             self.current_level not in self.collected_ship_item_levels)
-
-    async def handle_console_reset(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
-        logger.debug("Console reset")
-        self.is_playing = False
-        self.current_level = -1
-
     async def handle_level_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
         await self.update_game_state(ctx)
         # Special handling for menu, aka "level -1"
         self.current_level = int.from_bytes(new_data) if self.is_playing else -1
-        # if self.current_level == -1:
-        #     logger.debug("Reboot detected; force unpausing")
-        #     self.paused = False
         logger.debug("Level changed to %i", self.current_level)
 
     async def handle_floor_item_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
@@ -407,11 +390,8 @@ class TJEGameController():
         if self.is_playing:
             triggered_levels = [old_data[i] for i in range(10) if new_data[i] != old_data[i] and old_data[i] != 0]
             for level in triggered_levels:
-                # if level in self.ship_item_levels:
                 logger.debug("Triggering ship piece on level %i", level)
-                success = await self.client.trigger_location(ctx, SHIP_PIECE_LOC_TEMPLATE.format(level))
-                if success:
-                    self.collected_ship_item_levels.append(self.current_level)
+                await self.client.trigger_location(ctx, SHIP_PIECE_LOC_TEMPLATE.format(level))
 
     async def handle_rank_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
         rank = int.from_bytes(new_data)
