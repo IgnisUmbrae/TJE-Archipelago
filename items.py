@@ -4,7 +4,8 @@ from enum import IntEnum
 from BaseClasses import Item, ItemClassification, MultiWorld
 
 from .constants import BASE_TJE_ID
-from .generators import item_totals
+from .generators import item_totals, map_reveal_ranges, num_items_on_level
+from .locations import FLOOR_ITEM_LOC_TEMPLATE
 from .options import TJEOptions, GameOverOption, StartingPresentOption
 
 # TO DO: lots of redundancy here; needs a big clean-up
@@ -149,7 +150,7 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
     # Negative means we need to add items; positive means we have too many
     differential = create_rank_items(world, options, item_list) \
                    + create_elevator_keys(world, options, item_list) \
-                   + create_map_reveals(world, options, item_list) \
+                   + create_map_reveals(multiworld, world, options, player, item_list) \
                    + create_instatraps(world, options, total_locations, item_list)
 
     create_main_items(world, item_list, total_locations, differential)
@@ -216,11 +217,20 @@ def create_rank_items(world, options: TJEOptions, item_list) -> int:
         differential += extra_promos
     return differential
 
-def create_map_reveals(world, options: TJEOptions, item_list) -> int:
+def create_map_reveals(multiworld, world, options: TJEOptions, player, item_list) -> int:
     if options.map_reveals:
-        num = 5
-        item_list.extend([world.create_item("Progressive Map Reveal", ItemClassification.useful) for _ in range(num)])
-        return num
+        if options.local_map_reveals:
+            place_levels = [world.random.randint(a, b) for a, b in map_reveal_ranges(world.map_reveal_potencies)]
+            place_locs = [world.random.randint(1, num_items_on_level(level, True, options.min_items.value,
+                                                                    options.max_items.value) if level > 1 else 4)
+                        for level in place_levels]
+            for i in range(5):
+                multiworld.get_location(
+                    FLOOR_ITEM_LOC_TEMPLATE.format(place_levels[i], place_locs[i]),
+                    player).place_locked_item(world.create_item("Progressive Map Reveal", ItemClassification.useful))
+        else:
+            item_list.extend([world.create_item("Progressive Map Reveal", ItemClassification.useful) for _ in range(5)])
+        return 5
     return 0
 
 def create_main_items(world, item_list, total_locations, differential) -> None:
