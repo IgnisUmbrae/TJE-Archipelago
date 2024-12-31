@@ -136,29 +136,6 @@ TRAP_PRESENT_IDS = [ITEM_NAME_TO_ID[item.name] for item in BASE_ITEM_LIST
 
 #endregion
 
-#region Dialogue-related
-
-STATIC_DIALOGUE_LIST: dict[str, tuple[str,str]] = {
-    "Rocketship Windshield": ("Windshield!", "jammin'"),
-    "Left Megawatt Speaker": ("L. speaker!", "jammin'"),
-    "Super Funkomatic Amplamator": ("Amp!", "jammin'"),
-    "Amplamator Connector Fin": ("Amp fin!", "jammin'"),
-    "Forward Stabilizing Unit": ("Front leg!", "jammin'"),
-    "Rear Leg": ("Rear leg!", "jammin'"),
-    "Awesome Snowboard": ("Snowboard!", "jammin'"),
-    "Righteous Rapmaster Capsule": ("Capsule!", "jammin'"),
-    "Right Megawatt Speaker": ("R. speaker!", "jammin'"),
-    "Hyperfunk Thruster": ("Thruster!", "jammin'"),
-    "Cupid Trap": ("Uh-oh...", "cupid trap!"),
-    "Burp Trap": ("Uh-oh...", "burp trap!"),
-    "Sleep Trap": ("Uh-oh...", "study time!"),
-    "Earthling Trap": ("Uh-oh...", "earthling!!"),
-    "Rocket Skates Trap": ("Uh-oh...", "skates trap!"),
-    "Randomizer Trap": ("Uh-oh...", "randomizer!!"),
-}
-
-#endregion
-
 def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions) -> None:
     item_list: list[TJEItem] = []
 
@@ -242,7 +219,7 @@ def create_rank_items(world, options: TJEOptions, item_list) -> int:
 
 def create_map_reveals(world, options: TJEOptions, item_list) -> int:
     if options.map_reveals:
-        num = ceil(options.last_level.value/5)
+        num = 5
         item_list.extend([world.create_item("Progressive Map Reveal", ItemClassification.useful) for _ in range(num)])
         return num
     return 0

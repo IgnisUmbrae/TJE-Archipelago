@@ -8,8 +8,10 @@ import Utils
 from settings import get_settings
 from worlds.Files import APProcedurePatch, APTokenMixin, APTokenTypes
 
-from .constants import EMPTY_PRESENT, INITIAL_PRESENT_ADDRS, BASE_LEVEL_TYPES, INV_REF_ADDRS, INV_SIZE_ADDRS, INV_SIZE_ADDRS_ASL_D0, INV_SIZE_ADDRS_INITIAL, PCM_SFX_ADDRS, PCM_SFX_ADDRS_MUSIC, \
-                       PCM_SFX_USAGE_ADDRS, PCM_SFX_USAGE_ADDRS_MUSIC, PSG_SFX, PSG_SFX_USAGE_ADDRS
+from .constants import EMPTY_PRESENT, INITIAL_PRESENT_ADDRS, BASE_LEVEL_TYPES, INV_REF_ADDRS, INV_SIZE_ADDRS, \
+                       INV_SIZE_ADDRS_ASL_D0, INV_SIZE_ADDRS_INITIAL, MAP_REVEAL_DIALOGUE_ADDRS, PCM_SFX_ADDRS, \
+                       PCM_SFX_ADDRS_MUSIC, PCM_SFX_USAGE_ADDRS, PCM_SFX_USAGE_ADDRS_MUSIC, PSG_SFX, PSG_SFX_USAGE_ADDRS
+from .generators import map_reveal_text
 from .items import ITEM_ID_TO_CODE
 from .options import CharacterOption, SoundRandoOption, StartingPresentOption, GameOverOption, MapRandomizationOption
 
@@ -255,10 +257,21 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
     # Fewer levels
 
     if world.options.last_level != world.options.last_level.default:
+        # Patch in last level
         for addr in (0x000127e0+3, 0x0010bf2a+3, 0x0010b908+1, 0x0010a72e+1):
             patch.write_token(APTokenTypes.WRITE, addr, struct.pack(">B", world.options.last_level.value))
         for addr in (0x0010bd40+4, 0x0010b900+1):
             patch.write_token(APTokenTypes.WRITE, addr, struct.pack(">B", world.options.last_level.value-1))
+
+    # Map reveal modifications
+
+    patch.write_token(APTokenTypes.WRITE, 0x001a0300, struct.pack(">5B", *world.map_reveal_potencies))
+
+    if world.options.last_level != world.options.last_level.default:
+        # Patch in new dialogue
+        map_reveal_dialogue = map_reveal_text(world.map_reveal_potencies)
+        for addr, string in zip(MAP_REVEAL_DIALOGUE_ADDRS, map_reveal_dialogue):
+            patch.write_token(APTokenTypes.WRITE, addr, string.encode("ascii") + b"\x00")
 
     # Store data required by game/client
 

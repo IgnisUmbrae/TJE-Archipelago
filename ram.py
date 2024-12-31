@@ -1,6 +1,4 @@
 import random
-import struct
-import functools
 import logging
 from typing import TYPE_CHECKING, Callable, Optional
 from enum import IntEnum
@@ -9,9 +7,9 @@ import worlds._bizhawk as bizhawk
 from worlds._bizhawk import ConnectionStatus
 from worlds._bizhawk.client import BizHawkClient
 
-from .constants import EMPTY_ITEM, COLLECTED_SHIP_ITEM, PLAYER_SLOT_STRUCTURES, RANK_NAMES, \
+from .constants import EMPTY_ITEM, COLLECTED_SHIP_ITEM, PLAYER_SLOT_STRUCTURES, RANK_NAMES, STATIC_DIALOGUE_LIST, \
                         get_slot_addr, get_ram_addr, expand_inv_constants
-from .items import ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, STATIC_DIALOGUE_LIST, \
+from .items import ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, \
                     PRESENT_IDS, SHIP_PIECE_IDS,INSTATRAP_IDS, TRAP_PRESENT_IDS
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, RANK_LOC_TEMPLATE, SHIP_PIECE_LOC_TEMPLATE
 
@@ -110,10 +108,6 @@ class TJEGameController():
         self.ship_item_levels, self.collected_ship_item_levels = [], []
 
         self.num_ship_pieces_owned = 0
-
-        # Map-related
-
-        self.num_map_reveals: int = 0
 
         # Saving and loading–related
 
@@ -349,7 +343,7 @@ class TJEGameController():
     async def give_item_directly(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
         if await self.is_item_waiting(ctx):
             return False
-        if item_id in PRESENT_IDS and await self.is_inventory_full(ctx): #and self.game_state == TJEGameState.IN_INVENTORY:
+        if item_id in PRESENT_IDS and await self.is_inventory_full(ctx):
             return False
         item_code = ITEM_ID_TO_CODE[item_id]
         return await self.poke_ram(ctx, get_ram_addr("AP_GIVE_ITEM"), item_code.to_bytes(1))

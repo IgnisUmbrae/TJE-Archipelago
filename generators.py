@@ -1,5 +1,7 @@
 import itertools
 
+from .constants import MAP_REVEAL_DIALOGUE_TEMPLATE, MAP_REVEAL_DIALOGUE_TEMPLATE_DEGEN
+
 #region Constants
 
 PRESENT_LIST = range(0, 0x1B)
@@ -98,13 +100,13 @@ class TJEGenerator():
     # def generate_padding_items(self, number : int) -> list[int]:
     #     return self.random.choices(PADDING_LIST, weights=PADDING_WEIGHTS, k=number)
 
-    def generate_items_for_level(self, level : int, singleplayer : bool = True) -> list[int]:
+    def generate_items_for_level(self, level: int, singleplayer: bool = True) -> list[int]:
         if level <= 0:
             return []
         num_items = num_items_on_level(level, singleplayer=singleplayer)
         return [self.get_random_item(level_one=(level == 1)) for _ in range(num_items)]
 
-    def generate_all_level_items(self, singleplayer : bool = True) -> list[list[int]]:
+    def generate_all_level_items(self, singleplayer: bool = True) -> list[list[int]]:
         return [self.generate_items_for_level(level, singleplayer=singleplayer) for level in range(0,26)]
 
     def generate_item_blob(self, number: int, include_bad: bool = True) -> list[int]:
@@ -124,7 +126,7 @@ class TJEGenerator():
         ship_levels[self.random.randint(0, 9)] = last_level
         return sorted(ship_levels)
 
-    def generate_map_reveal_amounts(self, last_level: int) -> list[int] | None:
+    def generate_map_reveal_potencies(self, last_level: int) -> list[int] | None:
         if last_level < 1:
             return None
 
@@ -194,6 +196,12 @@ def expected_point_totals(cumulative=False) -> list[float]:
     if not cumulative:
         return totals
     return [round(n) for n in itertools.accumulate(iterable=totals)]
+
+def map_reveal_text(potencies: list[int]) -> list[str]:
+    uppers = list(itertools.accumulate(potencies))
+    lowers = [1]+[i+1 for i in uppers[:-1]]
+    return [(MAP_REVEAL_DIALOGUE_TEMPLATE if l != u else MAP_REVEAL_DIALOGUE_TEMPLATE_DEGEN).format(l, u)
+            for l, u in zip(lowers, uppers)]
 
 # def sign(num):
 #     return (num > 0) - (num < 0)

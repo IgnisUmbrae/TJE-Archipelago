@@ -1,4 +1,3 @@
-from enum import IntEnum
 from typing import NamedTuple
 
 BASE_TJE_ID = 25101991
@@ -62,6 +61,36 @@ INV_SIZE_ADDRS_ASL_D0 = [0x00009358, 0x0000936c, 0x00009380, 0x000097a8, 0x00009
 
 #endregion
 
+#region Dialogue-related ROM addresses
+
+MAP_REVEAL_DIALOGUE_ADDRS = (0x00105b73, 0x00105b7e, 0x00105b8a, 0x00105b97, 0x00105ba4)
+
+#region Dialogue templates
+
+MAP_REVEAL_DIALOGUE_TEMPLATE = "Lv{}-{} map!"
+MAP_REVEAL_DIALOGUE_TEMPLATE_DEGEN = "Lv{} map!"
+
+STATIC_DIALOGUE_LIST: dict[str, tuple[str,str]] = {
+    "Rocketship Windshield": ("Windshield!", "jammin'"),
+    "Left Megawatt Speaker": ("L. speaker!", "jammin'"),
+    "Super Funkomatic Amplamator": ("Amp!", "jammin'"),
+    "Amplamator Connector Fin": ("Amp fin!", "jammin'"),
+    "Forward Stabilizing Unit": ("Front leg!", "jammin'"),
+    "Rear Leg": ("Rear leg!", "jammin'"),
+    "Awesome Snowboard": ("Snowboard!", "jammin'"),
+    "Righteous Rapmaster Capsule": ("Capsule!", "jammin'"),
+    "Right Megawatt Speaker": ("R. speaker!", "jammin'"),
+    "Hyperfunk Thruster": ("Thruster!", "jammin'"),
+    "Cupid Trap": ("Uh-oh...", "cupid trap!"),
+    "Burp Trap": ("Uh-oh...", "burp trap!"),
+    "Sleep Trap": ("Uh-oh...", "study time!"),
+    "Earthling Trap": ("Uh-oh...", "earthling!!"),
+    "Rocket Skates Trap": ("Uh-oh...", "skates trap!"),
+    "Randomizer Trap": ("Uh-oh...", "randomizer!!"),
+}
+
+#endregion
+
 #region Floor items and ship pieces
 
 TREES = [b"\x51", b"\x52", b"\x53"]
@@ -82,96 +111,12 @@ RANK_NAMES = ["Dufus", "Poindexter", "Peanut", "Dude", "Bro", "Homey", "Rapmaste
 
 #endregion
 
-#region Toejam state flags
-
-# STATE_LOAD_DOWN = b"\x41"
-
-# SPRITES_HITOPS_JUMP = [0x70, 0x71, 0x72, 0x73]
-# SPRITES_WATER = [0x03, 0x07, 0x22, 0x23, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F,
-#                        0x30, 0x31, 0x32, 0x33, 0x48, 0x49, 0x4A, 0x4B, 0x4D, 0x64, 0x65, 0x66, 0x67, 0x77, 0x78]
-# SPRITES_GHOST = [0x05, 0x06]
-
-# class TJEGameState(Enum):
-#     WAITING_FOR_LOAD = -1
-#     MAIN_MENU = 0
-#     NORMAL = 1
-#     IN_INVENTORY = 2
-#     IN_AIR = 3
-#     IN_WATER = 4
-#     IN_ELEVATOR = 5
-#     ARRIVED = 6
-#     TRAVELLING_DOWN = 7
-#     UNFALLING = 8
-#     GHOST = 9
-
-# LOADING_STATES = [TJEGameState.IN_ELEVATOR, TJEGameState.TRAVELLING_DOWN]
-# LOADING_STATES_STRICT = LOADING_STATES + [TJEGameState.UNFALLING, TJEGameState.IN_INVENTORY]
-
-# SPAWN_BLOCKING_STATES = LOADING_STATES_STRICT + [TJEGameState.IN_AIR, TJEGameState.IN_WATER,
-#                                           TJEGameState.GHOST, TJEGameState.MAIN_MENU, TJEGameState.ARRIVED]
-
-#endregion
-
 #region Misc
 
 INITIAL_PRESENT_ADDRS = [0x00014393, 0x00014397, 0x000143a5, 0x000143ab,
                          0x000143c5, 0x000143cb, 0x000143d9, 0x000143df]
 
 BASE_LEVEL_TYPES = [0, 1, 5, 2, 7, 3, 4, 2, 6, 7, 2, 3, 6, 2, 4, 7, 2, 4, 2, 7, 4, 5, 1, 7]
-
-# The values at 0xFFA2AC
-class SPRITE_SETS(IntEnum):
-    IDLE = 0x1
-    WINGS_GHOST = 0x2
-    WALKING = 0x4
-    SNEAKING = 0x8
-    TEETERING = 0x10
-    FALLING = 0x20
-    BOUNCING = 0x40
-    DIVE_PREP = 0x80
-    DIVE_1 = 0x100
-    DIVE_2 = 0x200
-    DIVE_3 = 0x400
-    UNDERWATER = 0x800
-    CLIMBING_OUT = 0x1000
-    YOUCHED = 0x2000
-    SPRING_SHOES = 0x4000
-    FLYING = 0x8000
-    UNKNOWN1 = 0x10000
-    ZAPPED = 0x20000
-    TUBE_SWIM = 0x40000
-    TUBE_IDLE = 0x80000
-    TOMATO = 0x100000
-    SLINGSHOT = 0x200000
-    DANCING = 0x400000
-    UNKNOWN2 = 0x800000
-    SKATES_HOLD = 0x1000000
-    SKATES_WATER = 0x2000000
-    SKATES_AIR = 0x4000000
-    HITOPS_RUN = 0x8000000
-    HITOPS_JUMP = 0x10000000
-    SLEEPING = 0x20000000
-    UNKNOWN3 = 0x40000000
-    UNKNOWN4 = 0x80000000
-
-NO_SPAWN_SPRITE_SETS = [
-    SPRITE_SETS.FALLING,
-    SPRITE_SETS.DIVE_1,
-    SPRITE_SETS.DIVE_2,
-    SPRITE_SETS.DIVE_3,
-    SPRITE_SETS.UNDERWATER,
-    SPRITE_SETS.CLIMBING_OUT,
-    SPRITE_SETS.FLYING,
-    SPRITE_SETS.UNKNOWN1,
-    SPRITE_SETS.TUBE_SWIM,
-    SPRITE_SETS.TUBE_IDLE,
-    SPRITE_SETS.UNKNOWN2,
-    SPRITE_SETS.SKATES_WATER,
-    SPRITE_SETS.SKATES_AIR,
-    SPRITE_SETS.HITOPS_JUMP,
-    SPRITE_SETS.UNKNOWN3,
-    SPRITE_SETS.UNKNOWN4
-]
 
 # 0 = Toejam, 1 = Earl
 def get_ram_addr(name: str, player: int = 0) -> int:

@@ -50,6 +50,7 @@ class TJEWorld(World):
         self.key_levels = (get_key_levels(self.options.key_gap.value, self.options.last_level.value)
                            if self.options.elevator_keys else [])
         self.ship_item_levels = self.generator.generate_ship_piece_levels(self.options.last_level.value)
+        self.map_reveal_potencies = self.generator.generate_map_reveal_potencies(self.options.last_level.value)
         if self.options.upwarp_present:
             self.generator.fewer_upwarps()
 
