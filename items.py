@@ -159,7 +159,7 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
 
 def handle_trap_options(world, options: TJEOptions) -> None:
     if not options.bad_presents:
-        world.generator.forbid_trap_presents()
+        world.generator.forbid_bad_presents()
     if not options.bad_food:
         world.generator.forbid_bad_food()
 
