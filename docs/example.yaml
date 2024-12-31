@@ -7,14 +7,14 @@ game: ToeJam and Earl
 ToeJam and Earl:
   game_overs: drop_down
   islandless: yes
-  trap_presents: yes
-  trap_food: yes
+  bad_food: yes
+  bad_presents: yes
+  auto_bad_presents: no_randomizer
   trap_cupid: yes
   trap_burp: yes
   trap_sleep: no
   trap_earthling: no
   trap_skates: yes
-  auto_trap_presents: no_randomizer
   starting_presents: hitops
   key_type: progressive
   key_gap: 4
