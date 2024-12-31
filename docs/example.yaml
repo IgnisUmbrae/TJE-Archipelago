@@ -16,7 +16,7 @@ ToeJam and Earl:
   trap_earthling: no
   trap_skates: yes
   starting_presents: hitops
-  key_type: progressive
+  elevator_keys: yes
   key_gap: 4
   upwarp_present: yes
   map_reveals: yes
