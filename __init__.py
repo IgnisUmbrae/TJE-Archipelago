@@ -7,7 +7,7 @@ from BaseClasses import CollectionState, ItemClassification
 from worlds.AutoWorld import World, WebWorld
 
 from .client import TJEClient # required to register with BizHawkClient
-from .generators import TJEGenerator, get_key_levels, item_totals, total_points_to_next_rank
+from .generators import TJEGenerator, get_key_levels, item_totals, scaled_rank_thresholds, total_points_to_next_rank
 from .items import ITEM_ID_TO_CODE, TJEItem, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, TJEItemType, \
                    create_items, create_starting_presents
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, LOCATION_NAME_TO_ID
@@ -66,6 +66,9 @@ class TJEWorld(World):
                            if self.options.elevator_keys else [])
         self.ship_item_levels = self.generator.generate_ship_piece_levels(self.options.last_level.value)
         self.map_reveal_potencies = self.generator.generate_map_reveal_potencies(self.options.last_level.value)
+        self.rank_thresholds = scaled_rank_thresholds(self.options.last_level.value,
+                                                      self.options.min_items.value,
+                                                      self.options.max_items.value)
         if self.options.upwarp_present:
             self.generator.fewer_upwarps()
 
@@ -134,5 +137,6 @@ class TJEWorld(World):
             "key_level_access": self.key_levels + [self.options.last_level.value],
             "items_per_level": item_totals(True, self.options.min_items.value, self.options.max_items.value),
             "ship_item_levels": self.ship_item_levels,
-            "last_level": self.options.last_level.value
+            "last_level": self.options.last_level.value,
+            "rank_thresholds": self.rank_thresholds
         }

@@ -5,7 +5,7 @@ from worlds.generic.Rules import forbid_item, add_rule
 
 from .constants import RANK_NAMES
 from .items import EDIBLE_IDS, ITEM_ID_TO_NAME, TJEItem
-from .generators import expected_map_points_on_level, item_totals, scaled_rank_thresholds
+from .generators import expected_map_points_on_level, item_totals
 from .options import TJEOptions
 from .locations import TJELocation, FLOOR_ITEM_LOCATIONS, SHIP_PIECE_LOCATIONS, RANK_LOC_TEMPLATE
 
@@ -95,7 +95,7 @@ def handle_final_ship_piece(multiworld, options: TJEOptions, player):
 def handle_rank_options(multiworld, world, player,  options: TJEOptions, level_regions):
     if options.max_rank_check > 0:
         menu_region = multiworld.get_region("Menu", player)
-        add_rank_events(menu_region, player, options)
+        add_rank_events(menu_region, world, player, options)
         add_rank_checks(menu_region, world, player, options)
         for i in range(1, options.last_level.value+1):
             add_reach_level_event(level_regions[i], player, i)
@@ -156,9 +156,8 @@ def add_reach_level_event(level: Region, player: int, number: int):
     level.locations.append(reach_loc)
 
 # For internal rank number and logic tracking only
-def add_rank_events(menu: Region, player: int, options: TJEOptions):
-    thresholds = scaled_rank_thresholds(options.last_level.value, options.min_items.value, options.max_items.value)
-    for rank_number, rank, threshold in zip(range(1, 9), RANK_NAMES, thresholds):
+def add_rank_events(menu: Region, world, player: int, options: TJEOptions):
+    for rank_number, rank, threshold in zip(range(1, 9), RANK_NAMES, world.rank_thresholds):
         rank_loc = TJELocation(player, f"Reached {rank}", None, menu)
         rank_loc.show_in_spoiler = False
         prog: bool = (rank_number <= options.max_rank_check.value)
