@@ -42,6 +42,8 @@ class LastLevel(Range):
     The last level of the game. Set lower for shorter runs.
     Defaults to 25 (the maximum), as in the base game.
     Cannot be less than 11 as the game mandates ten levels with ship piece items.
+    Anything whose behaviour is relative to the last or second-last level of the game (e.g. restrictions on the use
+    of Up-Warps) will change in lockstep with this option.
     """
 
     display_name = "Last Level"
