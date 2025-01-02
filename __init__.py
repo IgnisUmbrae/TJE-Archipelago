@@ -15,7 +15,8 @@ from .options import TJEOptions
 from .regions import create_regions
 from .rom import TJEProcedurePatch, write_tokens
 
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
+# logger.setLevel(logging.DEBUG)
 
 class TJEWeb(WebWorld):
     theme = "partyTime"
@@ -51,7 +52,7 @@ class TJEWorld(World):
             else:
                 state.prog_items[item.player]["points"] += item.point_value
                 state.prog_items[item.player]["ranks"] += item.rank_value
-            # if item.point_value != 0 or item.rank_value != 0:
+            # if (item.point_value != 0 or item.rank_value != 0):
             #     logger.debug("* %s\t→ %i points, %i ranks",
             #                  item.name,
             #                  state.prog_items[item.player]["points"],

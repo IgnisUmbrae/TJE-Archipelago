@@ -1,5 +1,5 @@
 import itertools
-from math import floor
+from math import ceil
 
 from .constants import MAP_REVEAL_DIALOGUE_TEMPLATE, MAP_REVEAL_DIALOGUE_TEMPLATE_DEGEN
 
@@ -197,8 +197,8 @@ def expected_present_points_on_level(level: int, min_items: int = 12, max_items:
 def expected_points_on_level(level: int, min_items: int = 12, max_items: int = 28) -> int:
     return expected_map_points_on_level(level) + expected_present_points_on_level(level, min_items, max_items)
 
-def expected_point_totals(min_items: int = 12, max_items: int = 28, cumulative=False) -> list[int]:
-    totals = [expected_points_on_level(level, min_items, max_items) for level in range(0,26)]
+def expected_point_totals(last_level: int, min_items: int = 12, max_items: int = 28, cumulative = False) -> list[int]:
+    totals = [expected_points_on_level(level, min_items, max_items) for level in range(0,last_level+1)]
     if not cumulative:
         return totals
     return [round(n) for n in itertools.accumulate(iterable=totals)]
@@ -212,17 +212,67 @@ def map_reveal_text(potencies: list[int]) -> list[str]:
     return [(MAP_REVEAL_DIALOGUE_TEMPLATE if l != u else MAP_REVEAL_DIALOGUE_TEMPLATE_DEGEN).format(l, u)
             for l, u in map_reveal_ranges(potencies)]
 
-def total_points_to_next_rank(current_rank: int) -> int:#, last_level: int=25) -> int:
-    #rescale_factor: float = last_level/25.0
-    base = 40
+def get_rank_rescale_factor(last_level: int, min_items: int, max_items: int) -> float:
+    full_game_estimate = expected_point_totals(last_level=25, min_items=12, max_items=28, cumulative=True)[-1]
+    reduced_game_estimate = expected_point_totals(last_level, min_items, max_items, cumulative=True)[-1]
+    return reduced_game_estimate/full_game_estimate
+
+def rescale_to_nearest_10(num: int, rescale_factor: float) -> int:
+    return round(rescale_factor*num/10)*10
+
+def total_points_to_next_rank(current_rank: int, last_level: int = 25, min_items: int = 12, max_items: int = 28) -> int:
+    reqd = 0
     if current_rank > 7:
         return 0
-    for i in range(current_rank):
-        base += (i+3)*20
-    return base#floor(rescale_factor*base/10)*10
+    for rank in range(current_rank+1):
+        reqd += points_to_next_rank(rank)
+
+    if last_level == 25 and min_items == 12 and max_items == 28:
+        return reqd
+
+    rescale_factor = get_rank_rescale_factor(last_level, min_items, max_items)
+    return rescale_to_nearest_10(reqd, rescale_factor)
 
 def points_to_next_rank(current_rank: int) -> int:
-    return current_rank*20 + 40
+    return 40 + 20*current_rank
+
+def scaled_rank_thresholds(last_level: int = 25, min_items: int = 12, max_items: int = 28) -> list[int]:
+    return [total_points_to_next_rank(rank, last_level, min_items, max_items) for rank in range(8)]
+
+def scaled_rank_thresholds_alt(last_level: int = 25, min_items: int = 12, max_items: int = 28) -> list[int]:
+    min_factor = get_rank_rescale_factor(11, 4, 4) # Lowest rescale factor possible
+    factor = get_rank_rescale_factor(last_level, min_items, max_items)
+
+    # Map factor onto line starting at (min_factor, 1) and ending at (1, 0); its image under this map represents
+    # the % of the the rescaled second differences total that will be partitioned into 10s
+    percentage_of_tens = (factor-1)/(min_factor-1)
+    number_of_tens = int(ceil(percentage_of_tens*6))
+
+    # Partition out required number of tens (if this is not possible, then as many as possible)
+    diffs2_total = rescale_to_nearest_10(120, factor) # base second differences are [20]*6 → 120 total
+    quot, rem = divmod(diffs2_total, 10)
+    quot = min(number_of_tens, quot)
+    diffs2 = [10]*quot
+    diffs2_total -= 10*quot
+
+    # Partition out as many 20s as possible
+    quot, rem = divmod(diffs2_total, 20)
+    diffs2.extend([20]*quot)
+    if quot != 0 and rem != 0:
+        diffs2.append(rem)
+
+    # If we still haven't produced 6 numbers, add zeroes as required
+    diffs2.extend([0]*(6-len(diffs2)))
+
+    # Rescale base first difference and first rank threshold
+    diffs1_1 = rescale_to_nearest_10(60, factor)
+    thresh_1 = max(rescale_to_nearest_10(40, factor), 20)
+
+    diffs2 = sorted(diffs2)
+    diffs1 = sorted(itertools.accumulate([diffs1_1] + diffs2)) # Build first differences
+    thresholds = sorted(itertools.accumulate([thresh_1] + diffs1)) # Build actual sequence
+
+    return thresholds
 
 # def sign(num):
 #     return (num > 0) - (num < 0)

@@ -3,9 +3,9 @@ from typing import NamedTuple
 from BaseClasses import Region, MultiWorld, LocationProgressType, ItemClassification
 from worlds.generic.Rules import forbid_item, add_rule
 
-from .constants import RANK_NAMES, RANK_THRESHOLDS
+from .constants import RANK_NAMES
 from .items import EDIBLE_IDS, ITEM_ID_TO_NAME, TJEItem
-from .generators import expected_map_points_on_level, item_totals
+from .generators import expected_map_points_on_level, item_totals, scaled_rank_thresholds
 from .options import TJEOptions
 from .locations import TJELocation, FLOOR_ITEM_LOCATIONS, SHIP_PIECE_LOCATIONS, RANK_LOC_TEMPLATE
 
@@ -157,7 +157,8 @@ def add_reach_level_event(level: Region, player: int, number: int):
 
 # For internal rank number and logic tracking only
 def add_rank_events(menu: Region, player: int, options: TJEOptions):
-    for rank_number, rank, threshold in zip(range(1, 9), RANK_NAMES, RANK_THRESHOLDS):
+    thresholds = scaled_rank_thresholds(options.last_level.value, options.min_items.value, options.max_items.value)
+    for rank_number, rank, threshold in zip(range(1, 9), RANK_NAMES, thresholds):
         rank_loc = TJELocation(player, f"Reached {rank}", None, menu)
         rank_loc.show_in_spoiler = False
         prog: bool = (rank_number <= options.max_rank_check.value)
