@@ -99,7 +99,7 @@ def handle_rank_options(multiworld, world, player,  options: TJEOptions, level_r
         add_rank_checks(menu_region, world, player, options)
         for i in range(1, options.last_level.value+1):
             add_reach_level_event(level_regions[i], player, i)
-            add_map_points(level_regions[i], player, i)
+            add_exploration_points(level_regions[i], player, i)
 
 def add_floor_items(world, player,  options: TJEOptions, level_regions):
     per_level_limits = item_totals(True, options.min_items.value, options.max_items.value)
@@ -108,7 +108,8 @@ def add_floor_items(world, player,  options: TJEOptions, level_regions):
         for loc_data in FLOOR_ITEM_LOCATIONS[i][:per_level_limits[i]]:
             new_loc = TJELocation(player, loc_data.name, world.location_name_to_id[loc_data.name],
                                   level_regions[loc_data.level])
-            if loc_data.level == 1:
+            # No important items on the two potentially inaccessible islands on Level 1
+            if loc_data.level == 1 and loc_data.item_index > 4:
                 new_loc.progress_type = LocationProgressType.EXCLUDED
             locs_to_add.append(new_loc)
         level_regions[i].locations.extend(locs_to_add)
@@ -155,18 +156,18 @@ def add_rank_events(menu: Region, player: int, options: TJEOptions):
     for rank_number, rank, threshold in zip(range(1, 9), RANK_NAMES, RANK_THRESHOLDS):
         rank_loc = TJELocation(player, f"Reached {rank}", None, menu)
         rank_loc.show_in_spoiler = False
-        prog : bool = (rank_number <= options.max_rank_check.value)
+        prog: bool = (rank_number <= options.max_rank_check.value)
         rank_loc.place_locked_item(create_event(player, f"Reached {rank}",
                                                 point_value = 0, rank_value = 1, progression = prog))
         rank_loc.access_rule = lambda state, actual_threshold=threshold: state.has("points", player, actual_threshold)
         menu.locations.append(rank_loc)
 
 # Points for exploring the map (values are tentative)
-def add_map_points(level: Region, player: int, level_number: int):
+def add_exploration_points(level: Region, player: int, level_number: int):
     value = expected_map_points_on_level(level_number)
     map_loc = TJELocation(player, f"Uncover {value} Map Tiles on Level {level_number}", None, level)
     map_loc.show_in_spoiler = False
-    map_loc.place_locked_item(create_event(player, f"{value} Points", value))
+    map_loc.place_locked_item(create_event(player, f"{value} Points (Map Exploration)", value))
     level.locations.append(map_loc)
 
 #endregion

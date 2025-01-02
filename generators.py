@@ -1,4 +1,5 @@
 import itertools
+from math import floor
 
 from .constants import MAP_REVEAL_DIALOGUE_TEMPLATE, MAP_REVEAL_DIALOGUE_TEMPLATE_DEGEN
 
@@ -131,11 +132,12 @@ class TJEGenerator():
             return None
 
         quot, rem = divmod(last_level, 5)
+        amounts = [quot]*5
         if rem > 0:
             bump_indices = [0] + self.random.sample(range(1, 5), k=rem-1)
         else:
             bump_indices = []
-        amounts = [quot]*5
+
         for i in bump_indices:
             amounts[i] += 1
         return amounts
@@ -188,11 +190,15 @@ def expected_map_points_on_level(level: int) -> int:
 
 # Half the items on a level are presents on average and they're worth 2 points each
 # Assumes 3/4 of these presents are typically "easy" to collect
-def expected_present_points_on_level(level: int) -> float:
-    return 0.75*num_items_on_level(level)
+# Assumes worst possible use of Promotions, i.e. losing them / using them for zero points
+def expected_present_points_on_level(level: int, min_items: int = 12, max_items: int = 28) -> int:
+    return round(0.75*num_items_on_level(level, min_items, max_items))
 
-def expected_point_totals(cumulative=False) -> list[float]:
-    totals = [expected_map_points_on_level(level) + expected_present_points_on_level(level) for level in range(0,26)]
+def expected_points_on_level(level: int, min_items: int = 12, max_items: int = 28) -> int:
+    return expected_map_points_on_level(level) + expected_present_points_on_level(level, min_items, max_items)
+
+def expected_point_totals(min_items: int = 12, max_items: int = 28, cumulative=False) -> list[int]:
+    totals = [expected_points_on_level(level, min_items, max_items) for level in range(0,26)]
     if not cumulative:
         return totals
     return [round(n) for n in itertools.accumulate(iterable=totals)]
@@ -205,6 +211,18 @@ def map_reveal_ranges(potencies: list[int]) -> list[tuple[int, int]]:
 def map_reveal_text(potencies: list[int]) -> list[str]:
     return [(MAP_REVEAL_DIALOGUE_TEMPLATE if l != u else MAP_REVEAL_DIALOGUE_TEMPLATE_DEGEN).format(l, u)
             for l, u in map_reveal_ranges(potencies)]
+
+def total_points_to_next_rank(current_rank: int) -> int:#, last_level: int=25) -> int:
+    #rescale_factor: float = last_level/25.0
+    base = 40
+    if current_rank > 7:
+        return 0
+    for i in range(current_rank):
+        base += (i+3)*20
+    return base#floor(rescale_factor*base/10)*10
+
+def points_to_next_rank(current_rank: int) -> int:
+    return current_rank*20 + 40
 
 # def sign(num):
 #     return (num > 0) - (num < 0)

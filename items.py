@@ -34,6 +34,7 @@ class TJEItemData(NamedTuple):
     classification: ItemClassification
     point_value: int
 
+# Trap presents have a point value of 0 to reflect the assumption that the player won't choose to open them
 BASE_ITEM_LIST: list[TJEItemData] = [
     TJEItemData(0x20, "Rocketship Windshield", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
     TJEItemData(0x20, "Left Megawatt Speaker", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
@@ -55,7 +56,7 @@ BASE_ITEM_LIST: list[TJEItemData] = [
     TJEItemData(0x06, "Rose Bushes", TJEItemType.PRESENT, ItemClassification.useful, 2),
     TJEItemData(0x07, "Super Hitops", TJEItemType.PRESENT, ItemClassification.useful, 2),
     TJEItemData(0x08, "Doorway", TJEItemType.PRESENT, ItemClassification.useful, 2),
-    TJEItemData(0x09, "Food Present", TJEItemType.PRESENT, ItemClassification.useful, 2),
+    TJEItemData(0x09, "Food Present", TJEItemType.PRESENT, ItemClassification.filler, 2),
     TJEItemData(0x0A, "Rootbeer", TJEItemType.PRESENT, ItemClassification.useful, 2),
     TJEItemData(0x0B, "Promotion", TJEItemType.PRESENT, ItemClassification.useful, 2),
     TJEItemData(0x0C, "Un-fall", TJEItemType.PRESENT, ItemClassification.useful, 2),
@@ -149,7 +150,7 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
     # This number is relative to the number of *base* locations (floor items + ship pieces)
     # Negative means we need to add items; positive means we have too many
     differential = create_rank_items(world, options, item_list) \
-                   + create_elevator_keys(world, options, item_list) \
+                   + create_elevator_keys(world, item_list) \
                    + create_map_reveals(multiworld, world, options, player, item_list) \
                    + create_instatraps(world, options, total_locations, item_list)
 
@@ -199,7 +200,7 @@ def create_instatraps(world, options, total_locations, item_list) -> int:
 
     return instatrap_total
 
-def create_elevator_keys(world, options, item_list) -> int:
+def create_elevator_keys(world, item_list) -> int:
     item_list.extend([world.create_item("Progressive Elevator Key", ItemClassification.progression)
                         for _ in range(len(world.key_levels))])
     return len(world.key_levels)

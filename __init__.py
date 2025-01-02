@@ -1,3 +1,4 @@
+import logging
 import os
 import pkgutil
 from typing import Optional, Any
@@ -6,13 +7,15 @@ from BaseClasses import CollectionState, ItemClassification
 from worlds.AutoWorld import World, WebWorld
 
 from .client import TJEClient # required to register with BizHawkClient
-from .generators import TJEGenerator, get_key_levels, item_totals
-from .items import ITEM_ID_TO_CODE, TJEItem, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, \
+from .generators import TJEGenerator, get_key_levels, item_totals, total_points_to_next_rank
+from .items import ITEM_ID_TO_CODE, TJEItem, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, TJEItemType, \
                    create_items, create_starting_presents
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, LOCATION_NAME_TO_ID
 from .options import TJEOptions
 from .regions import create_regions
 from .rom import TJEProcedurePatch, write_tokens
+
+logger = logging.getLogger(__name__)
 
 class TJEWeb(WebWorld):
     theme = "partyTime"
@@ -40,8 +43,19 @@ class TJEWorld(World):
     def collect(self, state: "CollectionState", item: "TJEItem") -> bool:
         change = super().collect(state, item)
         if change:
-            state.prog_items[item.player]["points"] += item.point_value
+            # Promotion presents have no assigned rank value since the point value depends on current rank on use
+            if item.name == "Promotion":
+                state.prog_items[item.player]["points"] = total_points_to_next_rank(
+                    current_rank=state.prog_items[item.player]["ranks"]
+                )
+            else:
+                state.prog_items[item.player]["points"] += item.point_value
             state.prog_items[item.player]["ranks"] += item.rank_value
+            # if item.point_value != 0 or item.rank_value != 0:
+            #     logger.debug("* %s\t→ %i points, %i ranks",
+            #                  item.name,
+            #                  state.prog_items[item.player]["points"],
+            #                  state.prog_items[item.player]["ranks"])
         return change
 
     def generate_early(self) -> None:
@@ -64,10 +78,11 @@ class TJEWorld(World):
         classification = new_classification if new_classification else data.classification
 
         item = TJEItem(name, classification, self.item_name_to_id[name], self.player)
-        if name == "Promotion":
-            item.rank_value = 1
-            if self.options.max_rank_check.value > 0:
+        if self.options.max_rank_check.value > 0 and data.type == TJEItemType.PRESENT:
+            if name == "Promotion":
                 item.classification = ItemClassification.progression
+            else:
+                item.classification |= ItemClassification.progression_skip_balancing
 
         item.point_value = data.point_value
 
