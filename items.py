@@ -209,13 +209,6 @@ def create_rank_items(world, options: TJEOptions, item_list) -> int:
     differential = 0
     if options.max_rank_check > 0:
         differential -= 8
-
-    # Add an extra promotion if rank check is 7, two if 8; this helps avoid fill errors from impossible seeds
-    # These may end up being unplaceable, but the seed will still be completable in that instance
-    extra_promos = max(options.max_rank_check - 6, 0)
-    if extra_promos > 0:
-        item_list.extend([world.create_item("Promotion") for _ in range(extra_promos)])
-        differential += extra_promos
     return differential
 
 def create_map_reveals(multiworld, world, options: TJEOptions, player, item_list) -> int:
