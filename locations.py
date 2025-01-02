@@ -1,7 +1,8 @@
-from BaseClasses import Location
 from enum import Enum
 from typing import NamedTuple
 import itertools
+
+from BaseClasses import Location
 
 from .constants import BASE_TJE_ID, RANK_NAMES
 from .generators import item_totals
