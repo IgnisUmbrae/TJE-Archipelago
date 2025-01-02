@@ -47,7 +47,10 @@ class TJEWorld(World):
             # Promotion presents have no assigned rank value since the point value depends on current rank on use
             if item.name == "Promotion":
                 state.prog_items[item.player]["points"] = total_points_to_next_rank(
-                    current_rank=state.prog_items[item.player]["ranks"]
+                    state.prog_items[item.player]["ranks"],
+                    self.options.last_level,
+                    self.options.min_items,
+                    self.options.max_items
                 )
             else:
                 state.prog_items[item.player]["points"] += item.point_value
