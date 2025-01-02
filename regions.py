@@ -101,6 +101,10 @@ def handle_rank_options(multiworld, world, player,  options: TJEOptions, level_r
             add_reach_level_event(level_regions[i], player, i)
             add_exploration_points(level_regions[i], player, i)
 
+#endregion
+
+#region Main location adding routines
+
 def add_floor_items(world, player,  options: TJEOptions, level_regions):
     per_level_limits = item_totals(True, options.min_items.value, options.max_items.value)
     for i in range(1, options.last_level.value+1):
@@ -108,7 +112,7 @@ def add_floor_items(world, player,  options: TJEOptions, level_regions):
         for loc_data in FLOOR_ITEM_LOCATIONS[i][:per_level_limits[i]]:
             new_loc = TJELocation(player, loc_data.name, world.location_name_to_id[loc_data.name],
                                   level_regions[loc_data.level])
-            # No important items on the two potentially inaccessible islands on Level 1
+            # No progression items on the two potentially inaccessible islands on Level 1
             if loc_data.level == 1 and loc_data.item_index > 4:
                 new_loc.progress_type = LocationProgressType.EXCLUDED
             locs_to_add.append(new_loc)
