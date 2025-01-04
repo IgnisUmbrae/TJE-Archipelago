@@ -182,9 +182,9 @@ def get_key_levels(gap: int, last_level: int = 25) -> list[int] | None:
 def expected_map_points_on_level(level: int) -> int:
     match level:
         case 0: return 0
-        case 1: return 7
-        case 2: return 14
-        case 3: return 21
+        case 1: return 5
+        case 2: return 21
+        case 3: return 28
         case 4: return 35
         case _: return 42
 
@@ -225,16 +225,13 @@ def total_points_to_next_rank(current_rank: int, last_level: int = 25, min_items
     if current_rank > 7:
         return 0
     for rank in range(current_rank+1):
-        reqd += points_to_next_rank(rank)
+        reqd += 40 + 20*rank
 
     if last_level == 25 and min_items == 12 and max_items == 28:
         return reqd
 
     rescale_factor = get_rank_rescale_factor(last_level, min_items, max_items)
-    return rescale_to_nearest_10(reqd, rescale_factor)
-
-def points_to_next_rank(current_rank: int) -> int:
-    return 40 + 20*current_rank
+    return rescale_to_nearest_10(reqd, rescale_factor) + 10 # + 10 to avoid the absurdly low 10 points for Dufus
 
 def scaled_rank_thresholds(last_level: int = 25, min_items: int = 12, max_items: int = 28) -> list[int]:
     return [total_points_to_next_rank(rank, last_level, min_items, max_items) for rank in range(8)]
