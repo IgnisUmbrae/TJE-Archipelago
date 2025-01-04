@@ -279,6 +279,13 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
         for addr, string in zip(MAP_REVEAL_DIALOGUE_ADDRS, map_reveal_dialogue):
             patch.write_token(APTokenTypes.WRITE, addr, string.encode("ascii") + b"\x00")
 
+    # Patch in scaled rank thresholds & new function to use them
+
+    patch.write_token(APTokenTypes.WRITE, 0x001a0310, struct.pack(">8H", *world.rank_thresholds))
+    patch.write_token(APTokenTypes.WRITE, 0x0000b898, b"\x48\xE7\x38\x00\x34\x2F\x00\x12\x42\x43\x0C\x42\x00\x08\x6C"
+                                                      b"\x0C\x20\x7C\x00\x1A\x03\x10\xD0\xC2\xD0\xC2\x36\x10\x30\x03"
+                                                      b"\x48\xC0\x4C\xDF\x00\x1C\x4E\x75")
+
     # Store data required by game/client
 
     key_gap = world.options.key_gap.value if world.options.elevator_keys else 0
