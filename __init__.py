@@ -7,11 +7,12 @@ from BaseClasses import CollectionState, ItemClassification
 from worlds.AutoWorld import World, WebWorld
 
 from .client import TJEClient # required to register with BizHawkClient
+from .constants import VANILLA_RANK_THRESHOLDS
 from .generators import TJEGenerator, get_key_levels, item_totals, scaled_rank_thresholds, total_points_to_next_rank
 from .items import ITEM_ID_TO_CODE, TJEItem, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, TJEItemType, \
                    create_items, create_starting_presents
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, LOCATION_NAME_TO_ID
-from .options import TJEOptions
+from .options import RankRescalingOption, TJEOptions
 from .regions import create_regions
 from .rom import TJEProcedurePatch, write_tokens
 
@@ -44,22 +45,23 @@ class TJEWorld(World):
     def collect(self, state: "CollectionState", item: "TJEItem") -> bool:
         change = super().collect(state, item)
         if change:
-            # Promotion presents have no assigned rank value since the point value depends on current rank on use
-            if item.name == "Promotion":
-                state.prog_items[item.player]["points"] = total_points_to_next_rank(
-                    state.prog_items[item.player]["ranks"],
-                    self.options.last_level,
-                    self.options.min_items,
-                    self.options.max_items
-                )
+            current_rank = state.prog_items[item.player]["ranks"]
+            if item.name == "Promotion" and current_rank < 8:
+                state.prog_items[item.player]["points"] = self.rank_thresholds[current_rank+1]
+                state.prog_items[item.player]["ranks"] += 1
             else:
+                # Check whether this pushes us over the threshold
                 state.prog_items[item.player]["points"] += item.point_value
-                state.prog_items[item.player]["ranks"] += item.rank_value
-            # if (item.point_value != 0 or item.rank_value != 0):
-            #     logger.debug("* %s\t→ %i points, %i ranks",
-            #                  item.name,
-            #                  state.prog_items[item.player]["points"],
-            #                  state.prog_items[item.player]["ranks"])
+
+                rank = max(i for i in range(len(self.rank_thresholds))
+                        if self.rank_thresholds[i] <= state.prog_items[item.player]["points"])
+                state.prog_items[item.player]["ranks"] = rank
+
+                # if item.point_value != 0:
+                #     logger.debug("* %s\t→ %i points, %i ranks",
+                #                 item.name,
+                #                 state.prog_items[item.player]["points"],
+                #                 state.prog_items[item.player]["ranks"])
         return change
 
     def generate_early(self) -> None:
@@ -69,9 +71,19 @@ class TJEWorld(World):
                            if self.options.elevator_keys else [])
         self.ship_item_levels = self.generator.generate_ship_piece_levels(self.options.last_level.value)
         self.map_reveal_potencies = self.generator.generate_map_reveal_potencies(self.options.last_level.value)
-        self.rank_thresholds = scaled_rank_thresholds(self.options.last_level.value,
-                                                      self.options.min_items.value,
-                                                      self.options.max_items.value)
+
+
+        match self.options.rank_rescaling:
+            case RankRescalingOption.NONE:
+                self.rank_thresholds = VANILLA_RANK_THRESHOLDS
+            case _:
+                scale_threshold = (8 if self.options.rank_rescaling == RankRescalingOption.FUNK_LORD
+                                else self.options.max_rank_check)
+                self.rank_thresholds = scaled_rank_thresholds(self.options.last_level.value,
+                                                            self.options.min_items.value,
+                                                            self.options.max_items.value,
+                                                            scale_threshold
+                                                            )
         if self.options.upwarp_present:
             self.generator.fewer_upwarps()
 
