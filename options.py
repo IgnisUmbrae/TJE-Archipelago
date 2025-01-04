@@ -37,6 +37,11 @@ class SoundRandoOption(IntEnum):
     MOST = 1
     ALL = 2
 
+class RankRescalingOption(IntEnum):
+    NONE = 0
+    MAX_CHECK = 1
+    FUNK_LORD = 2
+
 class LastLevel(Range):
     """
     The last level of the game. Set lower for shorter runs.
@@ -245,8 +250,15 @@ class MaxRankCheck(NamedRange):
     """
     Enabling this (value > 0) adds eight additional checks, one for each rank.
     The number means the highest rank that *can* have a progression item.
-    Higher ranks will still be checks, but are guaranteed not to have progression items.
-    Moles will not steal Promotion presents if this setting is enabled.
+    Higher ranks will still be checks, but are excluded from having progression items.
+
+    If this setting is enabled, two extra Mole safeguards will be automatically patched in:
+    - Moles will not steal Promotion presents.
+    - You will receive points for any presents stolen by Moles.
+
+    If you have changed last_level, min_items or max_items, rank point thresholds will be rescaled
+    to be attainable in the smaller game world. See also: the rank_rescaling option.
+
     Set to 0 to disable.
     """
 
@@ -268,6 +280,27 @@ class MaxRankCheck(NamedRange):
     }
 
     default = 5
+
+class RankRescalingMode(Choice):
+    """
+    Determines how rank point thresholds rescale in smaller worlds.
+    Only functions if max_rank_check > 0 *and* at least one of last_level, min_items and max_items has been changed.
+
+    - None: No rescaling. Rank thresholds are vanilla.
+            ⚠ Likely to result in fill errors if last_level is low and max_rank_check is high.
+    - Max check: Rescales point thresholds so that you will reach your chosen rank towards the end of the game.
+            ⚠ Likely to result in fill warnings as all higher ranks are likely to be impossible to reach.
+    - Funk Lord: Rescales point thresholds so that you will reach Funk Lord towards the end of the game.
+
+    """
+
+    display_name = "Rank Rescaling Mode"
+
+    option_none = RankRescalingOption.NONE.value
+    option_max_check = RankRescalingOption.MAX_CHECK.value
+    option_funk_lord = RankRescalingOption.FUNK_LORD.value
+
+    default = option_funk_lord
 
 class UpwarpPresent(Toggle):
     """
@@ -454,7 +487,8 @@ tje_option_groups = [
         LocalMapReveals,
         ElevatorKeys,
         ElevatorKeyGap,
-        MaxRankCheck
+        MaxRankCheck,
+        RankRescalingMode
     ]),
     OptionGroup("Difficulty/QoL", [
         Character,
@@ -493,6 +527,7 @@ class TJEOptions(PerGameCommonOptions):
     elevator_keys: ElevatorKeys
     key_gap: ElevatorKeyGap
     max_rank_check: MaxRankCheck
+    rank_rescaling: RankRescalingMode
     upwarp_present: UpwarpPresent
     character: Character
     game_overs: GameOvers

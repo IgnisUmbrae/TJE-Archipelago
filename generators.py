@@ -1,7 +1,7 @@
 import itertools
-from math import ceil
+import math
 
-from .constants import MAP_REVEAL_DIALOGUE_TEMPLATE, MAP_REVEAL_DIALOGUE_TEMPLATE_DEGEN
+from .constants import MAP_REVEAL_DIALOGUE_TEMPLATE, MAP_REVEAL_DIALOGUE_TEMPLATE_DEGEN, VANILLA_RANK_THRESHOLDS
 
 #region Constants
 
@@ -186,7 +186,7 @@ def expected_map_points_on_level(level: int) -> int:
         case 2: return 21
         case 3: return 28
         case 4: return 35
-        case _: return 42
+        case _: return 35
 
 # Half the items on a level are presents on average and they're worth 2 points each
 # Assumes 3/4 of these presents are typically "easy" to collect
@@ -212,29 +212,39 @@ def map_reveal_text(potencies: list[int]) -> list[str]:
     return [(MAP_REVEAL_DIALOGUE_TEMPLATE if l != u else MAP_REVEAL_DIALOGUE_TEMPLATE_DEGEN).format(l, u)
             for l, u in map_reveal_ranges(potencies)]
 
-def get_rank_rescale_factor(last_level: int, min_items: int, max_items: int) -> float:
+def get_rank_rescale_factor(last_level: int = 25, min_items: int = 12, max_items: int = 28,
+                            desired_max_rank: int = 8) -> float:
     full_game_estimate = expected_point_totals(last_level=25, min_items=12, max_items=28, cumulative=True)[-1]
     reduced_game_estimate = expected_point_totals(last_level, min_items, max_items, cumulative=True)[-1]
-    return reduced_game_estimate/full_game_estimate
+    factor_1 = reduced_game_estimate/full_game_estimate
+    factor_2 = VANILLA_RANK_THRESHOLDS[8]/VANILLA_RANK_THRESHOLDS[desired_max_rank]
+    return factor_1 * factor_2
 
-def rescale_to_nearest_10(num: int, rescale_factor: float) -> int:
-    return round(rescale_factor*num/10)*10
+def rescale_to_nearest_10(num: int, rescale_factor: float, bump: float = 0) -> int:
+    return round((rescale_factor*num + bump)/10)*10
 
-def total_points_to_next_rank(current_rank: int, last_level: int = 25, min_items: int = 12, max_items: int = 28) -> int:
+def total_points_to_next_rank(current_rank: int, last_level: int = 25, min_items: int = 12, max_items: int = 28,
+                              desired_max_rank: int = 8) -> int:
     reqd = 0
     if current_rank > 7:
         return 0
     for rank in range(current_rank+1):
         reqd += 40 + 20*rank
 
-    if last_level == 25 and min_items == 12 and max_items == 28:
+    if last_level == 25 and min_items == 12 and max_items == 28 and desired_max_rank == 8:
         return reqd
 
-    rescale_factor = get_rank_rescale_factor(last_level, min_items, max_items)
-    return rescale_to_nearest_10(reqd, rescale_factor) + 10 # + 10 to avoid the absurdly low 10 points for Dufus
+    rescale_factor = get_rank_rescale_factor(last_level, min_items, max_items, desired_max_rank)
+    # "Bump" is a small boost to early rank thresholds that's greatest for short games with few items.
+    # It ensures that such games don't have comically low rank thresholds at the start, and that the rank
+    # progression is smoother overall. Affects large games minimally; does not affect vanilla games whatsoever.
+    bump = (25 - last_level)/(25 - 11) * (28 - max_items)/(28 - 4) * (8 - current_rank)/(8 - 0) * 10
+    return rescale_to_nearest_10(reqd, rescale_factor, bump)
 
-def scaled_rank_thresholds(last_level: int = 25, min_items: int = 12, max_items: int = 28) -> list[int]:
-    return [total_points_to_next_rank(rank, last_level, min_items, max_items) for rank in range(8)]
+def scaled_rank_thresholds(last_level: int = 25, min_items: int = 12, max_items: int = 28,
+                           desired_max_rank: int = 8) -> list[int]:
+    return [0] + \
+           [total_points_to_next_rank(rank, last_level, min_items, max_items, desired_max_rank) for rank in range(8)]
 
 def scaled_rank_thresholds_alt(last_level: int = 25, min_items: int = 12, max_items: int = 28) -> list[int]:
     min_factor = get_rank_rescale_factor(11, 4, 4) # Lowest rescale factor possible
@@ -243,7 +253,7 @@ def scaled_rank_thresholds_alt(last_level: int = 25, min_items: int = 12, max_it
     # Map factor onto line starting at (min_factor, 1) and ending at (1, 0); its image under this map represents
     # the % of the the rescaled second differences total that will be partitioned into 10s
     percentage_of_tens = (factor-1)/(min_factor-1)
-    number_of_tens = int(ceil(percentage_of_tens*6))
+    number_of_tens = int(math.ceil(percentage_of_tens*6))
 
     # Partition out required number of tens (if this is not possible, then as many as possible)
     diffs2_total = rescale_to_nearest_10(120, factor) # base second differences are [20]*6 → 120 total
