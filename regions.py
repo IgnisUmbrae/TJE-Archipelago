@@ -127,7 +127,7 @@ def add_ship_pieces(world, player, level_regions):
             level_regions[loc_data.level].locations.append(new_loc)
 
 def add_rank_checks(menu: Region, world, player, options: TJEOptions):
-    for number, rank in enumerate(RANK_NAMES[1:]):
+    for number, rank in enumerate(RANK_NAMES[1:], start=1):
         loc_name = RANK_LOC_TEMPLATE.format(rank)
         loc = TJELocation(player, loc_name, world.location_name_to_id[loc_name], menu)
         loc.access_rule = lambda state, rank_num=number: state.has("ranks", player, rank_num)
