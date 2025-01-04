@@ -106,8 +106,8 @@ EMPTY_PRESENT = b"\xFF"
 
 #region Elevator and rank checks
 
-RANK_THRESHOLDS = [40, 100, 180, 280, 400, 540, 700, 880]
-RANK_NAMES = ["Dufus", "Poindexter", "Peanut", "Dude", "Bro", "Homey", "Rapmaster", "Funk Lord"]
+VANILLA_RANK_THRESHOLDS = [0, 40, 100, 180, 280, 400, 540, 700, 880]
+RANK_NAMES = ["Wiener", "Dufus", "Poindexter", "Peanut", "Dude", "Bro", "Homey", "Rapmaster", "Funk Lord"]
 
 #endregion
 
