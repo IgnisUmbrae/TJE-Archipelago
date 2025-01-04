@@ -95,7 +95,7 @@ def handle_final_ship_piece(multiworld, options: TJEOptions, player):
 def handle_rank_options(multiworld, world, player,  options: TJEOptions, level_regions):
     if options.max_rank_check > 0:
         menu_region = multiworld.get_region("Menu", player)
-        add_rank_events(menu_region, world, player, options)
+        #add_rank_events(menu_region, world, player, options)
         add_rank_checks(menu_region, world, player, options)
         for i in range(1, options.last_level.value+1):
             add_reach_level_event(level_regions[i], player, i)
@@ -127,7 +127,7 @@ def add_ship_pieces(world, player, level_regions):
             level_regions[loc_data.level].locations.append(new_loc)
 
 def add_rank_checks(menu: Region, world, player, options: TJEOptions):
-    for number, rank in enumerate(RANK_NAMES, start=1):
+    for number, rank in enumerate(RANK_NAMES[1:]):
         loc_name = RANK_LOC_TEMPLATE.format(rank)
         loc = TJELocation(player, loc_name, world.location_name_to_id[loc_name], menu)
         loc.access_rule = lambda state, rank_num=number: state.has("ranks", player, rank_num)
@@ -155,16 +155,16 @@ def add_reach_level_event(level: Region, player: int, number: int):
     reach_loc.show_in_spoiler = False
     level.locations.append(reach_loc)
 
-# For internal rank number and logic tracking only
-def add_rank_events(menu: Region, world, player: int, options: TJEOptions):
-    for rank_number, rank, threshold in zip(range(1, 9), RANK_NAMES, world.rank_thresholds):
-        rank_loc = TJELocation(player, f"Reached {rank}", None, menu)
-        rank_loc.show_in_spoiler = False
-        prog: bool = (rank_number <= options.max_rank_check.value)
-        rank_loc.place_locked_item(create_event(player, f"Reached {rank}",
-                                                point_value = 0, rank_value = 1, progression = prog))
-        rank_loc.access_rule = lambda state, actual_threshold=threshold: state.has("points", player, actual_threshold)
-        menu.locations.append(rank_loc)
+# # For internal rank number and logic tracking only
+# def add_rank_events(menu: Region, world, player: int, options: TJEOptions):
+#     for rank_number, rank, threshold in zip(range(1, 9), RANK_NAMES[1:], world.rank_thresholds):
+#         rank_loc = TJELocation(player, f"Reached {rank}", None, menu)
+#         rank_loc.show_in_spoiler = False
+#         prog: bool = (rank_number <= options.max_rank_check.value)
+#         rank_loc.place_locked_item(create_event(player, f"Reached {rank}",
+#                                                 point_value = 0, rank_value = 1, progression = prog))
+#         rank_loc.access_rule = lambda state, actual_threshold=threshold: state.has("points", player, actual_threshold)
+#         menu.locations.append(rank_loc)
 
 # Points for exploring the map (values are tentative)
 def add_exploration_points(level: Region, player: int, level_number: int):

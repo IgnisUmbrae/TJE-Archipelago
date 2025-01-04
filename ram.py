@@ -388,7 +388,7 @@ class TJEGameController():
     async def handle_rank_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
         rank = int.from_bytes(new_data)
         if rank > 0:
-            loc = RANK_LOC_TEMPLATE.format(RANK_NAMES[rank-1])
+            loc = RANK_LOC_TEMPLATE.format(RANK_NAMES[rank])
             await self.client.trigger_location(ctx, loc)
 
     async def update_game_state(self, ctx: "BizHawkClientContext") -> None:

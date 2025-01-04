@@ -18,7 +18,6 @@ class TJEItem(Item):
     game: str = "ToeJam & Earl"
     type: str
     point_value: int = 0
-    rank_value: int = 0
 
 # "Ethereal" is used for extra items such as elevator keys that do not exist in the base game
 class TJEItemType(IntEnum):

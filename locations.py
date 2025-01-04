@@ -41,7 +41,7 @@ SHIP_PIECE_LOCATIONS: list[TJELocationData] = [
 
 RANK_LOCATIONS: list[TJELocationData] = [
     TJELocationData(RANK_LOC_TEMPLATE.format(rank), TJELocationType.RANK, -1, None)
-    for rank in RANK_NAMES
+    for rank in RANK_NAMES[1:]
 ]
 
 MASTER_LOCATION_LIST = list(itertools.chain(*FLOOR_ITEM_LOCATIONS)) + SHIP_PIECE_LOCATIONS + RANK_LOCATIONS
