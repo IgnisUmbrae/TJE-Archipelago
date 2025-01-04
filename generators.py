@@ -189,10 +189,8 @@ def expected_map_points_on_level(level: int) -> int:
         case _: return 35
 
 # Half the items on a level are presents on average and they're worth 2 points each
-# Assumes 3/4 of these presents are typically "easy" to collect
-# Assumes worst possible use of Promotions, i.e. losing them / using them for zero points
 def expected_present_points_on_level(level: int, min_items: int = 12, max_items: int = 28) -> int:
-    return round(0.75*num_items_on_level(level, min_items, max_items))
+    return num_items_on_level(level, min_items, max_items)
 
 def expected_points_on_level(level: int, min_items: int = 12, max_items: int = 28) -> int:
     return expected_map_points_on_level(level) + expected_present_points_on_level(level, min_items, max_items)
