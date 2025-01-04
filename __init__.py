@@ -148,10 +148,9 @@ class TJEWorld(World):
 
     # For tracker use
     def fill_slot_data(self) -> dict[str, Any]:
-        return self.options.as_dict("key_gap", "max_rank_check") | {
+        return self.options.as_dict("key_gap", "max_rank_check", "last_level") | {
             "key_level_access": self.key_levels + [self.options.last_level.value],
             "items_per_level": item_totals(True, self.options.min_items.value, self.options.max_items.value),
             "ship_item_levels": self.ship_item_levels,
-            "last_level": self.options.last_level.value,
             "rank_thresholds": self.rank_thresholds
         }
