@@ -94,18 +94,12 @@ class TJEGameController():
 
         logger.debug("Resetting game…")
 
-        # self.save_data: dict[str, bytes] | None = None
-
         # Game state–related
 
         self.is_playing: bool = False
         self.game_complete: bool = False
 
         self.current_level = -1
-
-        # Ship piece–related
-
-        self.num_ship_pieces_owned = 0
 
         # Saving and loading–related
 
@@ -359,8 +353,6 @@ class TJEGameController():
     async def award_ship_piece(self, ctx: "BizHawkClientContext", ship_piece_id: int) -> tuple[bool, tuple[str, str]]:
         piece = SHIP_PIECE_IDS.index(ship_piece_id)
         await self.poke_ram(ctx, get_slot_addr("COLLECTED_SHIP_PIECES", piece, self.char), COLLECTED_SHIP_ITEM)
-        self.num_ship_pieces_owned += 1
-        logger.debug("Currently have %i ship pieces", self.num_ship_pieces_owned)
         return True, STATIC_DIALOGUE_LIST[ITEM_ID_TO_NAME[ship_piece_id]]
 
     #endregion

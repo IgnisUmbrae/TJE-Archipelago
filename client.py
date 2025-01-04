@@ -187,5 +187,5 @@ class TJEClient(BizHawkClient):
 
         if not ctx.finished_game:
             await self.handle_items(ctx)
-            if self.game_controller.num_ship_pieces_owned == 10:
+            if self.game_controller.current_level == 26:
                 await self.goal_in(ctx)
