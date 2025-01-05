@@ -77,13 +77,16 @@ class TJEWorld(World):
             case RankRescalingOption.NONE:
                 self.rank_thresholds = VANILLA_RANK_THRESHOLDS
             case _:
-                scale_threshold = (8 if self.options.rank_rescaling == RankRescalingOption.FUNK_LORD
-                                else self.options.max_rank_check)
+                if self.options.rank_rescaling == RankRescalingOption.FUNK_LORD or self.options.max_rank_check == 0:
+                    scale_threshold = 8
+                else:
+                    scale_threshold = self.options.max_rank_check
                 self.rank_thresholds = scaled_rank_thresholds(self.options.last_level.value,
                                                             self.options.min_items.value,
                                                             self.options.max_items.value,
                                                             scale_threshold
                                                             )
+        print(self.rank_thresholds)
         if self.options.upwarp_present:
             self.generator.fewer_upwarps()
 
