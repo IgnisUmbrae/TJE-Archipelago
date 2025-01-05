@@ -21,6 +21,7 @@ ToeJam and Earl:
   upwarp_present: yes
   map_reveals: yes
   max_rank_check: bro
+  rank_rescaling: funk_lord
   sleep_when_idle: no
   free_earthling_services: yes
   present_timers: higher
