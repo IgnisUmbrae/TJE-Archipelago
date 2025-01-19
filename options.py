@@ -290,7 +290,7 @@ class RankRescalingMode(Choice):
             ⚠ Likely to result in fill errors if last_level is low and max_rank_check is high.
     - Max check: Rescales point thresholds so that you reach your chosen max_rank_check towards the end of the game.
                  Usually fine, but can result in fill warnings when higher ranks are impossible to reach.
-    - Funk Lord: Rescales point thresholds so that you reach Funk Lord towards the end of the game.
+    - Funk Lord (default): Rescales point thresholds so that you reach Funk Lord towards the end of the game.
 
     """
 
