@@ -13,7 +13,7 @@ PCM_SFX_ADDRS = [0x00044d8a, 0x000491c8, 0x0004c276, 0x0004d75a, 0x0004dfa0, 0x0
 # These four sounds are also used as part of the music
 PCM_SFX_ADDRS_MUSIC = [0x00089a42, 0x0008a4ac, 0x0008addc, 0x0008b104]
 
-# Excluding in Jam out
+# Excluding in Jam Out
 PCM_SFX_USAGE_ADDRS = [
     (0x0002009c, 0x0002160c), (0x0000f8c0,), (0x0001b2e6,), (0x0010a1f4, 0x0010a220), (0x0001070c,),
     (0x0001663a, 0x000166f6), (0x0001015c, 0x0001059c, 0x0001089e, 0x00011cbe, 0x00023f8c), (0x0000fcda, 0x0001b3cc),
@@ -117,6 +117,19 @@ INITIAL_PRESENT_ADDRS = [0x00014393, 0x00014397, 0x000143a5, 0x000143ab,
                          0x000143c5, 0x000143cb, 0x000143d9, 0x000143df]
 
 BASE_LEVEL_TYPES = [0, 1, 5, 2, 7, 3, 4, 2, 6, 7, 2, 3, 6, 2, 4, 7, 2, 4, 2, 7, 4, 5, 1, 7]
+
+# ROM-internal menu return values → AP-internal character values
+def ret_val_to_char(ret_val: int) -> int:
+    match ret_val:
+        # ToeJam only
+        case 1:
+            return 0
+        # Earl only
+        case 2:
+            return 1
+        # Both
+        case 0:
+            return 2
 
 # 0 = Toejam, 1 = Earl
 def get_ram_addr(name: str, player: int = 0) -> int:

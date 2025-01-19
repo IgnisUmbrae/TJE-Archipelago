@@ -7,10 +7,10 @@ import worlds._bizhawk as bizhawk
 from worlds._bizhawk import ConnectionStatus
 from worlds._bizhawk.client import BizHawkClient
 
-from .constants import EMPTY_ITEM, COLLECTED_SHIP_ITEM, PLAYER_SLOT_STRUCTURES, RANK_NAMES, STATIC_DIALOGUE_LIST, \
-                        get_slot_addr, get_ram_addr, expand_inv_constants
+from .constants import EMPTY_ITEM, COLLECTED_SHIP_ITEM, PLAYER_SLOT_STRUCTURES, RANK_NAMES, SAVE_DATA_POINTS, \
+                       STATIC_DIALOGUE_LIST, get_slot_addr, get_ram_addr, expand_inv_constants
 from .items import ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, \
-                    PRESENT_IDS, SHIP_PIECE_IDS,INSTATRAP_IDS, BAD_PRESENT_IDS
+                   PRESENT_IDS, SHIP_PIECE_IDS,INSTATRAP_IDS, BAD_PRESENT_IDS
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, RANK_LOC_TEMPLATE, SHIP_PIECE_LOC_TEMPLATE
 
 if TYPE_CHECKING:
@@ -104,6 +104,8 @@ class TJEGameController():
         # Saving and loading–related
 
         self.connected = False
+        self.save_state = None
+        self.save_hash = None
 
         # Misc
 
@@ -123,6 +125,9 @@ class TJEGameController():
                 await self.update_game_state(ctx)
                 for monitor in self.monitors: await monitor.tick()
 
+                if self.is_playing:
+                    await self.update_save_state(ctx)
+
     #endregion
 
     #region Initialization functions
@@ -130,15 +135,14 @@ class TJEGameController():
     def add_monitors(self, ctx: "BizHawkClientContext", char: int):
         # These are the values returned by the menu, which don't match the others in-game
         match char:
-            case 1:
-                level = MonitorLevel.TOEJAM
-                self.char = 0
-            case 2:
-                level = MonitorLevel.EARL
-                self.char = 1
             case 0:
+                level = MonitorLevel.TOEJAM
+            case 1:
+                level = MonitorLevel.EARL
+            case 2:
                 level = MonitorLevel.BOTH
-                self.char = 2
+
+        self.char = char
 
         self.monitors = [
             AddressMonitor(
@@ -316,7 +320,8 @@ class TJEGameController():
         return success
 
     async def spawn_item(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
-        if self.is_playing:# and self.game_state != TJEGameState.WAITING_FOR_LOAD:
+        logger.debug("Attempting to spawn item %s", ITEM_ID_TO_NAME[item_id])
+        if self.is_playing:
             dialogue = (None, None)
             if item_id in SHIP_PIECE_IDS:
                 success, dialogue = await self.award_ship_piece(ctx, item_id)
@@ -365,8 +370,9 @@ class TJEGameController():
     async def handle_level_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
         await self.update_game_state(ctx)
         # Special handling for menu, aka "level -1"
+        old_level = self.current_level
         self.current_level = int.from_bytes(new_data) if self.is_playing else -1
-        logger.debug("Level changed to %i", self.current_level)
+        logger.debug("Level changed from %i to %i", old_level, self.current_level)
 
     async def handle_floor_item_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
         new_as_int, old_as_int = int.from_bytes(new_data), int.from_bytes(old_data)
@@ -394,5 +400,29 @@ class TJEGameController():
     async def update_game_state(self, ctx: "BizHawkClientContext") -> None:
         player_state = await self.peek_ram(ctx, get_ram_addr("STATE", self.char), 1)
         self.is_playing = (player_state != b"\x00")
+
+    #endregion
+
+    #region Saving & loading–related functions
+
+    def get_save_state(self) -> tuple[list[bytes], int]:
+        return self.save_state, self.save_hash
+
+    async def update_save_state(self, ctx: "BizHawkClientContext") -> None:
+        try:
+            response = tuple(await bizhawk.read(ctx.bizhawk_ctx,
+                [(point.address, point.size, "68K RAM") for point in SAVE_DATA_POINTS]
+            ))
+        except (bizhawk.RequestFailedError, bizhawk.NotConnectedError):
+            response = None
+
+        if response is not None:
+            # If points decrease, something has gone wrong
+            # if self.save_state is not None:
+            #     print(f"New points: {int.from_bytes(response[8])}; old points: {int.from_bytes(self.save_state[8])}")
+            if (self.save_state is None
+                or (not int.from_bytes(response[8]) < int.from_bytes(self.save_state[8]))):
+                self.save_state, self.save_hash = response, hash(response)
+            #self.save_state = dict(zip([point.name for point in SAVE_DATA_POINTS], response))
 
     #endregion
