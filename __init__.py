@@ -1,9 +1,10 @@
 import logging
 import os
 import pkgutil
-from typing import Optional, Any
+from typing import Optional, Any, ClassVar
 
 from BaseClasses import CollectionState, ItemClassification
+import settings
 from worlds.AutoWorld import World, WebWorld
 
 from .client import TJEClient # required to register with BizHawkClient
@@ -19,6 +20,16 @@ from .rom import TJEProcedurePatch, write_tokens
 # logger = logging.getLogger(__name__)
 # logger.setLevel(logging.DEBUG)
 
+class TJESettings(settings.Group):
+    class ROMFile(settings.UserFilePath):
+        """Location of the ToeJam & Earl REV 02 ROM file."""
+
+        copy_to = "ToeJamEarl.SGD"
+        description = "ToeJam & Earl REV 02 ROM file"
+        md5s = ["72dc91fd2c5528b384f082a38db9ddda"]
+
+    rom_file: ROMFile = ROMFile(ROMFile.copy_to)
+
 class TJEWeb(WebWorld):
     theme = "partyTime"
 
@@ -28,6 +39,7 @@ class TJEWorld(World):
     game = "ToeJam and Earl"
     options_dataclass = TJEOptions
     options: TJEOptions
+    settings: ClassVar[TJESettings]
     topology_present = True
 
     item_name_to_id = ITEM_NAME_TO_ID
@@ -56,12 +68,6 @@ class TJEWorld(World):
                 rank = max(i for i in range(len(self.rank_thresholds))
                         if self.rank_thresholds[i] <= state.prog_items[item.player]["points"])
                 state.prog_items[item.player]["ranks"] = rank
-
-                # if item.point_value != 0:
-                #     logger.debug("* %s\t→ %i points, %i ranks",
-                #                 item.name,
-                #                 state.prog_items[item.player]["points"],
-                #                 state.prog_items[item.player]["ranks"])
         return change
 
     def generate_early(self) -> None:
@@ -71,7 +77,6 @@ class TJEWorld(World):
                            if self.options.elevator_keys else [])
         self.ship_item_levels = self.generator.generate_ship_piece_levels(self.options.last_level.value)
         self.map_reveal_potencies = self.generator.generate_map_reveal_potencies(self.options.last_level.value)
-
 
         match self.options.rank_rescaling:
             case RankRescalingOption.NONE:

@@ -35,27 +35,11 @@ class TJEProcedurePatch(APProcedurePatch, APTokenMixin):
 
     @classmethod
     def get_source_data(cls) -> bytes:
-
-        try:
-            filename = get_settings().tje_options["rom_file"]
-        except AttributeError:
-            filename = None
-        if not filename or not os.path.exists(filename):
-            filename = Utils.user_path(filename)
-
+        filename = get_settings().tje_options.rom_file
         with open(filename, "rb") as f:
             base_rom_bytes = bytes(f.read())
 
-        base_md5 = hashlib.md5()
-        base_md5.update(base_rom_bytes)
-        md5_hash = base_md5.hexdigest()
-
-        if md5_hash == REV02_MD5:
-            return base_rom_bytes
-        elif md5_hash == REV00_MD5:
-            raise ValueError("This appears to be REV00. Please supply a valid REV02 ROM.")
-        else:
-            raise ValueError("This doesn't appear to be a ToeJam & Earl ROM.")
+        return base_rom_bytes
 
 def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
 
