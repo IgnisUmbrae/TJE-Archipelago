@@ -1,5 +1,4 @@
-from typing import TYPE_CHECKING, Any, Callable
-import json
+from typing import TYPE_CHECKING, Callable
 import logging
 
 import worlds._bizhawk as bizhawk
@@ -28,8 +27,7 @@ class SaveManager():
         if (self.save_file_name is not None and save_data is not None
             and (self.last_saved_hash is None or (self.last_saved_hash != save_hash))):
             with open(home_path(f"{self.save_file_name}.aptjesave"), "wb") as f:
-                basd = f.write(b"".join(save_data))
-                print(f"Wrote {basd} bytes")
+                f.write(b"".join(save_data))
             self.last_saved_hash = save_hash
             return True
         return False
