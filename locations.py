@@ -55,3 +55,14 @@ LOCATION_ID_TO_NAME : dict[int, str] = {
     id: name
     for name, id in LOCATION_NAME_TO_ID.items()
 }
+
+LOCATION_GROUPS = dict(zip(
+    [f"Level {level}" for level in range(1, 26)],
+    [
+        ([SHIP_PIECE_LOC_TEMPLATE.format(lvl)] if lvl > 1 else []) +
+        [FLOOR_ITEM_LOC_TEMPLATE.format(lvl, i+1) for i in range(max_items_per_level[lvl])]
+        for lvl in range(1,26)
+    ]
+    )) \
+       | {"Ranks" : [RANK_LOC_TEMPLATE.format(rank) for rank in RANK_NAMES[1:]]} \
+       | {"Ship Items" : [SHIP_PIECE_LOC_TEMPLATE.format(level) for level in range(2, 26)]}

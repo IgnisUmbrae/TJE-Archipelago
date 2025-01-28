@@ -9,10 +9,10 @@ from worlds.AutoWorld import World, WebWorld
 
 from .client import TJEClient # required to register with BizHawkClient
 from .constants import VANILLA_RANK_THRESHOLDS
-from .generators import TJEGenerator, get_key_levels, item_totals, scaled_rank_thresholds, total_points_to_next_rank
+from .generators import TJEGenerator, get_key_levels, item_totals, scaled_rank_thresholds
 from .items import ITEM_ID_TO_CODE, TJEItem, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, TJEItemType, \
                    create_items, create_starting_presents
-from .locations import FLOOR_ITEM_LOC_TEMPLATE, LOCATION_NAME_TO_ID
+from .locations import FLOOR_ITEM_LOC_TEMPLATE, LOCATION_GROUPS, LOCATION_NAME_TO_ID
 from .options import RankRescalingOption, TJEOptions
 from .regions import create_regions
 from .rom import TJEProcedurePatch, write_tokens
@@ -54,6 +54,8 @@ class TJEWorld(World):
                         }
     }
 
+    location_name_groups = LOCATION_GROUPS
+
     def collect(self, state: "CollectionState", item: "TJEItem") -> bool:
         change = super().collect(state, item)
         if change:
@@ -91,7 +93,6 @@ class TJEWorld(World):
                                                             self.options.max_items.value,
                                                             scale_threshold
                                                             )
-        print(self.rank_thresholds)
         if self.options.upwarp_present:
             self.generator.fewer_upwarps()
 
