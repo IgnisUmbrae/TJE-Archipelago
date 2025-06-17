@@ -1,4 +1,6 @@
 from typing import TYPE_CHECKING, Callable
+from pathlib import Path
+# from base64 import b64encode, b64decode
 import logging
 
 import worlds._bizhawk as bizhawk
@@ -18,17 +20,40 @@ logger = logging.getLogger(__name__)
 
 class SaveManager():
     def __init__(self, get_save_data_fn: Callable):
-        self.save_file_name = None
+        self.save_filename = None
+        self.save_path = None
+        self.save_data = None
+        self.save_hash = None
         self.last_saved_hash = None
         self.get_save_data = get_save_data_fn
 
-    def save_to_disk(self) -> bool:
-        save_data, save_hash = self.get_save_data()
-        if (self.save_file_name is not None and save_data is not None
-            and (self.last_saved_hash is None or (self.last_saved_hash != save_hash))):
-            with open(home_path(f"{self.save_file_name}.aptjesave"), "wb") as f:
-                f.write(b"".join(save_data))
-            self.last_saved_hash = save_hash
+    async def initialize(self, fn: str, ctx: "BizHawkClientContext", game_controller: TJEGameController) -> int:
+        self.save_filename = f"{fn}.aptjesave"
+        self.save_path = Path(home_path()) / "saves" / "tje"
+        if self.save_file_exists():
+            with (self.save_path / self.save_filename).open("rb") as f:
+                save_data: bytes = f.read()
+                game_controller.set_save_state(ctx, save_data[16:])
+            return int.from_bytes(save_data[0:16])
+
+        if not self.save_path.exists():
+            logger.debug("Save directory does not exist; creating.")
+            self.save_path.mkdir(mode=661, parents=True)
+            return -1
+
+    def save_file_exists(self) -> bool:
+        fn = self.save_path / self.save_filename
+        return fn.exists() and fn.is_file()
+
+    def update_save_data(self) -> bool:
+        self.save_data, self.save_hash = self.get_save_data()
+
+    def save_to_disk(self, last_index: int) -> bool:
+        if (self.save_filename is not None and self.save_data is not None
+            and (self.last_saved_hash is None or self.last_saved_hash != self.save_hash)):
+            with (self.save_path / self.save_filename).open("wb") as f:
+                f.write(last_index.to_bytes(16)+b"".join(self.save_data))
+            self.last_saved_hash = self.save_hash
             return True
         return False
 
@@ -69,10 +94,13 @@ class TJEClient(BizHawkClient):
     def __init__(self):
         super().__init__()
 
+        self.ticks = 0
+
         self.game_controller = TJEGameController(self)
         self.save_manager = SaveManager(self.game_controller.get_save_state)
 
         self.last_processed_index = None
+        self.ignore_realtime_items = False
         self.auto_bad_presents = False
 
         self.edible_queue = SpawnQueue(cooldown=1)
@@ -119,8 +147,6 @@ class TJEClient(BizHawkClient):
 
             add_save_data_points(char, expanded_inv)
 
-            self.last_processed_index = -1
-
             return True
         except (bizhawk.RequestFailedError, bizhawk.NotConnectedError):
             logger.error("Failed to initialize game controller")
@@ -132,16 +158,25 @@ class TJEClient(BizHawkClient):
     async def process_tje_cmd(self, ctx: "BizHawkClientContext", cmd: str, args: dict) -> None:
         match cmd:
             case "RoomInfo":
-                self.save_manager.save_file_name = args["seed_name"] + ctx.auth
+                self.last_processed_index = await self.save_manager.initialize(args["seed_name"] + ctx.auth,
+                                                                               ctx, self.game_controller)
+                if self.last_processed_index > -1:
+                    self.ignore_realtime_items = True
+
+                await ctx.send_msgs([{"cmd": "Sync"}])
+
             case "ReceivedItems":
-                ignore_realtime_items = True if self.last_processed_index == -1 else False
-                for index, nwi in enumerate(args["items"], start=args["index"]):
-                    if (index > self.last_processed_index
-                        and not (ignore_realtime_items and nwi.item in EDIBLE_IDS+INSTATRAP_IDS)):
-                        logger.debug("* Processing item: %s", ITEM_ID_TO_NAME[nwi.item])
-                        self.process_item(ctx, nwi)
+                if self.last_processed_index is not None:
+                    for index, nwi in enumerate(args["items"], start=args["index"]):
+                        if (index > self.last_processed_index
+                            and not (self.ignore_realtime_items and nwi.item in EDIBLE_IDS+INSTATRAP_IDS)):
+                            logger.debug("* Processing item: %s", ITEM_ID_TO_NAME[nwi.item])
+                            self.process_item(ctx, nwi)
                         self.last_processed_index = index
-                logger.debug("Last processed: item index %s", self.last_processed_index)
+                    self.ignore_realtime_items = False
+                    logger.debug("Last processed: item index %s", self.last_processed_index)
+                else:
+                    logger.debug("Ignoring items initially sent by server until save data read")
 
     async def goal_in(self, ctx: "BizHawkClientContext") -> None:
         logger.debug("Finished game!")
@@ -209,16 +244,23 @@ class TJEClient(BizHawkClient):
         queue.tick()
         if queue.can_spawn():
             oldest = queue.oldest()
-            #logger.debug("Sending item: %s", ITEM_ID_TO_NAME[oldest.item])
             success = await self.game_controller.receive_item(ctx, oldest.item)
             if success:
                 queue.mark_spawned(oldest)
+                self.save_manager.update_save_data()
 
     async def game_watcher(self, ctx: "BizHawkClientContext") -> None:
+        self.ticks += 1
         await self.game_controller.tick(ctx)
 
         if not ctx.finished_game:
             await self.handle_items(ctx)
             if self.game_controller.current_level == 26:
                 await self.goal_in(ctx)
-            #self.save_manager.save_to_disk(ctx)
+            self.save_manager.update_save_data()
+            # save game to disk every 8 ticks (1s)
+            if self.ticks % 8 == 0 and not self.game_controller.is_awaiting_load():
+                if await self.save_manager.save_to_disk(self.last_processed_index):
+                    logger.debug("* Saved data to disk")
+                else:
+                    logger.error("* ERROR: Failed to save data to disk")

@@ -65,6 +65,8 @@ INV_SIZE_ADDRS_ASL_D0 = [0x00009358, 0x0000936c, 0x00009380, 0x000097a8, 0x00009
 
 MAP_REVEAL_DIALOGUE_ADDRS = (0x00105b73, 0x00105b7e, 0x00105b8a, 0x00105b97, 0x00105ba4)
 
+#endregion
+
 #region Dialogue templates
 
 MAP_REVEAL_DIALOGUE_TEMPLATE = "Lv{}-{} map!"
@@ -93,9 +95,9 @@ STATIC_DIALOGUE_LIST: dict[str, tuple[str,str]] = {
 
 #region Floor items and ship pieces
 
-TREES = [b"\x51", b"\x52", b"\x53"]
+TREES = (b"\x51", b"\x52", b"\x53")
 
-FIXED_SHIP_PIECE_LEVELS = [2, 6, 10, 12, 15, 17, 20, 21, 23, 25]
+FIXED_SHIP_PIECE_LEVELS = (2, 6, 10, 12, 15, 17, 20, 21, 23, 25)
 
 COLLECTED_SHIP_ITEM = b"\x00"
 EMPTY_SHIP_PIECE = b"\xFF"
@@ -106,17 +108,24 @@ EMPTY_PRESENT = b"\xFF"
 
 #region Elevator and rank checks
 
-VANILLA_RANK_THRESHOLDS = [0, 40, 100, 180, 280, 400, 540, 700, 880]
-RANK_NAMES = ["Wiener", "Dufus", "Poindexter", "Peanut", "Dude", "Bro", "Homey", "Rapmaster", "Funk Lord"]
+VANILLA_RANK_THRESHOLDS = (0, 40, 100, 180, 280, 400, 540, 700, 880)
+RANK_NAMES = ("Wiener", "Dufus", "Poindexter", "Peanut", "Dude", "Bro", "Homey", "Rapmaster", "Funk Lord")
 
 #endregion
 
 #region Misc
 
-INITIAL_PRESENT_ADDRS = [0x00014393, 0x00014397, 0x000143a5, 0x000143ab,
-                         0x000143c5, 0x000143cb, 0x000143d9, 0x000143df]
+RETURN_HOLE_DATA = (
+    (0x09783E, b"\x41\xC8\x1E\x44"),
+    (0x097851, b"\xC4\x09\x0A\xC6"),
+    (0x097864, b"\x46\x08\x0B\x44"),
+    (0x097877, b"\x40\x56\x56\x43")
+)
 
-BASE_LEVEL_TYPES = [0, 1, 5, 2, 7, 3, 4, 2, 6, 7, 2, 3, 6, 2, 4, 7, 2, 4, 2, 7, 4, 5, 1, 7]
+INITIAL_PRESENT_ADDRS = (0x00014393, 0x00014397, 0x000143a5, 0x000143ab,
+                         0x000143c5, 0x000143cb, 0x000143d9, 0x000143df)
+
+BASE_LEVEL_TYPES = (0, 1, 5, 2, 7, 3, 4, 2, 6, 7, 2, 3, 6, 2, 4, 7, 2, 4, 2, 7, 4, 5, 1, 7)
 
 # ROM-internal menu return values → AP-internal character values
 def ret_val_to_char(ret_val: int) -> int:
@@ -156,8 +165,8 @@ PLAYER_RAM_ADDRS: dict[tuple[int, int]] = {
     "POINTS": (0xA24C, 0x2),
     "RANK": (0xA250, 0x1),
     "HEALTH": (0xA252, 0x1),
-    "HP_DISPLAY": (0xA254, 0x2),
-    "HP_RESTORE": (0xA258, 0x2),
+    "HP_DISPLAY": (0xA254, 0x1),
+    "HP_RESTORE": (0xA258, 0x1),
     "FALL_STATE": (0xDA22, 0x1),
     "SLEEP_TIMER": (0xDA44, 0x2),
     "GLOBAL_ELEVATOR_STATE": (0xDA6A, 0x1),
@@ -185,13 +194,17 @@ GLOBAL_RAM_ADDRS: dict[int] = {
     "TRANSP_MAP_MASK": 0x92A2,
     # Special AP addresses
     "AP_CHARACTER": 0xF000,
+    "AP_NUM_KEYS": 0xF455,
+    "AP_NUM_MAP_REVEALS": 0xF456,
+    "AP_LAST_REVEALED_MAP": 0xF457,
     "AP_GIVE_ITEM": 0xF554,
     "AP_AUTO_PRESENT": 0xF555,
     "AP_AUTO_NO_POINTS": 0xF556,
     "AP_CUPID_TRAP": 0xF557,
     "AP_DIALOGUE_TRIGGER": 0xF558,
     "AP_DIALOGUE_LINE1": 0xF600,
-    "AP_DIALOGUE_LINE2": 0xF60C
+    "AP_DIALOGUE_LINE2": 0xF60C,
+    "AP_INIT_COMPLETE": 0xF6A0
 }
 
 def get_slot_addr(name: str, slot: int, player: int = 0) -> int | None:
@@ -247,6 +260,10 @@ SAVE_DATA_POINTS: list[DataPoint] = [
     DataPoint("Triggered ship items", GLOBAL_RAM_ADDRS["TRIGGERED_SHIP_ITEMS"], 10),
     DataPoint("Present wrapping", GLOBAL_RAM_ADDRS["PRESENTS_WRAPPING"], 56),
     DataPoint("Map masks", GLOBAL_RAM_ADDRS["UNCOVERED_MAP_MASK"], 364),
+    DataPoint("Character", GLOBAL_RAM_ADDRS["AP_CHARACTER"], 1),
+    DataPoint("Keys collected", GLOBAL_RAM_ADDRS["AP_NUM_KEYS"], 1),
+    DataPoint("Map reveals collected", GLOBAL_RAM_ADDRS["AP_NUM_MAP_REVEALS"], 1),
+    DataPoint("Last revealed map", GLOBAL_RAM_ADDRS["AP_LAST_REVEALED_MAP"], 1)
 ]
 
 def add_save_data_points(player: int = 0, expanded_inv: bool = False) -> None:
@@ -260,8 +277,8 @@ def add_save_data_points(player: int = 0, expanded_inv: bool = False) -> None:
 
         DataPoint("Inventory", get_ram_addr("INVENTORY", player), 64 if expanded_inv else 16),
 
-        DataPoint("Max health", get_ram_addr("HP_DISPLAY", player), 1),
-        DataPoint("Health", get_ram_addr("HEALTH", player), 1),
+        #DataPoint("Max health", get_ram_addr("HP_DISPLAY", player), 1),
+        #DataPoint("Health", get_ram_addr("HEALTH", player), 1),
     ])
 
 #endregion

@@ -26,7 +26,8 @@ class MonitorLevel(IntEnum):
 
 class AddressMonitor():
     def __init__(self, name: str, addr_name: str, size: int, level: MonitorLevel, enable_test_fn: Callable,
-                 on_trigger_fn: Callable, parent: "TJEGameController", ctx: "BizHawkClientContext", enabled=False):
+                 on_trigger_fn: Callable, parent: "TJEGameController", ctx: "BizHawkClientContext",
+                 enabled: bool = False):
         self.name = name
         self.parent = parent
         self.on_trigger = on_trigger_fn
@@ -104,6 +105,7 @@ class TJEGameController():
         # Saving and loading–related
 
         self.connected = False
+        self.awaiting_load = True
         self.save_state = None
         self.save_hash = None
 
@@ -150,7 +152,7 @@ class TJEGameController():
                 "COLLECTED_ITEMS",
                 104,
                 MonitorLevel.GLOBAL,
-                lambda: not self.is_on_menu(),
+                lambda: not self.is_on_menu() and not self.is_awaiting_load(),
                 self.handle_floor_item_change,
                 self,
                 ctx
@@ -160,7 +162,7 @@ class TJEGameController():
                 "TRIGGERED_SHIP_ITEMS",
                 10,
                 MonitorLevel.GLOBAL,
-                lambda: not self.is_on_menu(),
+                lambda: not self.is_on_menu() and not self.is_awaiting_load(),
                 self.handle_ship_item_change,
                 self,
                 ctx
@@ -170,7 +172,7 @@ class TJEGameController():
                 "RANK",
                 1,
                 level,
-                lambda: not self.is_on_menu(),
+                lambda: not self.is_on_menu() and not self.is_awaiting_load(),
                 self.handle_rank_change,
                 self,
                 ctx
@@ -182,6 +184,17 @@ class TJEGameController():
                 level,
                 lambda: True,
                 self.handle_level_change,
+                self,
+                ctx,
+                enabled=True
+            ),
+            AddressMonitor(
+                "State loading",
+                "AP_INIT_COMPLETE",
+                1,
+                MonitorLevel.GLOBAL,
+                lambda: True,
+                self.handle_init_complete,
                 self,
                 ctx,
                 enabled=True
@@ -213,18 +226,6 @@ class TJEGameController():
 
     def one_indices(self, bitfield: int, total_bits: int) -> list[int]:
         return [(total_bits-1)-i for i in range(bitfield.bit_length()) if bitfield & (1 << i)]
-
-    async def get_empty_inv_slot(self, ctx: "BizHawkClientContext") -> Optional[int]:
-        current_inventory = await self.peek_ram(ctx, get_ram_addr("INVENTORY", self.char),
-                                                64 if self.expanded_inv else 16)
-        if current_inventory:
-            split_inventory = [current_inventory[i:i+1] for i in range(len(current_inventory))]
-            try:
-                return split_inventory.index(EMPTY_ITEM)
-            except ValueError:
-                return None
-        else:
-            return None
 
     async def get_empty_dropped_present_slot(self, ctx: "BizHawkClientContext") -> Optional[int]:
         dropped_presents_table = await self.peek_ram(ctx,get_ram_addr("DROPPED_PRESENTS", self.char), 256)
@@ -367,6 +368,9 @@ class TJEGameController():
     def is_on_menu(self) -> bool:
         return (not self.is_playing or self.current_level == -1)
 
+    def is_awaiting_load(self) -> bool:
+        return self.awaiting_load
+
     async def handle_level_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
         await self.update_game_state(ctx)
         # Special handling for menu, aka "level -1"
@@ -405,24 +409,53 @@ class TJEGameController():
 
     #region Saving & loading–related functions
 
-    def get_save_state(self) -> tuple[list[bytes], int]:
+    async def handle_init_complete(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
+        logger.debug("LOADER: Game initialization complete")
+        if old_data == b"\x00" and self.save_state is not None:
+            logger.debug("LOADER: Loading saved game…")
+            await self.load_save_state(ctx, self.save_state)
+            logger.debug("LOADER: Loading complete")
+        await self.poke_ram(ctx, get_ram_addr("AP_INIT_COMPLETE"), b"\x00")
+        self.awaiting_load = False
+
+    def get_save_state(self) -> tuple[bytes, int]:
         return self.save_state, self.save_hash
 
-    async def update_save_state(self, ctx: "BizHawkClientContext") -> None:
-        try:
-            response = tuple(await bizhawk.read(ctx.bizhawk_ctx,
-                [(point.address, point.size, "68K RAM") for point in SAVE_DATA_POINTS]
-            ))
-        except (bizhawk.RequestFailedError, bizhawk.NotConnectedError):
-            response = None
+    async def update_save_state(self, ctx: "BizHawkClientContext") -> bool:
+        if not self.awaiting_load:
+            try:
+                response = tuple(await bizhawk.read(ctx.bizhawk_ctx,
+                    [(point.address, point.size, "68K RAM") for point in SAVE_DATA_POINTS]
+                ))
+            except (bizhawk.RequestFailedError, bizhawk.NotConnectedError):
+                response = None
 
-        if response is not None:
-            # If points decrease, something has gone wrong
-            # if self.save_state is not None:
-            #     print(f"New points: {int.from_bytes(response[8])}; old points: {int.from_bytes(self.save_state[8])}")
-            if (self.save_state is None
-                or (not int.from_bytes(response[8]) < int.from_bytes(self.save_state[8]))):
-                self.save_state, self.save_hash = response, hash(response)
-            #self.save_state = dict(zip([point.name for point in SAVE_DATA_POINTS], response))
+            if response is not None:
+                # If points decrease, something has gone wrong
+                if (self.save_state is None
+                    or (not int.from_bytes(response[8]) < int.from_bytes(self.save_state[802:804]))):
+                    await self.set_save_state(b"".join(response))
+                return True
+        return False
+
+    # set without loading
+    async def set_save_state(self, save_state: bytes) -> None:
+        self.save_state = save_state
+        self.save_hash = hash(self.save_state)
+
+    async def load_save_state(self, ctx: "BizHawkClientContext", save_state: bytes) -> bool:
+        try:
+            i = 16 # first 16 bytes are last processed item index, only for client
+            for point in SAVE_DATA_POINTS:
+                await self.poke_ram(ctx, point.address, save_state[i:i+point.size])
+                # Manually remove collected items on Level 1
+                if point.name == "Collected items":
+                    for index in self.one_indices(int.from_bytes(save_state[i+4:i+8]), 4*8):
+                        await self.poke_ram(ctx, get_slot_addr("FLOOR_ITEMS", index), EMPTY_ITEM)
+                i += point.size
+        except (bizhawk.RequestFailedError, bizhawk.NotConnectedError):
+            return False
+
+        return True
 
     #endregion
