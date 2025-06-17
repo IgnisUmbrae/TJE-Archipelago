@@ -1,11 +1,7 @@
 import copy
-import hashlib
 import struct
-import os
 from math import sqrt, ceil
-from typing import TYPE_CHECKING
 
-import Utils
 from settings import get_settings
 from worlds.Files import APProcedurePatch, APTokenMixin, APTokenTypes
 
@@ -15,9 +11,6 @@ from .constants import EMPTY_PRESENT, INITIAL_PRESENT_ADDRS, BASE_LEVEL_TYPES, I
 from .generators import map_reveal_text
 from .items import ITEM_ID_TO_CODE
 from .options import CharacterOption, SoundRandoOption, StartingPresentOption, GameOverOption, MapRandomizationOption
-
-if TYPE_CHECKING:
-    from . import TJEWorld
 
 REV00_MD5 = "0a6af20d9c5b3ec4e23c683f083b92cd"
 REV02_MD5 = "72dc91fd2c5528b384f082a38db9ddda"
@@ -286,3 +279,4 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
                                                                   *world.patchable_item_list))
 
     patch.write_file("token_data.bin", patch.get_token_binary())
+    

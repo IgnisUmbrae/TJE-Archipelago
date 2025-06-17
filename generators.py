@@ -279,12 +279,6 @@ def scaled_rank_thresholds_alt(last_level: int = 25, min_items: int = 12, max_it
 
     return thresholds
 
-# def sign(num):
-#     return (num > 0) - (num < 0)
-
-# def sborrow(x, y) -> bool:
-#     return sign(x) != sign(y) and sign(x-y) != sign(x)
-
 class TJEInternalRNG():
     rng_state = 0x3039
 
