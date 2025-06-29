@@ -2,7 +2,7 @@
 
 ## What is this?
 
-This lets you play the classic Sega ~~Genesis~~ Mega Drive game _Toejam & Earl_ in [Archipelago](https://archipelago.gg) as part of a multiworld.
+This lets you play the classic Sega Mega Drive/Genesis game _Toejam & Earl_ in [Archipelago](https://archipelago.gg) as part of a multiworld.
 
 ## Features
 
@@ -15,10 +15,10 @@ This lets you play the classic Sega ~~Genesis~~ Mega Drive game _Toejam & Earl_ 
 
 Additions over the base game include:
 
-- New sprites for AP items, ship pieces and hints
+- Server-side saving & loading
+- New sprites for AP items, ship pieces and extra items
 - Configurable starting presents, game over handling, and more
-- Progress is saved in the client when paused, when travelling between levels, and on game over
-- Customize level randomization, numbers of items, and more
+- Customize details of level randomization, number of levels, numbers of items, and much more
 - New items:
   - Elevator keys, which are required to unlock elevators
   - Map revealers, which uncover the map five levels at a time
@@ -27,7 +27,6 @@ Additions over the base game include:
 
 ## Caveats
 
-- Resuming after _closing_ the client (e.g. in asyncs) is currently a mess, and will imperfectly restore the game state.
 - 2-player mode is not currently supported.
 - Hints are yet to be implemented and locations are generically-named.
 
@@ -46,22 +45,17 @@ A tracker developed by GrayGooGlitch is available [on GitHub here](https://githu
 
 ### Instructions
 
-1. Locate your Toejam & Earl REV 02 ROM. If you own the Steam version, you can right-click it in your library, select Manage → Browse Local Files and locate `ToeJamEarl.SGD` in the `uncompressed ROMs` folder. Copy that file to the root of your Archipelago directory.
+0. Install BizHawk, install Archipelago, and obtain a ROM file.
 
-2. Add these lines to `host.yaml` so the client knows where your ROM file is (changing the name if needed):
+1. Place the downloaded `tje.apworld` file into the `custom_worlds` subfolder of your Archipelago installation.
 
-```
-tje_options:
-  rom_file: "ToeJamEarl.SGD"
-```
+2. Create a YAML with the settings of your choice. You can also use [the example](https://github.com/IgnisUmbrae/TJE-Archipelago/blob/main/docs/example.yaml) as a quickstart. Add this to the `Players` subfolder if you're hosting locally, upload it to the host otherwise.
 
-3. Place the downloaded `tje.apworld` file into the `custom_worlds` subfolder of your Archipelago installation.
+3. Now you or the host can generate a world; Archipelago will also generate a patch with the extension `.aptje`. Use the Patch function in the launcher to apply the patch to the ROM and automatically launch BizHawk along with the client. If this is your first time, you will be prompted to locate one or both of BizHawk and the ROM file.
 
-4. Create a YAML. You can use [the example](https://github.com/IgnisUmbrae/TJE-Archipelago/blob/main/docs/example.yaml) as a quickstart. Add this to the `Players` subfolder if you're hosting locally, or upload it to the host otherwise.
+4. Now BizHawk will pop up its Lua scripting window. If the `connector_bizhawk_generic` script isn't already enabled, enable it by double clicking it and everything will connect together.
 
-5. Now you or the host can generate a world. Archipelago will also generate a patch with the extension `.aptje`; the easiest way to use this is via the Patch function in the launcher, which will apply the patch to the ROM and automatically launch BizHawk along with the client. (You may be asked to locate one or both of these.)
-
-6. BizHawk will also pop up its Lua scripting window, in which you'll need to enable the script `connector_bizhawk_generic` by double clicking it. Now everything will connect together. It's recommended not to begin the game until the client has successfully connected to both BizHawk and the AP host.
+5. To avoid issues with items and/or save data desyncing, wait until the client has successfully connected to _both_ BizHawk _and_ the AP host before selecting "Play new game -- AP World" from the menu to actually start playing.
 
 ## Questions, feedback, etc
 
