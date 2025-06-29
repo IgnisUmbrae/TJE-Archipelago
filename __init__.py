@@ -17,9 +17,6 @@ from .options import RankRescalingOption, TJEOptions
 from .regions import create_regions
 from .rom import TJEProcedurePatch, write_tokens
 
-# logger = logging.getLogger(__name__)
-# logger.setLevel(logging.DEBUG)
-
 class TJESettings(settings.Group):
     class ROMFile(settings.UserFilePath):
         """Location of the ToeJam & Earl REV 02 ROM file."""
@@ -161,5 +158,6 @@ class TJEWorld(World):
             "key_level_access": self.key_levels + [self.options.last_level.value],
             "items_per_level": item_totals(True, self.options.min_items.value, self.options.max_items.value),
             "ship_item_levels": self.ship_item_levels,
-            "rank_thresholds": self.rank_thresholds
+            "rank_thresholds": self.rank_thresholds,
+            "map_reveal_potencies": self.map_reveal_potencies,
         }
