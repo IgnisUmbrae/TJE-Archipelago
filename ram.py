@@ -7,8 +7,9 @@ import worlds._bizhawk as bizhawk
 from worlds._bizhawk import ConnectionStatus
 from worlds._bizhawk.client import BizHawkClient
 
-from .constants import EMPTY_ITEM, COLLECTED_SHIP_ITEM, PLAYER_SLOT_STRUCTURES, RANK_NAMES, SAVE_DATA_POINTS, \
-                       STATIC_DIALOGUE_LIST, get_slot_addr, get_ram_addr, expand_inv_constants
+from .constants import EMPTY_ITEM, COLLECTED_SHIP_ITEM, GLOBAL_DATA_STRUCTURES, PLAYER_DATA_STRUCTURES, RANK_NAMES, \
+                       SAVE_DATA_POINTS_GLOBAL, SAVE_DATA_POINTS_PLAYER, STATIC_DIALOGUE_LIST, \
+                       get_datastructure, get_max_health, get_slot_addr, get_ram_addr, expand_inv_constants
 from .items import ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, \
                    PRESENT_IDS, SHIP_PIECE_IDS,INSTATRAP_IDS, BAD_PRESENT_IDS
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, RANK_LOC_TEMPLATE, SHIP_PIECE_LOC_TEMPLATE
@@ -24,7 +25,164 @@ class MonitorLevel(IntEnum):
     EARL = 1
     BOTH = 2
 
+
+def one_indices(bitfield: int, total_bits: int) -> list[int]:
+    return [(total_bits-1)-i for i in range(bitfield.bit_length()) if bitfield & (1 << i)]
+
+def character_to_monitor_level(char: int) -> MonitorLevel:
+    match char:
+        case 0:
+            return MonitorLevel.TOEJAM
+        case 1:
+            return MonitorLevel.EARL
+        case 2:
+            return MonitorLevel.BOTH
+        case _:
+            return MonitorLevel.GLOBAL
+
+class SaveManager():
+    def __init__(self, sync_interval: int, char: int, gc: "TJEGameController", ctx: "BizHawkClientContext"):
+        player_monitor_level = character_to_monitor_level(char)
+        self.char = char
+        self.ticks = 0
+        self.sync_interval = sync_interval
+        self.game_controller = gc
+        self.monitors: list[AddressMonitor] = []
+        self.monitors.append(
+            AddressMonitor(
+                "Initialization complete",
+                "AP_INIT_COMPLETE",
+                1,
+                MonitorLevel.GLOBAL,
+                lambda: True,
+                self.handle_init_flag_changed,
+                gc,
+                ctx,
+                enabled=True
+            ))
+        for structure in SAVE_DATA_POINTS_GLOBAL:
+            self.monitors.append(AddressMonitor.create_as_save_monitor(
+                structure,
+                MonitorLevel.GLOBAL,
+                self.data_changed,
+                gc,
+                ctx,
+            ))
+        for structure in SAVE_DATA_POINTS_PLAYER:
+            self.monitors.append(AddressMonitor.create_as_save_monitor(
+                structure,
+                player_monitor_level,
+                self.data_changed,
+                gc,
+                ctx,
+            ))
+
+        self.post_loading_routines: dict[str, Callable] = {
+            "RANK" : self.rank_post_load,
+            "COLLECTED_ITEMS" : self.collected_items_post_load,
+        }
+
+        self.ctx = ctx
+        self.save_queue: dict[str, int] = {}
+        self.data_to_load = {}
+
+    async def post_load_routine(self) -> None:
+        # Force redraw
+        await self.game_controller.poke_ram(self.ctx, get_ram_addr("REDRAW_FLAG"), b"\x01")
+
+    async def rank_post_load(self, load_bytes: bytes) -> None:
+        rank = int.from_bytes(load_bytes)
+        if rank > 0:
+            hp = get_max_health(self.char, rank)
+            await self.game_controller.poke_ram(self.ctx, get_ram_addr("HEALTH", self.char), int.to_bytes(hp))
+
+    async def collected_items_post_load(self, load_bytes: bytes) -> None:
+        # Manually remove items on Level 1 if already collected
+        for index in one_indices(int.from_bytes(load_bytes[4:8]), 32):
+            await self.game_controller.poke_ram(self.ctx, get_slot_addr("FLOOR_ITEMS", index), EMPTY_ITEM)
+
+    async def append_to_save_queue(self, name: str, data: int) -> None:
+        self.save_queue[name] = data
+
+    async def tick(self) -> None:
+        for monitor in self.monitors:
+            await monitor.tick()
+        if self.save_queue:
+            self.ticks += 1
+            if self.ticks > self.sync_interval:
+                await self.update_save_on_server()
+                self.ticks = 0
+
+    async def data_changed(self, from_monitor: "AddressMonitor", ctx: "BizHawkClientContext",
+                           old_data: bytes, new_data: bytes):
+        if from_monitor.monitor_level == MonitorLevel.GLOBAL:
+            data_to_save = GLOBAL_DATA_STRUCTURES[from_monitor.name].repr_for_saving(new_data)
+        else:
+            data_to_save = PLAYER_DATA_STRUCTURES[from_monitor.name].repr_for_saving(new_data)
+        await self.append_to_save_queue(from_monitor.name, data_to_save)
+
+    async def update_save_on_server(self) -> None:
+        await self.ctx.send_msgs([{
+            "cmd": "Set",
+            "key": k,
+            "want_reply": False,
+            "operations": [
+                {
+                    "operation": "replace",
+                    "value": v,
+                }
+            ]
+        } for k, v in self.save_queue.items()])
+        self.save_queue.clear()
+
+    async def handle_init_flag_changed(self, from_monitor: "AddressMonitor", ctx: "BizHawkClientContext",
+                                   old_data: bytes, new_data: bytes):
+        if int.from_bytes(new_data) == 1:
+            logger.debug("Game initialization complete")
+            print(self.data_to_load)
+            if self.data_to_load:
+                logger.debug("Loading data retrieved from server")
+                await bizhawk.lock(ctx.bizhawk_ctx)
+                # Load data
+                for name, data in self.data_to_load.items():
+                    if data is not None:
+                        addr = get_ram_addr(name)
+                        structure = get_datastructure(name)
+                        load_bytes = structure.repr_for_loading(data)
+                        await self.game_controller.poke_ram(ctx, addr, load_bytes)
+
+                        if name in self.post_loading_routines:
+                            await self.post_loading_routines.get(name)(load_bytes)
+
+                await self.post_load_routine()
+
+                await bizhawk.unlock(ctx.bizhawk_ctx)
+                logger.debug("Loading complete")
+            self.game_controller.awaiting_load = False
+        else:
+            logger.debug("Possible reset from in-game detected")
+            self.game_controller.awaiting_load = True
+
 class AddressMonitor():
+    @staticmethod
+    def create_as_save_monitor(structure_name: str, level: MonitorLevel, on_trigger_fn: Callable,
+                                   gc: "TJEGameController", ctx: "BizHawkClientContext") -> "AddressMonitor":
+        if level == MonitorLevel.GLOBAL:
+            structure = GLOBAL_DATA_STRUCTURES[structure_name]
+        else:
+            structure = PLAYER_DATA_STRUCTURES[structure_name]
+        return AddressMonitor(
+            structure_name,
+            structure_name,
+            structure.size(),
+            level,
+            lambda: not gc.is_on_menu() and not gc.is_awaiting_load(),
+            on_trigger_fn,
+            gc,
+            ctx,
+            False
+            )
+
     def __init__(self, name: str, addr_name: str, size: int, level: MonitorLevel, enable_test_fn: Callable,
                  on_trigger_fn: Callable, parent: "TJEGameController", ctx: "BizHawkClientContext",
                  enabled: bool = False):
@@ -87,7 +245,7 @@ class AddressMonitor():
                     await self.trigger(i)
 
     async def trigger(self, index: int):
-        await self.on_trigger(self.ctx, self.old_data[index], self.new_data[index])
+        await self.on_trigger(self, self.ctx, self.old_data[index], self.new_data[index])
 
 class TJEGameController():
     def __init__(self, client: "BizHawkClient"):
@@ -106,8 +264,6 @@ class TJEGameController():
 
         self.connected = False
         self.awaiting_load = True
-        self.save_state = None
-        self.save_hash = None
 
         # Misc
 
@@ -127,22 +283,12 @@ class TJEGameController():
                 await self.update_game_state(ctx)
                 for monitor in self.monitors: await monitor.tick()
 
-                if self.is_playing:
-                    await self.update_save_state(ctx)
-
     #endregion
 
     #region Initialization functions
 
     def add_monitors(self, ctx: "BizHawkClientContext", char: int):
-        # These are the values returned by the menu, which don't match the others in-game
-        match char:
-            case 0:
-                level = MonitorLevel.TOEJAM
-            case 1:
-                level = MonitorLevel.EARL
-            case 2:
-                level = MonitorLevel.BOTH
+        level = character_to_monitor_level(char)
 
         self.char = char
 
@@ -188,17 +334,6 @@ class TJEGameController():
                 ctx,
                 enabled=True
             ),
-            AddressMonitor(
-                "State loading",
-                "AP_INIT_COMPLETE",
-                1,
-                MonitorLevel.GLOBAL,
-                lambda: True,
-                self.handle_init_complete,
-                self,
-                ctx,
-                enabled=True
-            ),
         ]
 
     def initialize_slot_data(self, auto_bad_presents: bool, expanded_inv: bool):
@@ -223,9 +358,6 @@ class TJEGameController():
             return (await bizhawk.read(ctx.bizhawk_ctx, [(address, size, "68K RAM")]))[0]
         except (bizhawk.RequestFailedError, bizhawk.NotConnectedError):
             return None
-
-    def one_indices(self, bitfield: int, total_bits: int) -> list[int]:
-        return [(total_bits-1)-i for i in range(bitfield.bit_length()) if bitfield & (1 << i)]
 
     async def get_empty_dropped_present_slot(self, ctx: "BizHawkClientContext") -> Optional[int]:
         dropped_presents_table = await self.peek_ram(ctx,get_ram_addr("DROPPED_PRESENTS", self.char), 256)
@@ -345,7 +477,7 @@ class TJEGameController():
 
     async def is_inventory_full(self, ctx: "BizHawkClientContext") -> bool:
         return await self.peek_ram(ctx,
-                                   get_slot_addr("INVENTORY", PLAYER_SLOT_STRUCTURES["INVENTORY"].max_slot, self.char),
+                                   get_slot_addr("INVENTORY", PLAYER_DATA_STRUCTURES["INVENTORY"].max_slot, self.char),
                                    1) != b"\xFF"
 
     async def emit_dialogue(self, ctx: "BizHawkClientContext", lines: tuple[str, str]) -> None:
@@ -371,22 +503,25 @@ class TJEGameController():
     def is_awaiting_load(self) -> bool:
         return self.awaiting_load
 
-    async def handle_level_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
+    async def handle_level_change(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
+                                  old_data: bytes, new_data: bytes):
         await self.update_game_state(ctx)
         # Special handling for menu, aka "level -1"
         old_level = self.current_level
         self.current_level = int.from_bytes(new_data) if self.is_playing else -1
         logger.debug("Level changed from %i to %i", old_level, self.current_level)
 
-    async def handle_floor_item_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
+    async def handle_floor_item_change(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
+                                       old_data: bytes, new_data: bytes):
         new_as_int, old_as_int = int.from_bytes(new_data), int.from_bytes(old_data)
         if new_as_int > old_as_int:
-            changed_indices = self.one_indices(new_as_int ^ old_as_int, 104*8)
+            changed_indices = one_indices(new_as_int ^ old_as_int, 104*8)
             level_item_pairs = [divmod(i, 32) for i in changed_indices]
             for (level, item_num) in level_item_pairs:
                 await self.client.trigger_location(ctx, FLOOR_ITEM_LOC_TEMPLATE.format(level, item_num+1))
 
-    async def handle_ship_item_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
+    async def handle_ship_item_change(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
+                                      old_data: bytes, new_data: bytes):
         # This is an extra failsafe to avoid trouble during resets
         await self.update_game_state(ctx)
         if self.is_playing:
@@ -395,7 +530,8 @@ class TJEGameController():
                 logger.debug("Triggering ship piece on level %i", level)
                 await self.client.trigger_location(ctx, SHIP_PIECE_LOC_TEMPLATE.format(level))
 
-    async def handle_rank_change(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
+    async def handle_rank_change(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
+                                 old_data: bytes, new_data: bytes):
         rank = int.from_bytes(new_data)
         if rank > 0:
             loc = RANK_LOC_TEMPLATE.format(RANK_NAMES[rank])
@@ -404,58 +540,5 @@ class TJEGameController():
     async def update_game_state(self, ctx: "BizHawkClientContext") -> None:
         player_state = await self.peek_ram(ctx, get_ram_addr("STATE", self.char), 1)
         self.is_playing = (player_state != b"\x00")
-
-    #endregion
-
-    #region Saving & loading–related functions
-
-    async def handle_init_complete(self, ctx: "BizHawkClientContext", old_data: bytes, new_data: bytes):
-        logger.debug("LOADER: Game initialization complete")
-        if old_data == b"\x00" and self.save_state is not None:
-            logger.debug("LOADER: Loading saved game…")
-            await self.load_save_state(ctx, self.save_state)
-            logger.debug("LOADER: Loading complete")
-        await self.poke_ram(ctx, get_ram_addr("AP_INIT_COMPLETE"), b"\x00")
-        self.awaiting_load = False
-
-    def get_save_state(self) -> tuple[bytes, int]:
-        return self.save_state, self.save_hash
-
-    async def update_save_state(self, ctx: "BizHawkClientContext") -> bool:
-        if not self.awaiting_load:
-            try:
-                response = tuple(await bizhawk.read(ctx.bizhawk_ctx,
-                    [(point.address, point.size, "68K RAM") for point in SAVE_DATA_POINTS]
-                ))
-            except (bizhawk.RequestFailedError, bizhawk.NotConnectedError):
-                response = None
-
-            if response is not None:
-                # If points decrease, something has gone wrong
-                if (self.save_state is None
-                    or (not int.from_bytes(response[8]) < int.from_bytes(self.save_state[802:804]))):
-                    await self.set_save_state(b"".join(response))
-                return True
-        return False
-
-    # set without loading
-    async def set_save_state(self, save_state: bytes) -> None:
-        self.save_state = save_state
-        self.save_hash = hash(self.save_state)
-
-    async def load_save_state(self, ctx: "BizHawkClientContext", save_state: bytes) -> bool:
-        try:
-            i = 16 # first 16 bytes are last processed item index, only for client
-            for point in SAVE_DATA_POINTS:
-                await self.poke_ram(ctx, point.address, save_state[i:i+point.size])
-                # Manually remove collected items on Level 1
-                if point.name == "Collected items":
-                    for index in self.one_indices(int.from_bytes(save_state[i+4:i+8]), 4*8):
-                        await self.poke_ram(ctx, get_slot_addr("FLOOR_ITEMS", index), EMPTY_ITEM)
-                i += point.size
-        except (bizhawk.RequestFailedError, bizhawk.NotConnectedError):
-            return False
-
-        return True
 
     #endregion

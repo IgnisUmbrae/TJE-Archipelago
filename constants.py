@@ -1,4 +1,5 @@
 from typing import NamedTuple
+from base64 import b64encode, b64decode
 
 BASE_TJE_ID = 25101991
 
@@ -115,17 +116,14 @@ RANK_NAMES = ("Wiener", "Dufus", "Poindexter", "Peanut", "Dude", "Bro", "Homey",
 
 #region Misc
 
-RETURN_HOLE_DATA = (
-    (0x09783E, b"\x41\xC8\x1E\x44"),
-    (0x097851, b"\xC4\x09\x0A\xC6"),
-    (0x097864, b"\x46\x08\x0B\x44"),
-    (0x097877, b"\x40\x56\x56\x43")
-)
-
 INITIAL_PRESENT_ADDRS = (0x00014393, 0x00014397, 0x000143a5, 0x000143ab,
                          0x000143c5, 0x000143cb, 0x000143d9, 0x000143df)
 
 BASE_LEVEL_TYPES = (0, 1, 5, 2, 7, 3, 4, 2, 6, 7, 2, 3, 6, 2, 4, 7, 2, 4, 2, 7, 4, 5, 1, 7)
+
+# player = AP-internal character value
+def get_max_health(player: int, rank: int) -> int:
+    return [23, 31][player] + 4*rank
 
 # ROM-internal menu return values → AP-internal character values
 def ret_val_to_char(ret_val: int) -> int:
@@ -146,6 +144,11 @@ def get_ram_addr(name: str, player: int = 0) -> int:
         return GLOBAL_RAM_ADDRS[name]
     addr, earl_offset = PLAYER_RAM_ADDRS[name]
     return addr + player * earl_offset
+
+def get_datastructure(name: str) -> "DataStructure":
+    if name in GLOBAL_DATA_STRUCTURES:
+        return GLOBAL_DATA_STRUCTURES[name]
+    return PLAYER_DATA_STRUCTURES[name]
 
 PLAYER_RAM_ADDRS: dict[tuple[int, int]] = {
     # Main data store (P2 = P1 + 0x80)
@@ -179,10 +182,12 @@ PLAYER_RAM_ADDRS: dict[tuple[int, int]] = {
 }
 
 GLOBAL_RAM_ADDRS: dict[int] = {
+    "REDRAW_FLAG": 0x8022,
     "UNFALL_FLAG": 0x936C,
     #UNFALL_FLAG_2 = 0x936D
     "FLOOR_ITEMS": 0xDAE2,
     "END_ELEVATOR_STATE": 0xDA4F,
+    "PRESENTS_ALL_DATA": 0xF300, # vanilla: 0xDA8A
     "PRESENTS_WRAPPING": 0xF300, # vanilla: 0xDA8A
     "PRESENTS_IDENTIFIED": 0xF300, # vanilla: 0xDA8A
     "DROPPED_PRESENTS": 0xDCE6,
@@ -208,77 +213,88 @@ GLOBAL_RAM_ADDRS: dict[int] = {
 }
 
 def get_slot_addr(name: str, slot: int, player: int = 0) -> int | None:
-    if name in GLOBAL_SLOT_STRUCTURES:
-        struct = GLOBAL_SLOT_STRUCTURES[name]
+    if name in GLOBAL_DATA_STRUCTURES:
+        structure = GLOBAL_DATA_STRUCTURES[name]
         addr = GLOBAL_RAM_ADDRS[name]
     else:
-        struct = PLAYER_SLOT_STRUCTURES[name]
+        structure = PLAYER_DATA_STRUCTURES[name]
         addr = get_ram_addr(name, player)
-    if slot < 0 or slot > struct.max_slot:
+    if slot < 0 or slot > structure.max_slot:
         return None
-    return addr + slot * struct.slot_size + struct.fixed_offset
+    return addr + slot * structure.slot_size + structure.fixed_offset
 
-class SlotStructure(NamedTuple):
+class DataStructure(NamedTuple):
     max_slot: int
     slot_size: int # in bytes
     fixed_offset: int # in bytes
 
-GLOBAL_SLOT_STRUCTURES: dict[SlotStructure] = {
-    "COLLECTED_ITEMS": SlotStructure(25, 4, 0),
-    "FLOOR_ITEMS": SlotStructure(31, 8, 0),
-    "DROPPED_PRESENTS": SlotStructure(31, 8, 0),
-    "EARTHLINGS": SlotStructure(28, 18, 0),
-    "TRIGGERED_SHIP_ITEMS": SlotStructure(9, 1, 0),
-    "COLLECTED_SHIP_PIECES": SlotStructure(9, 1, 0),
-    "PRESENTS_WRAPPING": SlotStructure(0x1B, 2, 0),
-    "PRESENTS_IDENTIFIED": SlotStructure(0x1B, 2, 1),
-    "TRANSP_MAP_MASK": SlotStructure(25, 7, 0),
-    "UNCOVERED_MAP_MASK": SlotStructure(25, 7, 0)
+    def size(self) -> int:
+        return (self.max_slot+1)*self.slot_size
+
+    def repr_for_saving(self, data: bytes) -> str:
+        return b64encode(data).decode("ascii")
+
+    def repr_for_loading(self, data: str) -> bytes:
+        return b64decode(data)
+
+GLOBAL_DATA_STRUCTURES: dict[str, DataStructure] = {
+    "COLLECTED_ITEMS": DataStructure(25, 4, 0),
+    "FLOOR_ITEMS": DataStructure(31, 8, 0),
+    "DROPPED_PRESENTS": DataStructure(31, 8, 0),
+    "EARTHLINGS": DataStructure(28, 18, 0),
+    "TRIGGERED_SHIP_ITEMS": DataStructure(9, 1, 0),
+    "COLLECTED_SHIP_PIECES": DataStructure(9, 1, 0),
+    "PRESENTS_WRAPPING": DataStructure(0x1B, 2, 0),
+    "PRESENTS_IDENTIFIED": DataStructure(0x1B, 2, 1),
+    "PRESENTS_ALL_DATA": DataStructure(2*0x1B, 1, 0),
+    "TRANSP_MAP_MASK": DataStructure(25, 7, 0),
+    "UNCOVERED_MAP_MASK": DataStructure(25, 7, 0),
+    "AP_CHARACTER": DataStructure(0, 1, 0),
+    "AP_NUM_KEYS": DataStructure(0, 1, 0),
+    "AP_NUM_MAP_REVEALS": DataStructure(0, 1, 0),
+    "AP_LAST_REVEALED_MAP": DataStructure(0, 1, 0),
 }
 
-PLAYER_SLOT_STRUCTURES: dict[SlotStructure] = {
-    "INVENTORY": SlotStructure(15, 1, 0)
+PLAYER_DATA_STRUCTURES: dict[str, DataStructure] = {
+    "HIGHEST_LEVEL_REACHED": DataStructure(0, 1, 0),
+    "POINTS": DataStructure(0, 2, 0),
+    "RANK": DataStructure(0, 1, 0),
+    "BUCKS": DataStructure(0, 1, 0),
+    "LIVES": DataStructure(0, 1, 0),
+    "INVENTORY": DataStructure(15, 1, 0),
 }
 
 def expand_inv_constants() -> None:
-    PLAYER_SLOT_STRUCTURES["INVENTORY"] = SlotStructure(63, 1, 0)
+    PLAYER_DATA_STRUCTURES["INVENTORY"] = DataStructure(63, 1, 0)
     PLAYER_RAM_ADDRS["INVENTORY"] = (0xF280, 0x40)
 
 #endregion
 
 #region Save data–related
 
-class DataPoint(NamedTuple):
-    name: str
-    address: int
-    size: int
+SAVE_DATA_POINTS_GLOBAL: tuple[str] = (
+    "COLLECTED_ITEMS",
+    "DROPPED_PRESENTS",
+    "COLLECTED_SHIP_PIECES",
+    "TRIGGERED_SHIP_ITEMS",
+    "UNCOVERED_MAP_MASK",
+    "TRANSP_MAP_MASK",
+    "PRESENTS_ALL_DATA",
+    "AP_CHARACTER",
+    "AP_NUM_KEYS",
+    "AP_NUM_MAP_REVEALS",
+    "AP_LAST_REVEALED_MAP",
+)
 
-SAVE_DATA_POINTS: list[DataPoint] = [
-    DataPoint("Collected items", GLOBAL_RAM_ADDRS["COLLECTED_ITEMS"], 104),
-    DataPoint("Dropped presents", GLOBAL_RAM_ADDRS["DROPPED_PRESENTS"], 256),
-    DataPoint("Collected ship pieces", GLOBAL_RAM_ADDRS["COLLECTED_SHIP_PIECES"], 10),
-    DataPoint("Triggered ship items", GLOBAL_RAM_ADDRS["TRIGGERED_SHIP_ITEMS"], 10),
-    DataPoint("Present wrapping", GLOBAL_RAM_ADDRS["PRESENTS_WRAPPING"], 56),
-    DataPoint("Map masks", GLOBAL_RAM_ADDRS["UNCOVERED_MAP_MASK"], 364),
-    DataPoint("Character", GLOBAL_RAM_ADDRS["AP_CHARACTER"], 1),
-    DataPoint("Keys collected", GLOBAL_RAM_ADDRS["AP_NUM_KEYS"], 1),
-    DataPoint("Map reveals collected", GLOBAL_RAM_ADDRS["AP_NUM_MAP_REVEALS"], 1),
-    DataPoint("Last revealed map", GLOBAL_RAM_ADDRS["AP_LAST_REVEALED_MAP"], 1)
-]
+SAVE_DATA_POINTS_PLAYER: tuple[str] = (
+    "HIGHEST_LEVEL_REACHED",
+    "RANK",
+    "POINTS",
+    "BUCKS",
+    "LIVES",
+    "INVENTORY",
+)
 
-def add_save_data_points(player: int = 0, expanded_inv: bool = False) -> None:
-    SAVE_DATA_POINTS.extend([
-        DataPoint("Highest level reached", get_ram_addr("HIGHEST_LEVEL_REACHED", player), 1),
-
-        DataPoint("Rank", get_ram_addr("RANK", player), 1),
-        DataPoint("Points", get_ram_addr("POINTS", player), 2),
-        DataPoint("Bucks", get_ram_addr("BUCKS", player), 1),
-        DataPoint("Lives", get_ram_addr("LIVES", player), 1),
-
-        DataPoint("Inventory", get_ram_addr("INVENTORY", player), 64 if expanded_inv else 16),
-
-        #DataPoint("Max health", get_ram_addr("HP_DISPLAY", player), 1),
-        #DataPoint("Health", get_ram_addr("HEALTH", player), 1),
-    ])
+SAVE_DATA_POINTS_ALL = SAVE_DATA_POINTS_GLOBAL + SAVE_DATA_POINTS_PLAYER
 
 #endregion

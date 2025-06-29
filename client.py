@@ -1,67 +1,29 @@
-from typing import TYPE_CHECKING, Callable
-from pathlib import Path
-# from base64 import b64encode, b64decode
+from typing import TYPE_CHECKING
 import logging
 
 import worlds._bizhawk as bizhawk
 from worlds._bizhawk.client import BizHawkClient
 from NetUtils import ClientStatus, NetworkItem
-from Utils import async_start, home_path
+from Utils import async_start
 
-from .constants import add_save_data_points, ret_val_to_char
+from .constants import SAVE_DATA_POINTS_ALL, expand_inv_constants, ret_val_to_char
 from .items import EDIBLE_IDS, ITEM_ID_TO_NAME, PRESENT_IDS, INSTATRAP_IDS, SHIP_PIECE_IDS, BAD_PRESENT_IDS
 from .locations import LOCATION_ID_TO_NAME, LOCATION_NAME_TO_ID
-from .ram import TJEGameController
+from .ram import TJEGameController, SaveManager
 
 if TYPE_CHECKING:
     from worlds._bizhawk.context import BizHawkClientContext
 
 logger = logging.getLogger(__name__)
 
-class SaveManager():
-    def __init__(self, get_save_data_fn: Callable):
-        self.save_filename = None
-        self.save_path = None
-        self.save_data = None
-        self.save_hash = None
-        self.last_saved_hash = None
-        self.get_save_data = get_save_data_fn
-
-    async def initialize(self, fn: str, ctx: "BizHawkClientContext", game_controller: TJEGameController) -> int:
-        self.save_filename = f"{fn}.aptjesave"
-        self.save_path = Path(home_path()) / "saves" / "tje"
-        if self.save_file_exists():
-            with (self.save_path / self.save_filename).open("rb") as f:
-                save_data: bytes = f.read()
-                game_controller.set_save_state(ctx, save_data[16:])
-            return int.from_bytes(save_data[0:16])
-
-        if not self.save_path.exists():
-            logger.debug("Save directory does not exist; creating.")
-            self.save_path.mkdir(mode=661, parents=True)
-            return -1
-
-    def save_file_exists(self) -> bool:
-        fn = self.save_path / self.save_filename
-        return fn.exists() and fn.is_file()
-
-    def update_save_data(self) -> bool:
-        self.save_data, self.save_hash = self.get_save_data()
-
-    def save_to_disk(self, last_index: int) -> bool:
-        if (self.save_filename is not None and self.save_data is not None
-            and (self.last_saved_hash is None or self.last_saved_hash != self.save_hash)):
-            with (self.save_path / self.save_filename).open("wb") as f:
-                f.write(last_index.to_bytes(16)+b"".join(self.save_data))
-            self.last_saved_hash = self.save_hash
-            return True
-        return False
-
 class SpawnQueue():
-    def __init__(self, cooldown : int = 5):
-        self.queue : list[NetworkItem] = []
+    def __init__(self, name: str, cooldown: int = 1):
+        self.name = name
+        self.queue: list[NetworkItem] = []
         self.counter = cooldown
         self.cooldown = cooldown
+        self.spawned_count = 0
+        self.save_manager = None
         self.reset_cooldown()
 
     def can_spawn(self) -> bool:
@@ -73,10 +35,13 @@ class SpawnQueue():
     def oldest(self) -> NetworkItem:
         return self.queue[0]
 
-    def add(self, nwi : NetworkItem) -> None:
+    def add(self, nwi: NetworkItem) -> None:
         self.queue.append(nwi)
 
-    def mark_spawned(self, nwi : NetworkItem) -> None:
+    async def mark_spawned(self, nwi: NetworkItem) -> None:
+        self.spawned_count += 1
+        if self.save_manager:
+            await self.save_manager.append_to_save_queue(self.name, self.spawned_count)
         self.queue.remove(nwi)
         self.reset_cooldown()
 
@@ -86,6 +51,9 @@ class SpawnQueue():
     def empty(self) -> None:
         self.queue.clear()
 
+    def connect_save_manager(self, manager: SaveManager) -> None:
+        self.save_manager = manager
+
 class TJEClient(BizHawkClient):
     game = "ToeJam and Earl"
     system = "GEN"
@@ -94,19 +62,24 @@ class TJEClient(BizHawkClient):
     def __init__(self):
         super().__init__()
 
-        self.ticks = 0
-
         self.game_controller = TJEGameController(self)
-        self.save_manager = SaveManager(self.game_controller.get_save_state)
+        self.save_manager = None
 
-        self.last_processed_index = None
-        self.ignore_realtime_items = False
         self.auto_bad_presents = False
 
-        self.edible_queue = SpawnQueue(cooldown=1)
-        self.present_queue = SpawnQueue(cooldown=1)
-        self.trap_queue = SpawnQueue(cooldown=1)
-        self.misc_queue = SpawnQueue(cooldown=1)
+        self.edible_queue = SpawnQueue("EDIBLE_QUEUE")
+        self.present_queue = SpawnQueue("PRESENT_QUEUE")
+        self.trap_queue = SpawnQueue("TRAP_QUEUE")
+        self.misc_queue = SpawnQueue("MISC_QUEUE")
+        self.queues = [self.edible_queue, self.present_queue, self.trap_queue, self.misc_queue]
+
+        self.post_reset_init()
+
+    def post_reset_init(self) -> None:
+        self.game_controller.awaiting_load = True
+        self.last_processed_index = None
+        for queue in self.queues:
+            queue.empty()
 
     async def peek_rom(self, ctx: "BizHawkClientContext", address: int, size: int) -> bytes:
         return (await bizhawk.read(ctx.bizhawk_ctx, [(address, size, "MD CART")]))[0]
@@ -136,6 +109,8 @@ class TJEClient(BizHawkClient):
 
     async def setup_game_controller(self, ctx: "BizHawkClientContext") -> bool:
         try:
+            # Game controller
+
             menu_ret_val = int.from_bytes(await self.peek_rom(ctx, 0x000242c5, 1))
             char = ret_val_to_char(menu_ret_val)
 
@@ -145,7 +120,13 @@ class TJEClient(BizHawkClient):
             self.game_controller.initialize_slot_data(self.auto_bad_presents, expanded_inv)
             self.game_controller.add_monitors(ctx, char)
 
-            add_save_data_points(char, expanded_inv)
+            # Save manager
+
+            if expanded_inv:
+                expand_inv_constants()
+            self.save_manager = SaveManager(1, char, self.game_controller, ctx)
+            for queue in self.queues:
+                queue.connect_save_manager(self.save_manager)
 
             return True
         except (bizhawk.RequestFailedError, bizhawk.NotConnectedError):
@@ -155,28 +136,56 @@ class TJEClient(BizHawkClient):
     def on_package(self, ctx: "BizHawkClientContext", cmd: str, args: dict) -> None:
         async_start(self.process_tje_cmd(ctx, cmd, args))
 
+    async def set_last_processed_index(self, ctx: "BizHawkClientContext") -> None:
+        await ctx.send_msgs([{
+            "cmd": "Set",
+            "key": "last_index",
+            "default": -1,
+            "want_reply": False,
+            "operations": [
+                {
+                    "operation": "replace",
+                    "value": self.last_processed_index,
+                }
+            ]
+        }])
+
+    async def process_network_items(self, ctx: "BizHawkClientContext", args: dict) -> None:
+        for index, nwi in enumerate(args["items"], start=args["index"]):
+            if index > self.last_processed_index:
+                logger.debug("* Processing item: %s", ITEM_ID_TO_NAME[nwi.item])
+                self.process_item(ctx, nwi)
+                self.last_processed_index = index
+        await self.set_last_processed_index(ctx)
+
     async def process_tje_cmd(self, ctx: "BizHawkClientContext", cmd: str, args: dict) -> None:
         match cmd:
+            case "Connected":
+                await ctx.send_msgs([{
+                    "cmd": "Get",
+                    "keys": ["last_index"] + list(SAVE_DATA_POINTS_ALL)
+                }])
             case "RoomInfo":
-                self.last_processed_index = await self.save_manager.initialize(args["seed_name"] + ctx.auth,
-                                                                               ctx, self.game_controller)
-                if self.last_processed_index > -1:
-                    self.ignore_realtime_items = True
-
-                await ctx.send_msgs([{"cmd": "Sync"}])
-
+                pass
+            case "SetReply":
+                pass
+            case "Retrieved":
+                if "last_index" in args["keys"]:
+                    val = args["keys"].get("last_index")
+                    if val:
+                        self.last_processed_index = args["keys"].get("last_index")
+                    else:
+                        self.last_processed_index = -1
+                    await ctx.send_msgs([{
+                        "cmd": "Sync"
+                    }])
+                # initial loading of entire save state
+                savedata_keys = set(args["keys"].keys()) & frozenset(SAVE_DATA_POINTS_ALL)
+                if len(savedata_keys) > 0:
+                    self.save_manager.data_to_load = {k:v for k, v in args["keys"].items() if k in savedata_keys}
             case "ReceivedItems":
                 if self.last_processed_index is not None:
-                    for index, nwi in enumerate(args["items"], start=args["index"]):
-                        if (index > self.last_processed_index
-                            and not (self.ignore_realtime_items and nwi.item in EDIBLE_IDS+INSTATRAP_IDS)):
-                            logger.debug("* Processing item: %s", ITEM_ID_TO_NAME[nwi.item])
-                            self.process_item(ctx, nwi)
-                        self.last_processed_index = index
-                    self.ignore_realtime_items = False
-                    logger.debug("Last processed: item index %s", self.last_processed_index)
-                else:
-                    logger.debug("Ignoring items initially sent by server until save data read")
+                    await self.process_network_items(ctx, args)
 
     async def goal_in(self, ctx: "BizHawkClientContext") -> None:
         logger.debug("Finished game!")
@@ -187,10 +196,8 @@ class TJEClient(BizHawkClient):
         self.game_controller.game_complete = True
         ctx.finished_game = True
 
-        self.edible_queue.empty()
-        self.present_queue.empty()
-        self.misc_queue.empty()
-        self.trap_queue.empty()
+        for queue in self.queues:
+            queue.empty()
 
     async def trigger_location(self, ctx: "BizHawkClientContext", name: str) -> bool:
         loc_id = LOCATION_NAME_TO_ID.get(name, None)
@@ -205,10 +212,8 @@ class TJEClient(BizHawkClient):
         return False
 
     async def handle_items(self, ctx: "BizHawkClientContext") -> None:
-        await self.handle_queue(ctx, self.edible_queue)
-        await self.handle_queue(ctx, self.present_queue)
-        await self.handle_queue(ctx, self.misc_queue)
-        await self.handle_queue(ctx, self.trap_queue)
+        for queue in self.queues:
+            await self.handle_queue(ctx, queue)
 
     # Determines whether an item should be spawned by the client or left to the game's own code to award
     # Rank checks and ship pieces are currently unable to award items purely via ROM
@@ -246,21 +251,13 @@ class TJEClient(BizHawkClient):
             oldest = queue.oldest()
             success = await self.game_controller.receive_item(ctx, oldest.item)
             if success:
-                queue.mark_spawned(oldest)
-                self.save_manager.update_save_data()
+                await queue.mark_spawned(oldest)
 
     async def game_watcher(self, ctx: "BizHawkClientContext") -> None:
-        self.ticks += 1
         await self.game_controller.tick(ctx)
 
         if not ctx.finished_game:
             await self.handle_items(ctx)
+            await self.save_manager.tick()
             if self.game_controller.current_level == 26:
                 await self.goal_in(ctx)
-            self.save_manager.update_save_data()
-            # save game to disk every 8 ticks (1s)
-            if self.ticks % 8 == 0 and not self.game_controller.is_awaiting_load():
-                if await self.save_manager.save_to_disk(self.last_processed_index):
-                    logger.debug("* Saved data to disk")
-                else:
-                    logger.error("* ERROR: Failed to save data to disk")
