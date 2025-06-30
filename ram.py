@@ -7,11 +7,13 @@ import worlds._bizhawk as bizhawk
 from worlds._bizhawk import ConnectionStatus
 from worlds._bizhawk.client import BizHawkClient
 
-from .constants import EMPTY_ITEM, COLLECTED_SHIP_ITEM, GLOBAL_DATA_STRUCTURES, PLAYER_DATA_STRUCTURES, RANK_NAMES, \
-                       SAVE_DATA_POINTS_GLOBAL, SAVE_DATA_POINTS_PLAYER, STATIC_DIALOGUE_LIST, \
+from .constants import DEAD_SPRITES, EMPTY_ITEM, COLLECTED_SHIP_ITEM, EMPTY_PRESENT, GLOBAL_DATA_STRUCTURES, \
+                       PLAYER_DATA_STRUCTURES, RANK_NAMES, SAVE_DATA_POINTS_GLOBAL, SAVE_DATA_POINTS_PLAYER, \
+                       STATIC_DIALOGUE_LIST, \
                        get_datastructure, get_max_health, get_slot_addr, get_ram_addr, expand_inv_constants
 from .items import ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, \
                    PRESENT_IDS, SHIP_PIECE_IDS,INSTATRAP_IDS, BAD_PRESENT_IDS
+from .hint import generate_hints_for_current_level
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, RANK_LOC_TEMPLATE, SHIP_PIECE_LOC_TEMPLATE
 
 if TYPE_CHECKING:
@@ -24,7 +26,6 @@ class MonitorLevel(IntEnum):
     TOEJAM = 0
     EARL = 1
     BOTH = 2
-
 
 def one_indices(bitfield: int, total_bits: int) -> list[int]:
     return [(total_bits-1)-i for i in range(bitfield.bit_length()) if bitfield & (1 << i)]
@@ -139,7 +140,6 @@ class SaveManager():
                                    old_data: bytes, new_data: bytes):
         if int.from_bytes(new_data) == 1:
             logger.debug("Game initialization complete")
-            print(self.data_to_load)
             if self.data_to_load:
                 logger.debug("Loading data retrieved from server")
                 await bizhawk.lock(ctx.bizhawk_ctx)
@@ -287,19 +287,19 @@ class TJEGameController():
 
     #region Initialization functions
 
-    def add_monitors(self, ctx: "BizHawkClientContext", char: int):
+    def add_monitors(self, ctx: "BizHawkClientContext", char: int, death_link: bool):
         level = character_to_monitor_level(char)
 
         self.char = char
 
         self.monitors = [
             AddressMonitor(
-                "Floor item",
+                "Collected items",
                 "COLLECTED_ITEMS",
                 104,
                 MonitorLevel.GLOBAL,
                 lambda: not self.is_on_menu() and not self.is_awaiting_load(),
-                self.handle_floor_item_change,
+                self.handle_collected_item_change,
                 self,
                 ctx
             ),
@@ -334,7 +334,31 @@ class TJEGameController():
                 ctx,
                 enabled=True
             ),
+            AddressMonitor( # only used for on-the-fly hint generation
+                "Items set",
+                "AP_LEVEL_ITEMS_SET",
+                1,
+                MonitorLevel.GLOBAL,
+                lambda: True,
+                self.handle_items_set,
+                self,
+                ctx,
+            )
         ]
+
+        if death_link:
+            self.monitors.append(
+                AddressMonitor(
+                    "Lives",
+                    "LIVES",
+                    1,
+                    level,
+                    lambda: not self.is_on_menu() and not self.is_awaiting_load(),
+                    self.handle_lives_change,
+                    self,
+                    ctx
+                ),
+            )
 
     def initialize_slot_data(self, auto_bad_presents: bool, expanded_inv: bool):
         self.auto_bad_presents = auto_bad_presents
@@ -360,7 +384,7 @@ class TJEGameController():
             return None
 
     async def get_empty_dropped_present_slot(self, ctx: "BizHawkClientContext") -> Optional[int]:
-        dropped_presents_table = await self.peek_ram(ctx,get_ram_addr("DROPPED_PRESENTS", self.char), 256)
+        dropped_presents_table = await self.peek_ram(ctx, get_ram_addr("DROPPED_PRESENTS", self.char), 256)
         if dropped_presents_table:
             dropped_present_types = [dropped_presents_table[i:i+8][0:1]
                                      for i in range(0, len(dropped_presents_table), 8)]
@@ -478,7 +502,7 @@ class TJEGameController():
     async def is_inventory_full(self, ctx: "BizHawkClientContext") -> bool:
         return await self.peek_ram(ctx,
                                    get_slot_addr("INVENTORY", PLAYER_DATA_STRUCTURES["INVENTORY"].max_slot, self.char),
-                                   1) != b"\xFF"
+                                   1) != EMPTY_PRESENT
 
     async def emit_dialogue(self, ctx: "BizHawkClientContext", lines: tuple[str, str]) -> None:
         if lines[0] is not None and lines[1] is not None:
@@ -503,6 +527,30 @@ class TJEGameController():
     def is_awaiting_load(self) -> bool:
         return self.awaiting_load
 
+    async def is_player_dead(self, ctx: "BizHawkClientContext") -> bool:
+        sprite = await self.peek_ram(ctx, get_ram_addr("SPRITE", self.char), 1)
+        return sprite in DEAD_SPRITES
+
+    async def handle_lives_change(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
+                                  old_data: bytes, new_data: bytes):
+        if int.from_bytes(new_data) < int.from_bytes(old_data):
+            await ctx.send_death()
+
+    async def kill_player(self, ctx: "BizHawkClientContext"):
+        if not await self.is_player_dead(ctx):
+            await self.poke_ram(ctx, get_ram_addr("HEALTH", self.char), b"\x00")
+
+    async def handle_items_set(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
+                                  old_data: bytes, new_data: bytes):
+        if int.from_bytes(new_data) == 1 and self.current_level != -1:
+            map_data = await self.peek_ram(ctx, get_ram_addr("CURRENT_LEVEL_DATA"), 988)
+            floor_item_data = await self.peek_ram(ctx, get_ram_addr("FLOOR_ITEMS"), 256)
+            hints = generate_hints_for_current_level(map_data, floor_item_data)
+            print(hints)
+            for h in hints:
+                print(h)
+            await self.poke_ram(ctx, get_ram_addr("AP_LEVEL_ITEMS_SET"), b"\x00")
+
     async def handle_level_change(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
                                   old_data: bytes, new_data: bytes):
         await self.update_game_state(ctx)
@@ -511,7 +559,7 @@ class TJEGameController():
         self.current_level = int.from_bytes(new_data) if self.is_playing else -1
         logger.debug("Level changed from %i to %i", old_level, self.current_level)
 
-    async def handle_floor_item_change(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
+    async def handle_collected_item_change(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
                                        old_data: bytes, new_data: bytes):
         new_as_int, old_as_int = int.from_bytes(new_data), int.from_bytes(old_data)
         if new_as_int > old_as_int:

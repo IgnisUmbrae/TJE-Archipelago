@@ -62,13 +62,9 @@ INV_SIZE_ADDRS_ASL_D0 = [0x00009358, 0x0000936c, 0x00009380, 0x000097a8, 0x00009
 
 #endregion
 
-#region Dialogue-related ROM addresses
+#region Dialogue-related
 
 MAP_REVEAL_DIALOGUE_ADDRS = (0x00105b73, 0x00105b7e, 0x00105b8a, 0x00105b97, 0x00105ba4)
-
-#endregion
-
-#region Dialogue templates
 
 MAP_REVEAL_DIALOGUE_TEMPLATE = "Lv{}-{} map!"
 MAP_REVEAL_DIALOGUE_TEMPLATE_DEGEN = "Lv{} map!"
@@ -116,10 +112,16 @@ RANK_NAMES = ("Wiener", "Dufus", "Poindexter", "Peanut", "Dude", "Bro", "Homey",
 
 #region Misc
 
+DEAD_SPRITES = (0x5, 0x6)
+
 INITIAL_PRESENT_ADDRS = (0x00014393, 0x00014397, 0x000143a5, 0x000143ab,
                          0x000143c5, 0x000143cb, 0x000143d9, 0x000143df)
 
 BASE_LEVEL_TYPES = (0, 1, 5, 2, 7, 3, 4, 2, 6, 7, 2, 3, 6, 2, 4, 7, 2, 4, 2, 7, 4, 5, 1, 7)
+
+CHARACTERS = ("Toejam", "Earl")
+
+#endregion
 
 # player = AP-internal character value
 def get_max_health(player: int, rank: int) -> int:
@@ -197,6 +199,7 @@ GLOBAL_RAM_ADDRS: dict[int] = {
     "COLLECTED_SHIP_PIECES": 0xF444,
     "UNCOVERED_MAP_MASK": 0x91EC,
     "TRANSP_MAP_MASK": 0x92A2,
+    "CURRENT_LEVEL_DATA": 0x81AA,
     # Special AP addresses
     "AP_CHARACTER": 0xF000,
     "AP_NUM_KEYS": 0xF455,
@@ -209,7 +212,8 @@ GLOBAL_RAM_ADDRS: dict[int] = {
     "AP_DIALOGUE_TRIGGER": 0xF558,
     "AP_DIALOGUE_LINE1": 0xF600,
     "AP_DIALOGUE_LINE2": 0xF60C,
-    "AP_INIT_COMPLETE": 0xF6A0
+    "AP_INIT_COMPLETE": 0xF6A0,
+    "AP_LEVEL_ITEMS_SET": 0xF6A1,
 }
 
 def get_slot_addr(name: str, slot: int, player: int = 0) -> int | None:
@@ -267,8 +271,6 @@ PLAYER_DATA_STRUCTURES: dict[str, DataStructure] = {
 def expand_inv_constants() -> None:
     PLAYER_DATA_STRUCTURES["INVENTORY"] = DataStructure(63, 1, 0)
     PLAYER_RAM_ADDRS["INVENTORY"] = (0xF280, 0x40)
-
-#endregion
 
 #region Save data–related
 

@@ -117,8 +117,10 @@ class TJEClient(BizHawkClient):
             self.auto_bad_presents = bool.from_bytes(await self.peek_rom(ctx, 0x001f0005, 1))
             expanded_inv = int.from_bytes(await self.peek_rom(ctx, 0x0000979c+3, 1)) == 0x1D
 
+            self.death_link = "DeathLink" in ctx.tags
+
             self.game_controller.initialize_slot_data(self.auto_bad_presents, expanded_inv)
-            self.game_controller.add_monitors(ctx, char)
+            self.game_controller.add_monitors(ctx, char, self.death_link)
 
             # Save manager
 
@@ -165,6 +167,8 @@ class TJEClient(BizHawkClient):
                     "cmd": "Get",
                     "keys": ["last_index"] + list(SAVE_DATA_POINTS_ALL)
                 }])
+            case "DeathLink":
+                await self.game_controller.kill_player(ctx)
             case "RoomInfo":
                 pass
             case "SetReply":
