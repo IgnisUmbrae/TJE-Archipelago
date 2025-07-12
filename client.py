@@ -67,7 +67,7 @@ class TJEClient(BizHawkClient):
         self.game_controller = TJEGameController(self)
         self.save_manager = None
 
-        self.auto_bad_presents = False
+        self.auto_bad_presents = 0
         self.death_link = False
 
         self.edible_queue = SpawnQueue("EDIBLE_QUEUE")
@@ -83,6 +83,7 @@ class TJEClient(BizHawkClient):
     def post_reset_init(self) -> None:
         self.game_controller.awaiting_load = True
         self.last_processed_index = None
+        self.ignore_realtime = False
         for queue in self.queues:
             queue.empty()
 
@@ -124,7 +125,7 @@ class TJEClient(BizHawkClient):
             menu_ret_val = int.from_bytes(await self.peek_rom(ctx, 0x000242c5, 1))
             char = ret_val_to_char(menu_ret_val)
 
-            self.auto_bad_presents = bool.from_bytes(await self.peek_rom(ctx, 0x001f0005, 1))
+            self.auto_bad_presents = int.from_bytes(await self.peek_rom(ctx, 0x001f0005, 1))
             expanded_inv = int.from_bytes(await self.peek_rom(ctx, 0x0000979c+3, 1)) == 0x1D
 
             self.game_controller.initialize_slot_data(self.auto_bad_presents, expanded_inv)
@@ -166,6 +167,7 @@ class TJEClient(BizHawkClient):
                 logger.debug("* Processing item: %s", ITEM_ID_TO_NAME[nwi.item])
                 self.process_item(ctx, nwi)
                 self.last_processed_index = index
+        self.ignore_realtime = False
         await self.set_last_processed_index(ctx)
 
     async def process_tje_cmd(self, ctx: "BizHawkClientContext", cmd: str, args: dict) -> None:
@@ -196,8 +198,10 @@ class TJEClient(BizHawkClient):
                     val = args["keys"].get("last_index")
                     if val:
                         self.last_processed_index = args["keys"].get("last_index")
+                        self.ignore_realtime = True
                     else:
                         self.last_processed_index = -1
+                        self.ignore_realtime = False
                     await ctx.send_msgs([{
                         "cmd": "Sync"
                     }])
@@ -257,6 +261,9 @@ class TJEClient(BizHawkClient):
                             not (self.auto_bad_presents == 1 and ITEM_ID_TO_NAME[nwi.item] == "Randomizer"))
 
     def process_item(self, ctx: "BizHawkClientContext", nwi: NetworkItem) -> None:
+        if self.ignore_realtime and nwi.item in EDIBLE_IDS+INSTATRAP_IDS:
+            logger.debug("Ignoring realtime item received while offline")
+            return
         if nwi.item in INSTATRAP_IDS:
             self.trap_queue.add(nwi)
         elif nwi.item in SHIP_PIECE_IDS:

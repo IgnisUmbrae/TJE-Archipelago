@@ -272,7 +272,7 @@ class TJEGameController():
 
         self.char = 0
 
-        self.auto_bad_presents = False
+        self.auto_bad_presents = 0
         self.expanded_inv = False
 
     #region Per-update high-level logic functions
@@ -361,7 +361,7 @@ class TJEGameController():
                 ),
             )
 
-    def initialize_slot_data(self, auto_bad_presents: bool, expanded_inv: bool):
+    def initialize_slot_data(self, auto_bad_presents: int, expanded_inv: bool):
         self.auto_bad_presents = auto_bad_presents
         self.expanded_inv = expanded_inv
         if self.expanded_inv:
