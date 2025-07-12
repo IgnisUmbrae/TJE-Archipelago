@@ -268,6 +268,7 @@ class TJEGameController():
         # Misc
 
         self.monitors = []
+        self.dynamic_hints = {}
 
         self.char = 0
 
@@ -545,10 +546,9 @@ class TJEGameController():
         if int.from_bytes(new_data) == 1 and self.current_level != -1:
             map_data = await self.peek_ram(ctx, get_ram_addr("CURRENT_LEVEL_DATA"), 988)
             floor_item_data = await self.peek_ram(ctx, get_ram_addr("FLOOR_ITEMS"), 256)
-            hints = generate_hints_for_current_level(map_data, floor_item_data)
-            print(hints)
-            for h in hints:
-                print(h)
+            if self.dynamic_hints.get(self.current_level, None) is None:
+                hints = generate_hints_for_current_level(self.current_level, map_data, floor_item_data)
+                self.dynamic_hints.update(hints)
             await self.poke_ram(ctx, get_ram_addr("AP_LEVEL_ITEMS_SET"), b"\x00")
 
     async def handle_level_change(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",

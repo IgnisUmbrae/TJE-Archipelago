@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import IntEnum
 
-from Options import PerGameCommonOptions, Toggle, Choice, OptionGroup, Range, NamedRange, DefaultOnToggle
+from Options import PerGameCommonOptions, Toggle, Choice, OptionGroup, Range, NamedRange, DefaultOnToggle, DeathLink
 
 class CharacterOption(IntEnum):
     TOEJAM = 0
@@ -507,6 +507,7 @@ tje_option_groups = [
 
 @dataclass
 class TJEOptions(PerGameCommonOptions):
+    death_link: DeathLink
     starting_presents: StartingPresents
     islandless: Islandless
     map_rando: MapRandomization

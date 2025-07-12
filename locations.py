@@ -66,3 +66,12 @@ LOCATION_GROUPS = dict(zip(
     )) \
        | {"Ranks" : [RANK_LOC_TEMPLATE.format(rank) for rank in RANK_NAMES[1:]]} \
        | {"Ship Items" : [SHIP_PIECE_LOC_TEMPLATE.format(level) for level in range(2, 26)]}
+
+def floor_item_to_location_id(level: int, item_idx: int) -> int | None:
+    if level < 1 or level > 25 or item_idx < 1 or item_idx > 28:
+        return None
+
+    if level == 1:
+        return BASE_TJE_ID + item_idx
+
+    return BASE_TJE_ID + 12 + (level-2)*28 + item_idx

@@ -35,6 +35,7 @@ class TJEProcedurePatch(APProcedurePatch, APTokenMixin):
         return base_rom_bytes
 
 def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
+    patch.write_token(APTokenTypes.WRITE, 0x001f0001, struct.pack(">H", world.options.death_link.value))
 
     patch.write_token(APTokenTypes.WRITE, 0x00097704, struct.pack(">26H", *world.seeds))
 

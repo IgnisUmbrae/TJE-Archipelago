@@ -1,12 +1,14 @@
 from typing import TYPE_CHECKING
+import time
 import logging
 
 import worlds._bizhawk as bizhawk
 from worlds._bizhawk.client import BizHawkClient
-from NetUtils import ClientStatus, NetworkItem
+from NetUtils import ClientStatus, NetworkItem, add_json_text, JSONTypes
 from Utils import async_start
 
 from .constants import SAVE_DATA_POINTS_ALL, expand_inv_constants, ret_val_to_char
+from .hint import TJEHint
 from .items import EDIBLE_IDS, ITEM_ID_TO_NAME, PRESENT_IDS, INSTATRAP_IDS, SHIP_PIECE_IDS, BAD_PRESENT_IDS
 from .locations import LOCATION_ID_TO_NAME, LOCATION_NAME_TO_ID
 from .ram import TJEGameController, SaveManager
@@ -66,12 +68,15 @@ class TJEClient(BizHawkClient):
         self.save_manager = None
 
         self.auto_bad_presents = False
+        self.death_link = False
 
         self.edible_queue = SpawnQueue("EDIBLE_QUEUE")
         self.present_queue = SpawnQueue("PRESENT_QUEUE")
         self.trap_queue = SpawnQueue("TRAP_QUEUE")
         self.misc_queue = SpawnQueue("MISC_QUEUE")
         self.queues = [self.edible_queue, self.present_queue, self.trap_queue, self.misc_queue]
+
+        self.hints_seen = 0
 
         self.post_reset_init()
 
@@ -103,6 +108,10 @@ class TJEClient(BizHawkClient):
         ctx.want_slot_data = False
         ctx.watcher_timeout = 0.125
 
+        death_link = bool(await self.peek_rom(ctx, 0x001f0001, 1))
+        if death_link:
+            await ctx.update_death_link(death_link)
+
         success = await self.setup_game_controller(ctx)
 
         return success
@@ -117,10 +126,8 @@ class TJEClient(BizHawkClient):
             self.auto_bad_presents = bool.from_bytes(await self.peek_rom(ctx, 0x001f0005, 1))
             expanded_inv = int.from_bytes(await self.peek_rom(ctx, 0x0000979c+3, 1)) == 0x1D
 
-            self.death_link = "DeathLink" in ctx.tags
-
             self.game_controller.initialize_slot_data(self.auto_bad_presents, expanded_inv)
-            self.game_controller.add_monitors(ctx, char, self.death_link)
+            self.game_controller.add_monitors(ctx, char, ("DeathLink" in ctx.tags))
 
             # Save manager
 
@@ -167,12 +174,24 @@ class TJEClient(BizHawkClient):
                     "cmd": "Get",
                     "keys": ["last_index"] + list(SAVE_DATA_POINTS_ALL)
                 }])
+                if self.death_link:
+                    await ctx.update_death_link()
             case "DeathLink":
-                await self.game_controller.kill_player(ctx)
+                logger.debug("DEATHLINK: Received deathlink death")
+                if "DeathLink" in ctx.tags and ctx.last_death_link + 1 < time.time():
+                    logger.debug("DEATHLINK: Awarding death")
+                    await self.game_controller.kill_player(ctx)
             case "RoomInfo":
                 pass
-            case "SetReply":
+            case "SetReply": # only displays hints the first time they're requested
                 pass
+                # if args.get("key") == f"_read_{ctx.team}_{ctx.slot}":
+                #     hints = args.get("value")
+                #     for hint in hints[self.hints_seen:]:
+                #         hint_data = self.game_controller.dynamic_hints.get(hint["location"], None)
+                #         if hint_data:
+                #             await self.display_local_hint(ctx, hint_data)
+                #     self.hints_seen = len(hints)
             case "Retrieved":
                 if "last_index" in args["keys"]:
                     val = args["keys"].get("last_index")
@@ -190,6 +209,12 @@ class TJEClient(BizHawkClient):
             case "ReceivedItems":
                 if self.last_processed_index is not None:
                     await self.process_network_items(ctx, args)
+
+    async def display_local_hint(self, ctx: "BizHawkClientContext", hint: TJEHint) -> None:
+        parts = []
+        add_json_text(parts, LOCATION_ID_TO_NAME(hint.location_id), type=JSONTypes.location_name)
+        add_json_text(parts, hint.hint_text, type=JSONTypes.text)
+        ctx.on_print_json({"data": parts, "cmd": "PrintJSON"})
 
     async def goal_in(self, ctx: "BizHawkClientContext") -> None:
         logger.debug("Finished game!")
