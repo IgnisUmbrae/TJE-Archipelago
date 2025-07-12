@@ -111,6 +111,7 @@ class TJEClient(BizHawkClient):
         death_link = bool(await self.peek_rom(ctx, 0x001f0001, 1))
         if death_link:
             await ctx.update_death_link(death_link)
+            self.death_link = death_link
 
         success = await self.setup_game_controller(ctx)
 
@@ -174,11 +175,9 @@ class TJEClient(BizHawkClient):
                     "cmd": "Get",
                     "keys": ["last_index"] + list(SAVE_DATA_POINTS_ALL)
                 }])
-                if self.death_link:
-                    await ctx.update_death_link()
             case "DeathLink":
                 logger.debug("DEATHLINK: Received deathlink death")
-                if "DeathLink" in ctx.tags and ctx.last_death_link + 1 < time.time():
+                if self.death_link and ctx.last_death_link + 1 < time.time():
                     logger.debug("DEATHLINK: Awarding death")
                     await self.game_controller.kill_player(ctx)
             case "RoomInfo":
