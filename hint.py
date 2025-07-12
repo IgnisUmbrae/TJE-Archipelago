@@ -1,9 +1,16 @@
 from collections import Counter
+from dataclasses import dataclass
 from itertools import batched, product, accumulate
 from typing import Callable, Iterable
 from math import floor, sqrt, atan2, pi
 
 from .constants import EMPTY_ITEM, TREES
+from .locations import floor_item_to_location_id
+
+@dataclass
+class TJEHint:
+    location_id: int
+    hint_text: str
 
 #region Special tile groups
 
@@ -336,7 +343,6 @@ def evaluate_item(item_coords: tuple, map_tiles: list[list[TJETile]], tree_coord
     # Check for special tile types
     tile_x, tile_y = item_coords_to_tilexy(item_coords)
     tile_coords = (floor(tile_x), floor(tile_y))
-    print(tile_coords)
     tile_type = map_tiles[tile_coords[0]][tile_coords[1]].type
 
     hint_body = TILE_STRS.get(tile_type, None)
@@ -364,9 +370,9 @@ def evaluate_item(item_coords: tuple, map_tiles: list[list[TJETile]], tree_coord
     if hint_body:
         hint_body = f"{direction_str}, {hint_body}"
     if nearby_landmarks:
-        ret_str = f"{ret_str}, near {concat_item_list(nearby_landmarks)}"
+        hint_body = f"{hint_body}, near {concat_item_list(nearby_landmarks)}"
 
-    return ret_str
+    return hint_body
 
 def binary_map_data_to_tile_list(map_bytes: bytes) -> list[TJETile]:
     return [
@@ -379,11 +385,13 @@ def item_data_to_coord_list(item_data: bytes, max_index, accept_func: Callable) 
     item_y_coords = (int.from_bytes(item_data[8*i+6 : 8*i+8]) for i in range(28) if accept_func(item_data[8*i:8*i+1]))
     return zip(item_x_coords, item_y_coords, strict=True)
 
-def generate_hints_for_current_level(map_bytes: bytes, floor_item_bytes: bytes) -> list[str]:
+def generate_hints_for_current_level(level: int, map_bytes: bytes, floor_item_bytes: bytes) -> list[str]:
     map_data = binary_map_data_to_tile_list(map_bytes)
 
     item_coords = item_data_to_coord_list(floor_item_bytes[:28*8], 28, lambda b: b != EMPTY_ITEM)
     tree_coords = item_data_to_coord_list(floor_item_bytes[28*8:], 4, lambda b: b in TREES)
     tree_types = list(floor_item_bytes[28*8:][8*i] for i in range(4))
 
-    return [f"Item {i+1}: {evaluate_item(item, map_data, tree_coords, tree_types)}" for i, item in enumerate(item_coords)]
+    return {floor_item_to_location_id(level, i): TJEHint(floor_item_to_location_id(level, i),
+                    evaluate_item(item, map_data, tree_coords, tree_types))
+                    for i, item in enumerate(item_coords)}
