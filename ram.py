@@ -9,7 +9,7 @@ from worlds._bizhawk.client import BizHawkClient
 
 from .constants import DEAD_SPRITES, EMPTY_ITEM, COLLECTED_SHIP_ITEM, EMPTY_PRESENT, GLOBAL_DATA_STRUCTURES, \
                        PLAYER_DATA_STRUCTURES, RANK_NAMES, SAVE_DATA_POINTS_GLOBAL, SAVE_DATA_POINTS_PLAYER, \
-                       STATIC_DIALOGUE_LIST, \
+                       STATIC_DIALOGUE_LIST, IN_END_ELEVATOR, \
                        get_datastructure, get_max_health, get_slot_addr, get_ram_addr, expand_inv_constants
 from .items import ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, \
                    PRESENT_IDS, SHIP_PIECE_IDS,INSTATRAP_IDS, BAD_PRESENT_IDS
@@ -530,15 +530,22 @@ class TJEGameController():
 
     async def is_player_dead(self, ctx: "BizHawkClientContext") -> bool:
         sprite = await self.peek_ram(ctx, get_ram_addr("SPRITE", self.char), 1)
-        return sprite in DEAD_SPRITES
+        hp = int.from_bytes(await self.peek_ram(ctx, get_ram_addr("HEALTH", self.char), 1))
+        return (sprite in DEAD_SPRITES and hp == 0)
 
     async def handle_lives_change(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
                                   old_data: bytes, new_data: bytes):
         if int.from_bytes(new_data) < int.from_bytes(old_data):
             await ctx.send_death()
+            ctx.sent_death_time = ctx.last_death_link
+
+    async def is_safe_to_kill_player(self, ctx: "BizHawkClientContext") -> bool:
+        in_end_elev = await self.peek_ram(ctx, get_ram_addr("GLOBAL_ELEVATOR_STATE", self.char), 1) == IN_END_ELEVATOR
+        num_lives = int.from_bytes(await self.peek_ram(ctx, get_ram_addr("LIVES", self.char), 1))
+        return not (in_end_elev and num_lives == 0)
 
     async def kill_player(self, ctx: "BizHawkClientContext"):
-        if not await self.is_player_dead(ctx):
+        if not await self.is_player_dead(ctx) and await self.is_safe_to_kill_player(ctx):
             await self.poke_ram(ctx, get_ram_addr("HEALTH", self.char), b"\x00")
 
     async def handle_items_set(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",

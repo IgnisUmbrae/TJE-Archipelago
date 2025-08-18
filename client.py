@@ -61,22 +61,29 @@ class TJEClient(BizHawkClient):
     system = "GEN"
     patch_suffix = ".aptje"
 
+    save_manager = None
+
+    edible_queue = SpawnQueue("EDIBLE_QUEUE")
+    present_queue = SpawnQueue("PRESENT_QUEUE")
+    trap_queue = SpawnQueue("TRAP_QUEUE")
+    misc_queue = SpawnQueue("MISC_QUEUE")
+    queues = [edible_queue, present_queue, trap_queue, misc_queue]
+
+    auto_bad_presents = 0
+
+    death_link_enabled = False
+    pending_deathlink = False
+    ignore_deathlink = False
+
+    last_processed_index = None
+    ignore_realtime = False
+
+    hints_seen = 0
+
     def __init__(self):
         super().__init__()
 
         self.game_controller = TJEGameController(self)
-        self.save_manager = None
-
-        self.auto_bad_presents = 0
-        self.death_link = False
-
-        self.edible_queue = SpawnQueue("EDIBLE_QUEUE")
-        self.present_queue = SpawnQueue("PRESENT_QUEUE")
-        self.trap_queue = SpawnQueue("TRAP_QUEUE")
-        self.misc_queue = SpawnQueue("MISC_QUEUE")
-        self.queues = [self.edible_queue, self.present_queue, self.trap_queue, self.misc_queue]
-
-        self.hints_seen = 0
 
         self.post_reset_init()
 
@@ -108,11 +115,12 @@ class TJEClient(BizHawkClient):
         ctx.items_handling = 0b011 # Initial inventory handled locally; everything else remote
         ctx.want_slot_data = False
         ctx.watcher_timeout = 0.125
+        ctx.sent_death_time = None
 
         death_link = bool(await self.peek_rom(ctx, 0x001f0001, 1))
         if death_link:
             await ctx.update_death_link(death_link)
-            self.death_link = death_link
+            self.death_link_enabled = death_link
 
         success = await self.setup_game_controller(ctx)
 
@@ -167,7 +175,10 @@ class TJEClient(BizHawkClient):
                 logger.debug("* Processing item: %s", ITEM_ID_TO_NAME[nwi.item])
                 self.process_item(ctx, nwi)
                 self.last_processed_index = index
-        self.ignore_realtime = False
+        if self.ignore_realtime:
+            self.edible_queue.empty()
+            self.trap_queue.empty()
+            self.ignore_realtime = False
         await self.set_last_processed_index(ctx)
 
     async def process_tje_cmd(self, ctx: "BizHawkClientContext", cmd: str, args: dict) -> None:
@@ -177,11 +188,10 @@ class TJEClient(BizHawkClient):
                     "cmd": "Get",
                     "keys": ["last_index"] + list(SAVE_DATA_POINTS_ALL)
                 }])
-            case "DeathLink":
-                logger.debug("DEATHLINK: Received deathlink death")
-                if self.death_link and ctx.last_death_link + 1 < time.time():
-                    logger.debug("DEATHLINK: Awarding death")
-                    await self.game_controller.kill_player(ctx)
+            case "Bounced":
+                if (self.death_link_enabled and "DeathLink" in args.get("tags", [])
+                    and args["data"]["time"] != ctx.sent_death_time):
+                        self.pending_deathlink = True
             case "RoomInfo":
                 pass
             case "SetReply": # only displays hints the first time they're requested
@@ -261,9 +271,9 @@ class TJEClient(BizHawkClient):
                             not (self.auto_bad_presents == 1 and ITEM_ID_TO_NAME[nwi.item] == "Randomizer"))
 
     def process_item(self, ctx: "BizHawkClientContext", nwi: NetworkItem) -> None:
-        if self.ignore_realtime and nwi.item in EDIBLE_IDS+INSTATRAP_IDS:
-            logger.debug("Ignoring realtime item received while offline")
-            return
+        # if self.ignore_realtime and nwi.item in EDIBLE_IDS+INSTATRAP_IDS:
+        #     logger.debug("Ignoring realtime item received while offline")
+        #     return
         if nwi.item in INSTATRAP_IDS:
             self.trap_queue.add(nwi)
         elif nwi.item in SHIP_PIECE_IDS:
@@ -288,10 +298,17 @@ class TJEClient(BizHawkClient):
             if success:
                 await queue.mark_spawned(oldest)
 
+    async def handle_deathlink(self, ctx: "BizHawkClientContext") -> None:
+        if self.pending_deathlink:
+            print("DEATHLINK: killing player")
+            self.pending_deathlink = False
+            await self.game_controller.kill_player(ctx)
+
     async def game_watcher(self, ctx: "BizHawkClientContext") -> None:
         await self.game_controller.tick(ctx)
 
         if not ctx.finished_game:
+            await self.handle_deathlink(ctx)
             await self.handle_items(ctx)
             await self.save_manager.tick()
             if self.game_controller.current_level == 26:
