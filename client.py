@@ -300,7 +300,6 @@ class TJEClient(BizHawkClient):
 
     async def handle_deathlink(self, ctx: "BizHawkClientContext") -> None:
         if self.pending_deathlink:
-            print("DEATHLINK: killing player")
             self.pending_deathlink = False
             await self.game_controller.kill_player(ctx)
 
