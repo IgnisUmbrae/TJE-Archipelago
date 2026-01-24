@@ -62,8 +62,8 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
             string = None
             no_2player = False
 
-    # Initializes special RAM address that keeps track of which character will receive traps
-    patch.write_token(APTokenTypes.WRITE, 0x0010b300+3, char_init.to_bytes(1))
+    # Initializes special RAM address that keeps track of various character-specific receipt-related things
+    patch.write_token(APTokenTypes.WRITE, 0x0010b400+3, char_init.to_bytes(1))
 
     if string:
         patch.write_token(APTokenTypes.WRITE, 0x000242c5, struct.pack(">B", ret_val))
@@ -111,7 +111,8 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
         patch.write_token(APTokenTypes.WRITE, 0x000111ac, b"\x4E\xB9\x00\x10\xA3\x00")
         patch.write_token(APTokenTypes.WRITE, 0x0010a300, b"\x22\x7C\x00\xFF\xDA\x22\x13\xBC\x00\x01\x48\x00\x22\x7C"
                                                           b"\x00\xFF\xA2\x48\x13\xBC\x00\x04\x48\x00\x22\x7C\x00\xFF"
-                                                          b"\xA2\xA7\x02\x2A\x00\x7F\x00\x4D\x4E\x75")
+                                                          b"\xA2\xA7\x02\x2A\x00\x7F\x00\x4D\x22\x7C\x00\xFF\xDA\x6A"
+                                                          b"\x42\x31\x48\x00\x4E\x75")
     if not world.options.sleep_when_idle:
         patch.write_token(APTokenTypes.WRITE, 0x0001262a, b"\x4E\x71\x4E\x71")
 
@@ -172,11 +173,11 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
         patch.write_token(APTokenTypes.WRITE, 0x000099a6, b"\xED\x81") # using D1
         patch.write_token(APTokenTypes.WRITE, 0x00022068, b"\xED\x82") # using D2
 
-        # Make presents scooch up properly on opening and dropping
+        # Make presents scooch up properly on opening and dropping (expand range)
         patch.write_token(APTokenTypes.WRITE, 0x00009ab2+3, b"\x3F")
         patch.write_token(APTokenTypes.WRITE, 0x00009ba0+3, b"\x3F")
 
-        # Patch menu handler to allow extra scrolling
+        # Patch menu handler to allow extra scrolling (size/2 - 3)
         patch.write_token(APTokenTypes.WRITE, 0x0000979c+3, b"\x1D")
 
     if world.options.sound_rando != world.options.sound_rando.default:
