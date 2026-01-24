@@ -3,7 +3,7 @@ from enum import IntEnum
 
 from BaseClasses import Item, ItemClassification, MultiWorld
 
-from .constants import BASE_TJE_ID
+from .constants import BASE_TJE_ID, TRAP_NAMES
 from .generators import item_totals, map_reveal_ranges, num_items_on_level
 from .locations import FLOOR_ITEM_LOC_TEMPLATE
 from .options import TJEOptions, GameOverOption, StartingPresentOption
@@ -59,18 +59,18 @@ BASE_ITEM_LIST: list[TJEItemData] = [
     TJEItemData(0x0A, "Rootbeer", TJEItemType.PRESENT, ItemClassification.useful, 2),
     TJEItemData(0x0B, "Promotion", TJEItemType.PRESENT, ItemClassification.useful, 2),
     TJEItemData(0x0C, "Un-fall", TJEItemType.PRESENT, ItemClassification.useful, 2),
-    TJEItemData(0x0D, "Rain Cloud", TJEItemType.PRESENT, ItemClassification.trap, 0),
+    TJEItemData(0x0D, "Rain Cloud", TJEItemType.PRESENT, ItemClassification.trap, 2),
     TJEItemData(0x0E, "Fudge Sundae Present", TJEItemType.PRESENT, ItemClassification.useful, 2),
     TJEItemData(0x0F, "Decoy", TJEItemType.PRESENT, ItemClassification.useful, 2),
-    TJEItemData(0x10, "Total Bummer", TJEItemType.PRESENT, ItemClassification.trap, 0),
+    TJEItemData(0x10, "Total Bummer", TJEItemType.PRESENT, ItemClassification.trap, 2),
     TJEItemData(0x11, "Extra Life", TJEItemType.PRESENT, ItemClassification.useful, 2),
-    TJEItemData(0x12, "Randomizer", TJEItemType.PRESENT, ItemClassification.trap, 0),
+    TJEItemData(0x12, "Randomizer", TJEItemType.PRESENT, ItemClassification.trap, 2),
     TJEItemData(0x13, "Telephone", TJEItemType.PRESENT, ItemClassification.useful, 2),
     TJEItemData(0x14, "Extra Buck Present", TJEItemType.PRESENT, ItemClassification.useful, 2),
     TJEItemData(0x15, "Jackpot", TJEItemType.PRESENT, ItemClassification.useful, 2),
     TJEItemData(0x16, "Tomato Rain", TJEItemType.PRESENT, ItemClassification.useful, 2),
-    TJEItemData(0x17, "Earthling", TJEItemType.PRESENT, ItemClassification.trap, 0),
-    TJEItemData(0x18, "School Book", TJEItemType.PRESENT, ItemClassification.trap, 0),
+    TJEItemData(0x17, "Earthling", TJEItemType.PRESENT, ItemClassification.trap, 2),
+    TJEItemData(0x18, "School Book", TJEItemType.PRESENT, ItemClassification.trap, 2),
     TJEItemData(0x19, "Boombox", TJEItemType.PRESENT, ItemClassification.useful, 2),
     TJEItemData(0x1A, "Mystery Present", TJEItemType.PRESENT, ItemClassification.filler, 2),
     TJEItemData(0x1B, "Bonus Hitops", TJEItemType.PRESENT, ItemClassification.useful, 2),
@@ -180,18 +180,10 @@ def create_ship_pieces(multiworld, world, options: TJEOptions, player, item_list
 
 def create_instatraps(world, options, total_locations, item_list) -> int:
     instatrap_total = 0
-
-    instatrap_weights = [
-                        5 if options.trap_cupid else 0,
-                        3 if options.trap_burp else 0,
-                        3 if options.trap_sleep else 0,
-                        4 if options.trap_earthling else 0,
-                        2 if options.trap_skates else 0,
-                        1 if options.trap_randomizer else 0
-                        ]
+    instatrap_weights = [options.trap_weights[trap] for trap in TRAP_NAMES]
 
     if sum(instatrap_weights) > 0:
-        instatrap_total = world.random.randint(round(0.03*total_locations), round(0.06*total_locations))
+        instatrap_total = round(options.trap_percentage.value/100.0*total_locations)
         item_list.extend([
             world.create_item(id, ItemClassification.trap)
             for id in world.random.choices(INSTATRAP_IDS, weights=instatrap_weights, k=instatrap_total)
