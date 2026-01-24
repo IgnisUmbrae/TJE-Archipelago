@@ -57,13 +57,16 @@ class TJEWorld(World):
         change = super().collect(state, item)
         if change:
             current_rank = state.prog_items[item.player]["ranks"]
-            if item.name == "Promotion" and current_rank < 8:
-                state.prog_items[item.player]["points"] = self.rank_thresholds[current_rank+1]
-                state.prog_items[item.player]["ranks"] += 1
+            if item.name == "Promotion":
+                if current_rank < 8:
+                    state.prog_items[item.player]["points"] = self.rank_thresholds[current_rank+1]
+                    state.prog_items[item.player]["ranks"] += 1
+                else:
+                    state.prog_items[item.player]["points"] = max(self.rank_thresholds[8], state.prog_items[item.player]["points"])
+                    state.prog_items[item.player]["ranks"] = 8
             else:
                 # Check whether this pushes us over the threshold
                 state.prog_items[item.player]["points"] += item.point_value
-
                 rank = max(i for i in range(len(self.rank_thresholds))
                         if self.rank_thresholds[i] <= state.prog_items[item.player]["points"])
                 state.prog_items[item.player]["ranks"] = rank
@@ -138,10 +141,8 @@ class TJEWorld(World):
             num = items_per_level[level]
             for i in range(num):
                 item = self.get_location(FLOOR_ITEM_LOC_TEMPLATE.format(level, i+1)).item
-                if item.code is None:
-                    item_hex = 0xFF
-                elif item.code in ITEM_ID_TO_CODE:
-                    item_hex = ITEM_ID_TO_CODE[item.code]
+                if item.player == self.player:
+                    item_hex =  ITEM_ID_TO_CODE.get(item.code, 0xFF)
                 else:
                     if item.classification in \
                         (ItemClassification.progression, ItemClassification.progression_skip_balancing):
