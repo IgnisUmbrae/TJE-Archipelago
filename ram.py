@@ -105,12 +105,12 @@ class SaveManager():
     async def append_to_save_queue(self, name: str, data: int) -> None:
         self.save_queue[name] = data
 
-    async def tick(self) -> None:
+    async def tick(self, force_save=False) -> None:
         for monitor in self.monitors:
             await monitor.tick()
         if self.save_queue:
             self.ticks += 1
-            if self.ticks > self.sync_interval:
+            if force_save or self.ticks >= self.sync_interval:
                 await self.update_save_on_server()
                 self.ticks = 0
 
@@ -335,16 +335,16 @@ class TJEGameController():
                 ctx,
                 enabled=True
             ),
-            AddressMonitor( # only used for on-the-fly hint generation
-                "Items set",
-                "AP_LEVEL_ITEMS_SET",
-                1,
-                MonitorLevel.GLOBAL,
-                lambda: True,
-                self.handle_items_set,
-                self,
-                ctx,
-            )
+            # AddressMonitor( # only used for on-the-fly hint generation
+            #     "Items set",
+            #     "AP_LEVEL_ITEMS_SET",
+            #     1,
+            #     MonitorLevel.GLOBAL,
+            #     lambda: True,
+            #     self.handle_items_set,
+            #     self,
+            #     ctx,
+            # )
         ]
 
         if death_link:
@@ -462,10 +462,13 @@ class TJEGameController():
     async def is_item_waiting(self, ctx: "BizHawkClientContext") -> bool:
         return (await self.peek_ram(ctx, get_ram_addr("AP_GIVE_ITEM", self.char), 1)) != b"\xFF"
 
+    async def should_spawn_present_as_trap(self, item_id: int) -> bool:
+        return (self.auto_bad_presents > 0 and item_id in BAD_PRESENT_IDS and
+                            not (self.auto_bad_presents == 1 and item_id == ITEM_NAME_TO_ID["Randomizer"]))
+
     async def receive_item(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
-        if self.auto_bad_presents > 0 and item_id in BAD_PRESENT_IDS:
-            if not (self.auto_bad_presents == 1 and item_id == ITEM_NAME_TO_ID["Randomizer"]):
-                return await self.open_trap_present(ctx, item_id)
+        if await self.should_spawn_present_as_trap(item_id):
+            return await self.open_trap_present(ctx, item_id)
         return await self.spawn_item(ctx, item_id)
 
     async def open_trap_present(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
@@ -493,11 +496,12 @@ class TJEGameController():
         return False
 
     async def give_item_directly(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
+        item_code = ITEM_ID_TO_CODE[item_id]
         if await self.is_item_waiting(ctx):
             return False
         if item_id in PRESENT_IDS and await self.is_inventory_full(ctx):
-            return False
-        item_code = ITEM_ID_TO_CODE[item_id]
+            await self.poke_ram(ctx, get_ram_addr("AP_DROP_PRESENT"), item_code.to_bytes(1))
+            return True
         return await self.poke_ram(ctx, get_ram_addr("AP_GIVE_ITEM"), item_code.to_bytes(1))
 
     async def is_inventory_full(self, ctx: "BizHawkClientContext") -> bool:
