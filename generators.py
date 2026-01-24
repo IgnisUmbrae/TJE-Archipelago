@@ -182,11 +182,12 @@ def get_key_levels(gap: int, last_level: int = 25) -> list[int] | None:
 def expected_map_points_on_level(level: int) -> int:
     match level:
         case 0: return 0
-        case 1: return 5
-        case 2: return 21
-        case 3: return 28
-        case 4: return 35
-        case _: return 35
+        case 1: return 10
+        case 2: return 30
+        case 3: return 35
+        case 4: return 40
+        case 5: return 45
+        case _: return 50
 
 # Half the items on a level are presents on average and they're worth 2 points each
 def expected_present_points_on_level(level: int, min_items: int = 12, max_items: int = 28) -> int:
