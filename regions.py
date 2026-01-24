@@ -123,7 +123,7 @@ def add_ship_pieces(world, player, level_regions):
         if loc_data.level in world.ship_item_levels:
             new_loc = TJELocation(player, loc_data.name, world.location_name_to_id[loc_data.name],
                                   level_regions[loc_data.level])
-            new_loc.progress_type = LocationProgressType.PRIORITY
+            #new_loc.progress_type = LocationProgressType.PRIORITY
             level_regions[loc_data.level].locations.append(new_loc)
 
 def add_rank_checks(menu: Region, world, player, options: TJEOptions):
@@ -132,8 +132,9 @@ def add_rank_checks(menu: Region, world, player, options: TJEOptions):
         loc = TJELocation(player, loc_name, world.location_name_to_id[loc_name], menu)
         loc.access_rule = lambda state, rank_num=number: state.has("ranks", player, rank_num)
         if number <= options.max_rank_check.value:
-            loc.progress_type = LocationProgressType.PRIORITY
-            forbid_item(loc, "Promotion", player)
+            pass
+            #loc.progress_type = LocationProgressType.PRIORITY
+            #forbid_item(loc, "Promotion", player)
         else:
             loc.progress_type = LocationProgressType.EXCLUDED
         menu.locations.append(loc)
