@@ -1,7 +1,10 @@
 from dataclasses import dataclass
 from enum import IntEnum
 
-from Options import PerGameCommonOptions, Toggle, Choice, OptionGroup, Range, NamedRange, DefaultOnToggle, DeathLink
+from Options import PerGameCommonOptions, Toggle, Choice, OptionGroup, Range, NamedRange, DefaultOnToggle, DeathLink, \
+                    OptionCounter
+
+from .constants import TRAP_NAMES
 
 class CharacterOption(IntEnum):
     TOEJAM = 0
@@ -342,47 +345,37 @@ class BadFood(DefaultOnToggle):
 
     display_name = "Include Bad Food"
 
-class TrapCupid(Toggle):
+class TrapWeights(OptionCounter):
     """
-    Adds control-scrambling Cupid traps into the item pool.
+    Specifies the relative frequency of each type of trap in the item pool.
+    Set a trap weight to zero to disable it.
+
+    Available traps:
+
+    - Cupid: scrambles controls
+    - Burp: makes you burp
+    - Sleep: makes you fall asleep
+    - Skates: gives you rocket skates
+    - Earthling: spawns an earthling
+    - Randomizer: randomizes all of your presents
+
+    """
+    display_name = "Trap Weights"
+    valid_keys = TRAP_NAMES
+    min = 0
+    default = dict(zip(TRAP_NAMES, range(5,-1,-1)))
+
+class TrapPercentage(Range):
+    """
+    What percentage of the item pool will be traps.
     """
 
-    display_name = "Enable Cupid Traps"
+    display_name = "Trap Percentage"
 
-class TrapBurp(Toggle):
-    """
-    Adds traps that make you constantly burp into the item pool.
-    """
+    range_start = 0
+    range_end = 10
 
-    display_name = "Enable Burp Traps"
-
-class TrapSleep(Toggle):
-    """
-    Adds traps that instantly send you to sleep into the item pool.
-    """
-
-    display_name = "Enable Sleep Traps"
-
-class TrapRocketSkates(Toggle):
-    """
-    Adds traps that instantly give you Rocket Skates into the item pool.
-    """
-
-    display_name = "Enable Rocket Skates Traps"
-
-class TrapEarthling(Toggle):
-    """
-    Adds traps that spawn Earthlings into the item pool.
-    """
-
-    display_name = "Enable Earthling Traps"
-
-class TrapRandomizer(Toggle):
-    """
-    Adds traps that force-randomize all your presents into the item pool.
-    """
-
-    display_name = "Enable Randomizer Traps"
+    default = 3
 
 class StartingPresents(Choice):
     """
@@ -475,11 +468,8 @@ tje_option_groups = [
         AutoOpenBadPresents,
         BadFood,
         BadPresents,
-        TrapCupid,
-        TrapSleep,
-        TrapRocketSkates,
-        TrapEarthling,
-        TrapRandomizer
+        TrapWeights,
+        TrapPercentage
     ]),
     OptionGroup("Extra Items/Locations", [
         UpwarpPresent,
@@ -517,12 +507,8 @@ class TJEOptions(PerGameCommonOptions):
     auto_bad_presents: AutoOpenBadPresents
     bad_food: BadFood
     bad_presents: BadPresents
-    trap_cupid: TrapCupid
-    trap_burp: TrapBurp
-    trap_sleep: TrapSleep
-    trap_skates: TrapRocketSkates
-    trap_earthling: TrapEarthling
-    trap_randomizer: TrapRandomizer
+    trap_weights: TrapWeights
+    trap_percentage: TrapPercentage
     map_reveals: MapReveals
     local_map_reveals: LocalMapReveals
     elevator_keys: ElevatorKeys
