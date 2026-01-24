@@ -8,8 +8,8 @@ from NetUtils import ClientStatus, NetworkItem, add_json_text, JSONTypes
 from Utils import async_start
 
 from .constants import SAVE_DATA_POINTS_ALL, expand_inv_constants, ret_val_to_char
-from .hint import TJEHint
-from .items import EDIBLE_IDS, ITEM_ID_TO_NAME, PRESENT_IDS, INSTATRAP_IDS, SHIP_PIECE_IDS, BAD_PRESENT_IDS
+# from .hint import TJEHint
+from .items import ITEM_ID_TO_NAME, INSTATRAP_IDS, SHIP_PIECE_IDS
 from .locations import LOCATION_ID_TO_NAME, LOCATION_NAME_TO_ID
 from .ram import TJEGameController, SaveManager
 
@@ -19,12 +19,11 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 class SpawnQueue():
-    def __init__(self, name: str, cooldown: int = 1):
-        self.name = name
+    def __init__(self, cooldown: int = 0):
         self.queue: list[NetworkItem] = []
         self.counter = cooldown
         self.cooldown = cooldown
-        self.spawned_count = 0
+        self.awarded_count = None # will be initialized to 0 / saved value after checking for savedata on server
         self.save_manager = None
         self.reset_cooldown()
 
@@ -40,11 +39,12 @@ class SpawnQueue():
     def add(self, nwi: NetworkItem) -> None:
         self.queue.append(nwi)
 
-    async def mark_spawned(self, nwi: NetworkItem) -> None:
-        self.spawned_count += 1
+    async def mark_awarded(self, nwi: NetworkItem) -> None:
+        self.awarded_count += 1
         if self.save_manager:
-            await self.save_manager.append_to_save_queue(self.name, self.spawned_count)
-        self.queue.remove(nwi)
+            await self.save_manager.append_to_save_queue("awarded_count", self.awarded_count)
+        if nwi in self.queue:
+            self.queue.remove(nwi)
         self.reset_cooldown()
 
     def reset_cooldown(self) -> None:
@@ -63,22 +63,11 @@ class TJEClient(BizHawkClient):
 
     save_manager = None
 
-    edible_queue = SpawnQueue("EDIBLE_QUEUE")
-    present_queue = SpawnQueue("PRESENT_QUEUE")
-    trap_queue = SpawnQueue("TRAP_QUEUE")
-    misc_queue = SpawnQueue("MISC_QUEUE")
-    queues = [edible_queue, present_queue, trap_queue, misc_queue]
+    queue = SpawnQueue()
 
     auto_bad_presents = 0
 
-    death_link_enabled = False
     pending_deathlink = False
-    ignore_deathlink = False
-
-    last_processed_index = None
-    ignore_realtime = False
-
-    hints_seen = 0
 
     def __init__(self):
         super().__init__()
@@ -89,10 +78,8 @@ class TJEClient(BizHawkClient):
 
     def post_reset_init(self) -> None:
         self.game_controller.awaiting_load = True
-        self.last_processed_index = None
-        self.ignore_realtime = False
-        for queue in self.queues:
-            queue.empty()
+        self.queue.awarded_count = None
+        self.queue.empty()
 
     async def peek_rom(self, ctx: "BizHawkClientContext", address: int, size: int) -> bytes:
         return (await bizhawk.read(ctx.bizhawk_ctx, [(address, size, "MD CART")]))[0]
@@ -118,15 +105,13 @@ class TJEClient(BizHawkClient):
         ctx.sent_death_time = None
 
         death_link = bool(await self.peek_rom(ctx, 0x001f0001, 1))
-        if death_link:
-            await ctx.update_death_link(death_link)
-            self.death_link_enabled = death_link
+        await ctx.update_death_link(death_link)
 
-        success = await self.setup_game_controller(ctx)
+        success = await self.setup_game_controller(ctx, death_link)
 
         return success
 
-    async def setup_game_controller(self, ctx: "BizHawkClientContext") -> bool:
+    async def setup_game_controller(self, ctx: "BizHawkClientContext", death_link: bool) -> bool:
         try:
             # Game controller
 
@@ -137,15 +122,14 @@ class TJEClient(BizHawkClient):
             expanded_inv = int.from_bytes(await self.peek_rom(ctx, 0x0000979c+3, 1)) == 0x1D
 
             self.game_controller.initialize_slot_data(self.auto_bad_presents, expanded_inv)
-            self.game_controller.add_monitors(ctx, char, ("DeathLink" in ctx.tags))
+            self.game_controller.add_monitors(ctx, char, death_link)
 
             # Save manager
 
             if expanded_inv:
                 expand_inv_constants()
             self.save_manager = SaveManager(1, char, self.game_controller, ctx)
-            for queue in self.queues:
-                queue.connect_save_manager(self.save_manager)
+            self.queue.connect_save_manager(self.save_manager)
 
             return True
         except (bizhawk.RequestFailedError, bizhawk.NotConnectedError):
@@ -155,79 +139,42 @@ class TJEClient(BizHawkClient):
     def on_package(self, ctx: "BizHawkClientContext", cmd: str, args: dict) -> None:
         async_start(self.process_tje_cmd(ctx, cmd, args))
 
-    async def set_last_processed_index(self, ctx: "BizHawkClientContext") -> None:
-        await ctx.send_msgs([{
-            "cmd": "Set",
-            "key": "last_index",
-            "default": -1,
-            "want_reply": False,
-            "operations": [
-                {
-                    "operation": "replace",
-                    "value": self.last_processed_index,
-                }
-            ]
-        }])
-
     async def process_network_items(self, ctx: "BizHawkClientContext", args: dict) -> None:
+        # for nwi in args["items"]:
+        #     await self.process_item(ctx, nwi)
         for index, nwi in enumerate(args["items"], start=args["index"]):
-            if index > self.last_processed_index:
-                logger.debug("* Processing item: %s", ITEM_ID_TO_NAME[nwi.item])
-                self.process_item(ctx, nwi)
-                self.last_processed_index = index
-        if self.ignore_realtime:
-            self.edible_queue.empty()
-            self.trap_queue.empty()
-            self.ignore_realtime = False
-        await self.set_last_processed_index(ctx)
+            if index >= self.queue.awarded_count:
+                logger.debug("* Queueing item: %s", ITEM_ID_TO_NAME[nwi.item])
+                await self.process_item(ctx, nwi)
 
     async def process_tje_cmd(self, ctx: "BizHawkClientContext", cmd: str, args: dict) -> None:
         match cmd:
             case "Connected":
                 await ctx.send_msgs([{
                     "cmd": "Get",
-                    "keys": ["last_index"] + list(SAVE_DATA_POINTS_ALL)
+                    "keys": ["awarded_count"] + list(SAVE_DATA_POINTS_ALL)
                 }])
             case "Bounced":
-                if (self.death_link_enabled and "DeathLink" in args.get("tags", [])
-                    and args["data"]["time"] != ctx.sent_death_time):
+                if "DeathLink" in args.get("tags", []) and \
+                    args["data"]["time"] != ctx.sent_death_time:
                         self.pending_deathlink = True
-            case "RoomInfo":
-                pass
-            case "SetReply": # only displays hints the first time they're requested
-                pass
-                # if args.get("key") == f"_read_{ctx.team}_{ctx.slot}":
-                #     hints = args.get("value")
-                #     for hint in hints[self.hints_seen:]:
-                #         hint_data = self.game_controller.dynamic_hints.get(hint["location"], None)
-                #         if hint_data:
-                #             await self.display_local_hint(ctx, hint_data)
-                #     self.hints_seen = len(hints)
             case "Retrieved":
-                if "last_index" in args["keys"]:
-                    val = args["keys"].get("last_index")
-                    if val:
-                        self.last_processed_index = args["keys"].get("last_index")
-                        self.ignore_realtime = True
+                if "awarded_count" in args["keys"]:
+                    saved_ac = args["keys"].get("awarded_count")
+                    if saved_ac:
+                        self.queue.awarded_count = saved_ac
                     else:
-                        self.last_processed_index = -1
-                        self.ignore_realtime = False
+                        self.queue.awarded_count = 0
+                    # initial loading of entire save state
+                    savedata_keys = set(args["keys"].keys()) & frozenset(SAVE_DATA_POINTS_ALL)
+                    if len(savedata_keys) > 0:
+                        self.save_manager.data_to_load = {k:v for k, v in args["keys"].items() if k in savedata_keys}
                     await ctx.send_msgs([{
                         "cmd": "Sync"
                     }])
-                # initial loading of entire save state
-                savedata_keys = set(args["keys"].keys()) & frozenset(SAVE_DATA_POINTS_ALL)
-                if len(savedata_keys) > 0:
-                    self.save_manager.data_to_load = {k:v for k, v in args["keys"].items() if k in savedata_keys}
             case "ReceivedItems":
-                if self.last_processed_index is not None:
+                if self.queue.awarded_count is not None:
                     await self.process_network_items(ctx, args)
-
-    async def display_local_hint(self, ctx: "BizHawkClientContext", hint: TJEHint) -> None:
-        parts = []
-        add_json_text(parts, LOCATION_ID_TO_NAME(hint.location_id), type=JSONTypes.location_name)
-        add_json_text(parts, hint.hint_text, type=JSONTypes.text)
-        ctx.on_print_json({"data": parts, "cmd": "PrintJSON"})
 
     async def goal_in(self, ctx: "BizHawkClientContext") -> None:
         logger.debug("Finished game!")
@@ -237,9 +184,7 @@ class TJEClient(BizHawkClient):
         }])
         self.game_controller.game_complete = True
         ctx.finished_game = True
-
-        for queue in self.queues:
-            queue.empty()
+        self.queue.empty()
 
     async def trigger_location(self, ctx: "BizHawkClientContext", name: str) -> bool:
         loc_id = LOCATION_NAME_TO_ID.get(name, None)
@@ -253,50 +198,32 @@ class TJEClient(BizHawkClient):
             return True
         return False
 
-    async def handle_items(self, ctx: "BizHawkClientContext") -> None:
-        for queue in self.queues:
-            await self.handle_queue(ctx, queue)
-
     # Determines whether an item should be spawned by the client or left to the game's own code to award
-    # Rank checks and ship pieces are currently unable to award items purely via ROM
     def should_spawn_from_remote(self, ctx: "BizHawkClientContext", nwi: NetworkItem) -> bool:
         #!getitem'ed / server / remote
         if nwi.location <= 0 or nwi.player != ctx.slot:
             return True
+        # instatrap or ship piece, any source
+        if nwi.item in INSTATRAP_IDS or nwi.item in SHIP_PIECE_IDS:
+            return True
+        # local promotion or ship piece
         loc_name = LOCATION_ID_TO_NAME[nwi.location]
         return "Promoted" in loc_name or "Ship Piece" in loc_name
 
-    def should_spawn_present_as_trap(self, nwi: NetworkItem) -> bool:
-        return (self.auto_bad_presents > 0 and nwi.item in BAD_PRESENT_IDS and
-                            not (self.auto_bad_presents == 1 and ITEM_ID_TO_NAME[nwi.item] == "Randomizer"))
-
-    def process_item(self, ctx: "BizHawkClientContext", nwi: NetworkItem) -> None:
-        # if self.ignore_realtime and nwi.item in EDIBLE_IDS+INSTATRAP_IDS:
-        #     logger.debug("Ignoring realtime item received while offline")
-        #     return
-        if nwi.item in INSTATRAP_IDS:
-            self.trap_queue.add(nwi)
-        elif nwi.item in SHIP_PIECE_IDS:
-            self.misc_queue.add(nwi)
+    async def process_item(self, ctx: "BizHawkClientContext", nwi: NetworkItem) -> None:
+        if self.should_spawn_from_remote(ctx, nwi):
+            self.queue.add(nwi)
         else:
-            if self.should_spawn_from_remote(ctx, nwi): # non-local item
-                if nwi.item in PRESENT_IDS:
-                    if self.should_spawn_present_as_trap(nwi):
-                        self.trap_queue.add(nwi)
-                    else:
-                        self.present_queue.add(nwi)
-                elif nwi.item in EDIBLE_IDS:
-                    self.edible_queue.add(nwi)
-                else:
-                    self.misc_queue.add(nwi)
+            await self.queue.mark_awarded(nwi)
 
-    async def handle_queue(self, ctx: "BizHawkClientContext", queue: SpawnQueue) -> None:
-        queue.tick()
-        if queue.can_spawn():
-            oldest = queue.oldest()
-            success = await self.game_controller.receive_item(ctx, oldest.item)
-            if success:
-                await queue.mark_spawned(oldest)
+    async def handle_queue(self, ctx: "BizHawkClientContext") -> None:
+        if self.queue.awarded_count is not None:
+            self.queue.tick()
+            if self.queue.can_spawn():
+                oldest = self.queue.oldest()
+                success = await self.game_controller.receive_item(ctx, oldest.item)
+                if success:
+                    await self.queue.mark_awarded(oldest)
 
     async def handle_deathlink(self, ctx: "BizHawkClientContext") -> None:
         if self.pending_deathlink:
@@ -307,8 +234,8 @@ class TJEClient(BizHawkClient):
         await self.game_controller.tick(ctx)
 
         if not ctx.finished_game:
+            await self.handle_queue(ctx)
             await self.handle_deathlink(ctx)
-            await self.handle_items(ctx)
             await self.save_manager.tick()
             if self.game_controller.current_level == 26:
                 await self.goal_in(ctx)
