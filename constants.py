@@ -60,6 +60,9 @@ INV_SIZE_ADDRS_ASL_D0 = [0x00009358, 0x0000936c, 0x00009380, 0x000097a8, 0x00009
                          0x00009bc4, 0x00009c0e, 0x00009c96, 0x00009d74, 0x00009dca, 0x0000a238, 0x0000a45e,
                          0x0010a0de, 0x0010a0f6, 0x00021fc6, 0x00022042, 0x0002205a, 0x0002207e, 0x00022278]
 
+INITIAL_PRESENT_ADDRS = (0x00014393, 0x00014397, 0x000143a5, 0x000143ab,
+                         0x000143c5, 0x000143cb, 0x000143d9, 0x000143df)
+
 #endregion
 
 #region Dialogue-related
@@ -116,8 +119,7 @@ RANK_NAMES = ("Wiener", "Dufus", "Poindexter", "Peanut", "Dude", "Bro", "Homey",
 
 DEAD_SPRITES = (0x5, 0x6)
 
-INITIAL_PRESENT_ADDRS = (0x00014393, 0x00014397, 0x000143a5, 0x000143ab,
-                         0x000143c5, 0x000143cb, 0x000143d9, 0x000143df)
+TRAP_NAMES = ("cupid", "burp", "sleep", "earthling", "skates", "randomizer")
 
 BASE_LEVEL_TYPES = (0, 1, 5, 2, 7, 3, 4, 2, 6, 7, 2, 3, 6, 2, 4, 7, 2, 4, 2, 7, 4, 5, 1, 7)
 
@@ -207,6 +209,7 @@ GLOBAL_RAM_ADDRS: dict[int] = {
     "AP_NUM_KEYS": 0xF455,
     "AP_NUM_MAP_REVEALS": 0xF456,
     "AP_LAST_REVEALED_MAP": 0xF457,
+    "AP_DROP_PRESENT" : 0xF553,
     "AP_GIVE_ITEM": 0xF554,
     "AP_AUTO_PRESENT": 0xF555,
     "AP_AUTO_NO_POINTS": 0xF556,
