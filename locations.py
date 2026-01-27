@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, auto
 from typing import NamedTuple
 import itertools
 
@@ -8,9 +8,9 @@ from .constants import BASE_TJE_ID, RANK_NAMES
 from .generators import item_totals
 
 class TJELocationType(Enum):
-    FLOOR_ITEM = 0
-    SHIP_PIECE = 1
-    RANK = 2
+    FLOOR_ITEM = auto()
+    SHIP_PIECE = auto()
+    RANK = auto()
 
 class TJELocation(Location):
     game: str = "ToeJam & Earl"
