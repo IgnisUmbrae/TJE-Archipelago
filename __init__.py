@@ -8,7 +8,7 @@ import settings
 from worlds.AutoWorld import World, WebWorld
 
 from .client import TJEClient # required to register with BizHawkClient
-from .constants import VANILLA_RANK_THRESHOLDS
+from .constants import VANILLA_RANK_THRESHOLDS, REV00_MD5, REV02_MD5
 from .generators import TJEGenerator, get_key_levels, item_totals, scaled_rank_thresholds
 from .items import ITEM_ID_TO_CODE, TJEItem, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, TJEItemType, \
                    create_items, create_starting_presents
@@ -19,11 +19,11 @@ from .rom import TJEProcedurePatch, write_tokens
 
 class TJESettings(settings.Group):
     class ROMFile(settings.UserFilePath):
-        """Location of the ToeJam & Earl REV 02 ROM file."""
+        """Location of the ToeJam & Earl ROM file."""
 
         copy_to = "ToeJamEarl.SGD"
-        description = "ToeJam & Earl REV 02 ROM file"
-        md5s = ["72dc91fd2c5528b384f082a38db9ddda"]
+        description = "ToeJam & Earl ROM file"
+        md5s = [REV00_MD5, REV02_MD5]
 
     rom_file: ROMFile = ROMFile(ROMFile.copy_to)
 
@@ -128,6 +128,14 @@ class TJEWorld(World):
     def generate_output(self, output_directory: str):
         self.create_patchable_item_list()
         patch = TJEProcedurePatch(player=self.player, player_name=self.multiworld.player_name[self.player])
+        
+        if self.options.game_version.value == 0:
+            patch.hash = REV00_MD5
+            patch.procedure.insert(0, ("apply_bsdiff4", ["00to02.bsdiff4"]))
+            patch.write_file("00to02.bsdiff4", pkgutil.get_data(__name__, "data/00to02.bsdiff4"))
+        else:
+            patch.hash = REV02_MD5
+
         patch.write_file("base_patch.bsdiff4", pkgutil.get_data(__name__, "data/base_patch.bsdiff4"))
         write_tokens(self, patch)
 

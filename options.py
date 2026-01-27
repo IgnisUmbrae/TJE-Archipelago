@@ -45,6 +45,10 @@ class RankRescalingOption(IntEnum):
     MAX_CHECK = 1
     FUNK_LORD = 2
 
+class GameVersionOption(IntEnum):
+    REV00 = 0
+    REV02 = 2
+
 class LastLevel(Range):
     """
     The last level of the game. Set lower for shorter runs.
@@ -455,6 +459,25 @@ class FreeEarthlingServices(Toggle):
 
     display_name = "Free Earthling Services"
 
+class GameVersion(Choice):
+    """
+    Which revision of the game your ROM is. Defaults to the more easily obtainable REV02.
+    
+    REV02 is the version that was available e.g. via Mega Drive/Genesis Classics on Steam.
+    You may have a REV00 ROM if you dumped your original cartridge.
+    
+    If you aren't sure which version you have, open it in any editor (text or binary)
+    and check the header. A date of 1991.JUL is REV00; a date of 1991.OCT is REV02.
+    """
+
+    display_name = "Game Version"
+
+    option_rev00 = GameVersionOption.REV00.value
+    option_rev02 = GameVersionOption.REV02.value
+
+    default = option_rev02
+
+
 tje_option_groups = [
     OptionGroup("Basic Items/Locations", [
         StartingPresents,
@@ -491,7 +514,8 @@ tje_option_groups = [
         ExpandedInventory
     ]),
     OptionGroup("Misc", [
-        SoundRando
+        SoundRando,
+        GameVersion
     ])
 ]
 
@@ -525,3 +549,4 @@ class TJEOptions(PerGameCommonOptions):
     fast_loads: FastLoads
     expanded_inventory: ExpandedInventory
     sound_rando: SoundRando
+    game_version: GameVersion

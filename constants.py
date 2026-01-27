@@ -125,6 +125,9 @@ BASE_LEVEL_TYPES = (0, 1, 5, 2, 7, 3, 4, 2, 6, 7, 2, 3, 6, 2, 4, 7, 2, 4, 2, 7, 
 
 CHARACTERS = ("Toejam", "Earl")
 
+REV00_MD5 = "0a6af20d9c5b3ec4e23c683f083b92cd"
+REV02_MD5 = "72dc91fd2c5528b384f082a38db9ddda"
+
 #endregion
 
 # player = AP-internal character value

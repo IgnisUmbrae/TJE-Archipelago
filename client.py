@@ -94,9 +94,6 @@ class TJEClient(BizHawkClient):
         if rom_name != "TOEJAM & EARL":
             logger.error("Selected ROM is not a ToeJam & Earl ROM")
             return False
-        elif version != "02":
-            logger.error("Selected ToeJam & Earl ROM appears to be REV00, not REV02")
-            return False
 
         ctx.game = self.game
         ctx.items_handling = 0b011 # Initial inventory handled locally; everything else remote

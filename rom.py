@@ -12,12 +12,10 @@ from .generators import map_reveal_text
 from .items import ITEM_ID_TO_CODE
 from .options import CharacterOption, SoundRandoOption, StartingPresentOption, GameOverOption, MapRandomizationOption
 
-REV00_MD5 = "0a6af20d9c5b3ec4e23c683f083b92cd"
-REV02_MD5 = "72dc91fd2c5528b384f082a38db9ddda"
+
 
 class TJEProcedurePatch(APProcedurePatch, APTokenMixin):
     game = "ToeJam and Earl"
-    hash = REV02_MD5
     patch_file_ending = ".aptje"
     result_file_ending = ".bin"
 
