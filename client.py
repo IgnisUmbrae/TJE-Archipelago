@@ -137,11 +137,8 @@ class TJEClient(BizHawkClient):
         async_start(self.process_tje_cmd(ctx, cmd, args))
 
     async def process_network_items(self, ctx: "BizHawkClientContext", args: dict) -> None:
-        # for nwi in args["items"]:
-        #     await self.process_item(ctx, nwi)
         for index, nwi in enumerate(args["items"], start=args["index"]):
             if index >= self.queue.awarded_count:
-                logger.debug("* Queueing item: %s", ITEM_ID_TO_NAME[nwi.item])
                 await self.process_item(ctx, nwi)
 
     async def process_tje_cmd(self, ctx: "BizHawkClientContext", cmd: str, args: dict) -> None:
@@ -164,8 +161,11 @@ class TJEClient(BizHawkClient):
                         self.queue.awarded_count = 0
                     # initial loading of entire save state
                     savedata_keys = set(args["keys"].keys()) & frozenset(SAVE_DATA_POINTS_ALL)
+                    print(args["keys"])
                     if len(savedata_keys) > 0:
-                        self.save_manager.data_to_load = {k:v for k, v in args["keys"].items() if k in savedata_keys}
+                        self.save_manager.data_to_load = {k:v for k, v in args["keys"].items()
+                                                          if k in savedata_keys and v is not None}
+                    print(self.save_manager.data_to_load)
                     await ctx.send_msgs([{
                         "cmd": "Sync"
                     }])
@@ -174,7 +174,6 @@ class TJEClient(BizHawkClient):
                     await self.process_network_items(ctx, args)
 
     async def goal_in(self, ctx: "BizHawkClientContext") -> None:
-        logger.debug("Finished game!")
         await ctx.send_msgs([{
             "cmd": "StatusUpdate",
             "status": ClientStatus.CLIENT_GOAL
@@ -187,7 +186,6 @@ class TJEClient(BizHawkClient):
         loc_id = LOCATION_NAME_TO_ID.get(name, None)
 
         if loc_id is not None:
-            logger.debug("Triggering location: %s", name)
             await ctx.send_msgs([{
                 "cmd": "LocationChecks",
                 "locations": [loc_id]
