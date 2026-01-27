@@ -38,10 +38,12 @@ A tracker developed by GrayGooGlitch is available [on GitHub here](https://githu
 
 ### Requirements
 
-- [Archipelago](https://github.com/ArchipelagoMW/Archipelago/releases) 5.0.0+
+- [Archipelago](https://github.com/ArchipelagoMW/Archipelago/releases) 0.6.2+
 - [BizHawk](https://tasvideos.org/BizHawk/ReleaseHistory) 2.9.1+
 - The latest [Toejam & Earl AP World](https://github.com/IgnisUmbrae/TJE-Archipelago/releases)
-- A legally-obtained **REV 02** Toejam & Earl ROM, the easiest source of which is [the Steam release](https://store.steampowered.com/app/71166/ToeJam__Earl/). **REV 00 is not supported.**
+- A legally-obtained REV00 or REV02 Toejam & Earl ROM.
+
+   ⚠️ As of January 2026, there is currently no way to buy a ROM of the game. If you bought [the Steam release of Mega Drive/Genesis Classics](https://store.steampowered.com/app/71166/ToeJam__Earl/) prior to its delisting on 6th December 2024, you can still install it and access the ROM (REV02). The only other option is to dump your own cartridge; see [the instructions over at dumping.guide](https://dumping.guide/carts/sega/mega-drive-genesis) for more information.
 
 ### Instructions
 
@@ -51,7 +53,10 @@ A tracker developed by GrayGooGlitch is available [on GitHub here](https://githu
 
 2. Create a YAML with the settings of your choice. You can also use [the example](https://github.com/IgnisUmbrae/TJE-Archipelago/blob/main/docs/example.yaml) as a quickstart. Add this to the `Players` subfolder if you're hosting locally, upload it to the host otherwise.
 
-3. Now you or the host can generate a world; Archipelago will also generate a patch with the extension `.aptje`. Use the Patch function in the launcher to apply the patch to the ROM and automatically launch BizHawk along with the client. If this is your first time, you will be prompted to locate one or both of BizHawk and the ROM file.
+   ⚠️ If you're using a REV00 ROM, you _must_ specify this in the YAML by adding `game_version: rev00` so the generator knows to use the extra patches.
+
+
+3. Now you or the host can generate a world. Archipelago will also generate a patch with the extension `.aptje`. Use the Patch function in the launcher to apply the patch to the ROM and automatically launch BizHawk along with the client. If this is your first time, you will be prompted to locate one or both of BizHawk and the ROM file.
 
 4. Now BizHawk will pop up its Lua scripting window. If the `connector_bizhawk_generic` script isn't already enabled, enable it by double clicking it and everything will connect together.
 
