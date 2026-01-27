@@ -228,16 +228,19 @@ class TJEClient(BizHawkClient):
             await self.game_controller.kill_player(ctx)
 
     async def game_watcher(self, ctx: "BizHawkClientContext") -> None:
-        await self.game_controller.tick(ctx)
-        # retrieve save data after local reset that stays connected to server; no effect if not connected
-        if ctx.save_retrieved == False and self.game_controller.current_level == -1:
-            await self.retrieve_server_save(ctx)
-            ctx.save_retrieved = True
-            self.game_controller.awaiting_load = True
-
-        if not ctx.finished_game:
-            await self.handle_queue(ctx)
-            await self.handle_deathlink(ctx)
-            await self.save_manager.tick()
-            if self.game_controller.current_level == 26:
-                await self.goal_in(ctx)
+        await self.game_controller.level_monitor.tick()
+        if await self.game_controller.check_if_on_menu(ctx):
+            self.game_controller.current_level = -1
+            # retrieve save data after local reset; if not connected, on_package will request the same on connect
+            if not ctx.save_retrieved:
+                await self.retrieve_server_save(ctx)
+                ctx.save_retrieved = True
+                self.game_controller.awaiting_load = True
+        else:
+            await self.game_controller.tick(ctx)
+            if not ctx.finished_game:
+                await self.handle_queue(ctx)
+                await self.handle_deathlink(ctx)
+                await self.save_manager.tick()
+                if self.game_controller.current_level == 26:
+                    await self.goal_in(ctx)

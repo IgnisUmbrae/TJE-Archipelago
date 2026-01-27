@@ -10,11 +10,14 @@ ToeJam and Earl:
   bad_food: yes
   bad_presents: yes
   auto_bad_presents: no_randomizer
-  trap_cupid: yes
-  trap_burp: yes
-  trap_sleep: no
-  trap_earthling: no
-  trap_skates: yes
+  trap_weights:
+    cupid: 2
+    burp: 2
+    sleep: 2
+    earthling: 3
+    skates: 1
+    randomizer: 0
+  trap_percentage: 3
   starting_presents: hitops
   elevator_keys: yes
   key_gap: 4
