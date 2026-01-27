@@ -100,6 +100,7 @@ class TJEClient(BizHawkClient):
         ctx.want_slot_data = False
         ctx.watcher_timeout = 0.125
         ctx.sent_death_time = None
+        ctx.save_retrieved = False
 
         death_link = bool(await self.peek_rom(ctx, 0x001f0001, 1))
         await ctx.update_death_link(death_link)
@@ -141,13 +142,16 @@ class TJEClient(BizHawkClient):
             if index >= self.queue.awarded_count:
                 await self.process_item(ctx, nwi)
 
+    async def retrieve_server_save(self, ctx: "BizHawkClientContext"):
+        await ctx.send_msgs([{
+            "cmd": "Get",
+            "keys": ["awarded_count"] + list(SAVE_DATA_POINTS_ALL)
+        }])
+
     async def process_tje_cmd(self, ctx: "BizHawkClientContext", cmd: str, args: dict) -> None:
         match cmd:
             case "Connected":
-                await ctx.send_msgs([{
-                    "cmd": "Get",
-                    "keys": ["awarded_count"] + list(SAVE_DATA_POINTS_ALL)
-                }])
+                await self.retrieve_server_save(ctx)
             case "Bounced":
                 if "DeathLink" in args.get("tags", []) and \
                     args["data"]["time"] != ctx.sent_death_time:
@@ -161,11 +165,9 @@ class TJEClient(BizHawkClient):
                         self.queue.awarded_count = 0
                     # initial loading of entire save state
                     savedata_keys = set(args["keys"].keys()) & frozenset(SAVE_DATA_POINTS_ALL)
-                    print(args["keys"])
                     if len(savedata_keys) > 0:
                         self.save_manager.data_to_load = {k:v for k, v in args["keys"].items()
                                                           if k in savedata_keys and v is not None}
-                    print(self.save_manager.data_to_load)
                     await ctx.send_msgs([{
                         "cmd": "Sync"
                     }])
@@ -227,6 +229,11 @@ class TJEClient(BizHawkClient):
 
     async def game_watcher(self, ctx: "BizHawkClientContext") -> None:
         await self.game_controller.tick(ctx)
+        # retrieve save data after local reset that stays connected to server; no effect if not connected
+        if ctx.save_retrieved == False and self.game_controller.current_level == -1:
+            await self.retrieve_server_save(ctx)
+            ctx.save_retrieved = True
+            self.game_controller.awaiting_load = True
 
         if not ctx.finished_game:
             await self.handle_queue(ctx)
