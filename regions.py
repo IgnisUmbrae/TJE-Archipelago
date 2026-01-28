@@ -7,7 +7,7 @@ from .constants import RANK_NAMES
 from .items import EDIBLE_IDS, ITEM_ID_TO_NAME, TJEItem
 from .generators import expected_map_points_on_level, item_totals
 from .options import TJEOptions
-from .locations import TJELocation, FLOOR_ITEM_LOCATIONS, SHIP_PIECE_LOCATIONS, RANK_LOC_TEMPLATE
+from .locations import TJELocation, FLOOR_ITEM_LOCATIONS, SHIP_PIECE_LOCATIONS, RANK_LOC_TEMPLATE, REACH_LOC_TEMPLATE
 
 class TJERegion(NamedTuple):
     name: str
@@ -61,6 +61,7 @@ def create_regions(multiworld: MultiWorld, player: int, options: TJEOptions):
 
     handle_key_options(multiworld, world, player, options)
     handle_rank_options(multiworld, world, player, options, level_regions)
+    handle_reach_options(player, world, options, level_regions)
 
     multiworld.regions.extend(level_regions)
 
@@ -101,6 +102,10 @@ def handle_rank_options(multiworld, world, player,  options: TJEOptions, level_r
             add_reach_level_event(level_regions[i], player, i)
             add_exploration_points(level_regions[i], player, i)
 
+def handle_reach_options(player, world, options: TJEOptions, level_regions: list[Region]):
+    if options.reach_level_checks:
+        add_reach_level_checks(player, world, options, level_regions)
+
 #endregion
 
 #region Main location adding routines
@@ -138,6 +143,13 @@ def add_rank_checks(menu: Region, world, player, options: TJEOptions):
         else:
             loc.progress_type = LocationProgressType.EXCLUDED
         menu.locations.append(loc)
+
+def add_reach_level_checks(player, world, options: TJEOptions, level_regions: list[Region]):
+    for i, level in enumerate(level_regions[2:options.last_level.value+1]):
+        loc_name = REACH_LOC_TEMPLATE.format(i+2)
+        level.locations.append(
+            TJELocation(player, loc_name, world.location_name_to_id[loc_name], level_regions[i])
+        )
 
 #endregion
 

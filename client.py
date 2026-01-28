@@ -203,9 +203,9 @@ class TJEClient(BizHawkClient):
         # instatrap or ship piece, any source
         if nwi.item in INSTATRAP_IDS or nwi.item in SHIP_PIECE_IDS:
             return True
-        # local promotion or ship piece
+        # local promotion, ship piece or reach check
         loc_name = LOCATION_ID_TO_NAME[nwi.location]
-        return "Promoted" in loc_name or "Ship Piece" in loc_name
+        return "Reach" in loc_name or "Promoted" in loc_name or "Ship Piece" in loc_name
 
     async def process_item(self, ctx: "BizHawkClientContext", nwi: NetworkItem) -> None:
         if self.should_spawn_from_remote(ctx, nwi):

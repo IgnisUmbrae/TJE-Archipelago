@@ -151,7 +151,10 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
     differential = create_rank_items(world, options, item_list) \
                    + create_elevator_keys(world, item_list) \
                    + create_map_reveals(multiworld, world, options, player, item_list) \
-                   + create_instatraps(world, options, total_locations, item_list)
+                   + create_instatraps(world, options, total_locations, item_list) \
+
+    if options.reach_level_checks:
+        differential -= options.last_level-1
 
     create_main_items(world, item_list, total_locations, differential)
 

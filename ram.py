@@ -14,7 +14,7 @@ from .constants import DEAD_SPRITES, EMPTY_ITEM, COLLECTED_SHIP_ITEM, EMPTY_PRES
 from .items import ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, \
                    PRESENT_IDS, SHIP_PIECE_IDS,INSTATRAP_IDS, BAD_PRESENT_IDS
 from .hint import generate_hints_for_current_level
-from .locations import FLOOR_ITEM_LOC_TEMPLATE, RANK_LOC_TEMPLATE, SHIP_PIECE_LOC_TEMPLATE
+from .locations import FLOOR_ITEM_LOC_TEMPLATE, RANK_LOC_TEMPLATE, SHIP_PIECE_LOC_TEMPLATE, REACH_LOC_TEMPLATE
 
 if TYPE_CHECKING:
     from worlds._bizhawk.context import BizHawkClientContext
@@ -317,7 +317,7 @@ class TJEGameController():
                 ctx
             ),
             AddressMonitor(
-                "Ship item",
+                "Ship items",
                 "TRIGGERED_SHIP_ITEMS",
                 10,
                 MonitorLevel.GLOBAL,
@@ -333,6 +333,16 @@ class TJEGameController():
                 level,
                 lambda: not self.is_awaiting_load(),
                 self.handle_rank_change,
+                self,
+                ctx
+            ),
+            AddressMonitor(
+                "Highest level reached",
+                "HIGHEST_LEVEL_REACHED",
+                1,
+                level,
+                lambda: not self.is_awaiting_load(),
+                self.handle_highest_level_change,
                 self,
                 ctx
             ),
@@ -458,6 +468,9 @@ class TJEGameController():
 
     #region Spawning functions (also receipt of ethereal items)
 
+    async def is_warping(self, ctx: "BizHawkClientContext") -> bool:
+        return (await self.peek_ram(ctx, get_ram_addr("END_ELEVATOR_STATE", self.char), 1)) == b"\x0C"
+
     async def is_item_waiting(self, ctx: "BizHawkClientContext") -> bool:
         return (await self.peek_ram(ctx, get_ram_addr("AP_GIVE_ITEM", self.char), 1)) != b"\xFF"
 
@@ -466,6 +479,8 @@ class TJEGameController():
                             not (self.auto_bad_presents == 1 and item_id == ITEM_NAME_TO_ID["Randomizer"]))
 
     async def receive_item(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
+        if await self.is_warping(ctx):
+            return False
         if await self.should_spawn_present_as_trap(item_id):
             return await self.open_trap_present(ctx, item_id)
         return await self.spawn_item(ctx, item_id)
@@ -582,6 +597,14 @@ class TJEGameController():
         rank = int.from_bytes(new_data)
         if rank > 0:
             loc = RANK_LOC_TEMPLATE.format(RANK_NAMES[rank])
+            await self.client.trigger_location(ctx, loc)
+
+    async def handle_highest_level_change(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
+                                 old_data: bytes, new_data: bytes):
+        old = int.from_bytes(old_data)
+        level = int.from_bytes(new_data)
+        if level > old and level in range(2,26):
+            loc = REACH_LOC_TEMPLATE.format(level)
             await self.client.trigger_location(ctx, loc)
 
     async def check_if_on_menu(self, ctx: "BizHawkClientContext") -> None:

@@ -309,6 +309,13 @@ class RankRescalingMode(Choice):
 
     default = option_funk_lord
 
+class ReachLevelChecks(Toggle):
+    """
+    Adds extra checks that trigger when you reach a new highest level.
+    """
+
+    display_name = "Reach Level Checks"
+
 class UpwarpPresent(Toggle):
     """
     Mutator that changes the Un-Fall present into an Up-Warp present that always sends you up one level,
@@ -501,7 +508,8 @@ tje_option_groups = [
         ElevatorKeys,
         ElevatorKeyGap,
         MaxRankCheck,
-        RankRescalingMode
+        RankRescalingMode,
+        ReachLevelChecks,
     ]),
     OptionGroup("Difficulty/QoL", [
         Character,
@@ -539,6 +547,7 @@ class TJEOptions(PerGameCommonOptions):
     key_gap: ElevatorKeyGap
     max_rank_check: MaxRankCheck
     rank_rescaling: RankRescalingMode
+    reach_level_checks: ReachLevelChecks
     upwarp_present: UpwarpPresent
     character: Character
     game_overs: GameOvers

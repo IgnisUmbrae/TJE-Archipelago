@@ -11,6 +11,7 @@ class TJELocationType(Enum):
     FLOOR_ITEM = auto()
     SHIP_PIECE = auto()
     RANK = auto()
+    REACH = auto()
 
 class TJELocation(Location):
     game: str = "ToeJam & Earl"
@@ -24,6 +25,7 @@ class TJELocationData(NamedTuple):
 FLOOR_ITEM_LOC_TEMPLATE = "Level {} - Item {}"
 SHIP_PIECE_LOC_TEMPLATE = "Level {} - Ship Piece"
 RANK_LOC_TEMPLATE = "Promoted to {}"
+REACH_LOC_TEMPLATE = "Reach Level {}"
 
 FLOOR_ITEM_LOCATIONS : list[list[TJELocationData]] = [[]]
 
@@ -44,7 +46,13 @@ RANK_LOCATIONS: list[TJELocationData] = [
     for rank in RANK_NAMES[1:]
 ]
 
-MASTER_LOCATION_LIST = list(itertools.chain(*FLOOR_ITEM_LOCATIONS)) + SHIP_PIECE_LOCATIONS + RANK_LOCATIONS
+REACH_LOCATIONS: list[TJELocationData] = [
+    TJELocationData(REACH_LOC_TEMPLATE.format(level), TJELocationType.REACH, -1, None)
+    for level in range(2, 26)
+]
+
+MASTER_LOCATION_LIST = list(itertools.chain(*FLOOR_ITEM_LOCATIONS)) + SHIP_PIECE_LOCATIONS \
+                                                                    + RANK_LOCATIONS + REACH_LOCATIONS
 
 LOCATION_NAME_TO_ID : dict[str, int] = {
     loc.name: id
