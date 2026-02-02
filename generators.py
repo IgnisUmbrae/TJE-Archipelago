@@ -1,45 +1,55 @@
 import itertools
-import math
+from collections import defaultdict, Counter
+from math import ceil
 
-from .constants import MAP_REVEAL_DIALOGUE_TEMPLATE, MAP_REVEAL_DIALOGUE_TEMPLATE_DEGEN, VANILLA_RANK_THRESHOLDS
-
-#region Constants
-
-PRESENT_LIST = range(0, 0x1B)
-PRESENT_WEIGHTS = [4, 5, 3, 4, 3, 4, 4, 3, 4, 4, 4, 1, 5, 4, 4, 4, 3, 1, 2, 2, 2, 1, 2, 2, 2, 2, 5]
-BAD_PRESENT_INDICES = set([13, 16, 18, 23, 24])
-LV1_FORBIDDEN_PRESENT_INDICES = set([0, 2, 5, 16, 18, 26])
-assert(len(PRESENT_LIST) == len(PRESENT_WEIGHTS))
-
-FOOD_LIST = range(0x40, 0x50)
-FOOD_WEIGHTS = [1]*len(FOOD_LIST)
-BAD_FOOD_INDICES = set([11, 12, 13, 14, 15])
-A_BUCK = 0x50
-
-SHIP_PIECE_RANGES = (
-    [(2, 3), (4, 5), (6, 7), (8, 9), (10, 11)], # max level 12
-    [(2, 3), (4, 5), (6, 8), (9, 10), (11, 12)],
-    [(2, 3), (4, 5), (6, 8), (9, 10), (11, 13)],
-    [(2, 4), (5, 6), (7, 8), (9, 11), (12, 14)],
-    [(2, 4), (5, 7), (8, 9), (10, 12), (13, 15)],
-    [(2, 4), (5, 7), (8, 10), (11, 13), (14, 16)],
-    [(2, 4), (5, 8), (9, 11), (12, 14), (15, 17)],
-    [(2, 4), (5, 8), (9, 12), (13, 15), (16, 18)],
-    [(2, 4), (5, 8), (9, 13), (14, 16), (17, 19)],
-    [(2, 5), (6, 9), (10, 13), (14, 16), (17, 20)],
-    [(2, 5), (6, 9), (10, 13), (14, 17), (18, 21)],
-    [(2, 5), (6, 10), (11, 14), (15, 18), (19, 22)],
-    [(2, 5), (6, 10), (11, 14), (15, 19), (20, 23)],
-    [(2, 5), (6, 10), (11, 15), (16, 20), (21, 24)] # max level 25
-)
-
-#endregion
+from .constants import MAP_REVEAL_DIALOGUE_TEMPLATE, MAP_REVEAL_DIALOGUE_TEMPLATE_DEGEN, VANILLA_RANK_THRESHOLDS, \
+                       EARTHLING_LIST, EARTHLING_TOTAL, EARTHLING_UNIQUE, EARTHLING_WEIGHTS, EARTHLING_MAX_PER_LEVEL, \
+                       EARTHLING_WEIGHTS_PER_LEVEL, SHIP_PIECE_RANGES, PRESENT_LIST, PRESENT_WEIGHTS, A_BUCK, \
+                       BAD_PRESENT_INDICES, LV1_FORBIDDEN_PRESENT_INDICES, FOOD_LIST, FOOD_WEIGHTS, BAD_FOOD_INDICES
 
 class TJEGenerator():
     def __init__(self, world):
         self.random = world.random
         self.global_banned_food = set()
         self.global_banned_presents = set()
+
+        self.per_level_earthling_counts = Counter()
+        self.unique_earthling_levels = defaultdict(list)
+
+
+    def get_trimmed_level_weights(self, earthling):
+        candidates = EARTHLING_WEIGHTS_PER_LEVEL[EARTHLING_LIST.index(earthling)]
+        return [candidates[i]
+                if self.per_level_earthling_counts[i] < EARTHLING_MAX_PER_LEVEL[i] \
+                and i not in self.unique_earthling_levels[earthling]
+                else 0
+                for i in range(2,26)]
+
+    def generate_full_random_earthlings(self):
+        earthlings = []
+        for _ in range(2,26):
+            earthlings.append(self.random.choices(EARTHLING_LIST, (1,)*21, k=20))
+        return earthlings
+
+    def generate_nice_random_earthlings(self):
+        import random
+        self.random = random
+        output = defaultdict(list)
+        # Start with a base of a handful of friendly Earthlings
+        choices = list(EARTHLING_UNIQUE*2)
+        choices += self.random.choices(EARTHLING_LIST, EARTHLING_WEIGHTS, k=EARTHLING_TOTAL-8)
+        # Assign level-limited Earthlings first
+        choices = sorted(choices, key=lambda c: c in EARTHLING_UNIQUE, reverse=True)
+        # Assign Earthlings levels in order from rarest to most common to maximize chances of sensible placement
+        #choices = sorted(choices, key=lambda c: EARTHLING_WEIGHTS[EARTHLING_LIST.index(c)])
+        for c in choices:
+            target = self.random.choices(range(2,26), self.get_trimmed_level_weights(c), k=1)[0]
+            output[target].append(c)
+            self.per_level_earthling_counts[target] += 1
+            if c in EARTHLING_UNIQUE:
+                self.unique_earthling_levels[c].append(target)
+        output = [sorted(output[lv]) for lv in sorted(output.keys())]
+        return output
 
     def forbid_item(self, item_code: int):
         if item_code in PRESENT_LIST:
@@ -252,7 +262,7 @@ def scaled_rank_thresholds_alt(last_level: int = 25, min_items: int = 12, max_it
     # Map factor onto line starting at (min_factor, 1) and ending at (1, 0); its image under this map represents
     # the % of the the rescaled second differences total that will be partitioned into 10s
     percentage_of_tens = (factor-1)/(min_factor-1)
-    number_of_tens = int(math.ceil(percentage_of_tens*6))
+    number_of_tens = ceil(percentage_of_tens*6)
 
     # Partition out required number of tens (if this is not possible, then as many as possible)
     diffs2_total = rescale_to_nearest_10(120, factor) # base second differences are [20]*6 → 120 total

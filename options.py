@@ -49,6 +49,12 @@ class GameVersionOption(IntEnum):
     REV00 = 0
     REV02 = 2
 
+class EarthlingRandomizationOption(IntEnum):
+    BASE = 0
+    BASE_SHUFFLE = 1
+    NICE_RANDOM = 2
+    EARTHLINGSANITY = 3
+
 class LastLevel(Range):
     """
     The last level of the game. Set lower for shorter runs.
@@ -93,7 +99,7 @@ class SoundRando(Choice):
     All: Also randomizes the four sounds used in the music (clap, kick, record scratch and snare).
     """
 
-    display_name = "Sound Randomization Level"
+    display_name = "Sound Randomization"
 
     option_none = SoundRandoOption.NONE.value
     option_most = SoundRandoOption.MOST.value
@@ -485,6 +491,29 @@ class GameVersion(Choice):
     default = option_rev02
 
 
+class EarthlingRando(Choice):
+    """
+    Randomizes Earthling placement.
+
+    - Base: as in the vanilla game
+    - Base shuffle: shuffles the vanilla 25 sets of Earthlings
+    - Nice random: controlled random Earthlings (see below)
+    - Full random: completely random Earthlings, no restrictions
+    
+    * "Nice random" means the Earthling numbers and distribution across levels are based on the vanilla game, but
+      much more variation is possible. Some restrictions still apply, e.g. there is a maximum of 1 of each friendly
+      Earthling on each level.
+    """
+
+    display_name = "Earthling Randomization"
+
+    option_base = EarthlingRandomizationOption.BASE.value
+    option_base_shuffle = EarthlingRandomizationOption.BASE_SHUFFLE.value
+    option_nice_random = EarthlingRandomizationOption.NICE_RANDOM.value
+    option_earthlingsanity = EarthlingRandomizationOption.EARTHLINGSANITY.value
+
+    default = option_base
+
 tje_option_groups = [
     OptionGroup("Basic Items/Locations", [
         StartingPresents,
@@ -514,6 +543,7 @@ tje_option_groups = [
     OptionGroup("Difficulty/QoL", [
         Character,
         GameOvers,
+        EarthlingRando,
         SleepWhenIdle,
         WalkSpeedBoost,
         ExtendedPresentTimers,
@@ -559,3 +589,4 @@ class TJEOptions(PerGameCommonOptions):
     expanded_inventory: ExpandedInventory
     sound_rando: SoundRando
     game_version: GameVersion
+    earthling_rando: EarthlingRando

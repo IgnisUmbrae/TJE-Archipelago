@@ -8,12 +8,12 @@ import settings
 from worlds.AutoWorld import World, WebWorld
 
 from .client import TJEClient # required to register with BizHawkClient
-from .constants import VANILLA_RANK_THRESHOLDS, REV00_MD5, REV02_MD5
+from .constants import VANILLA_RANK_THRESHOLDS, BASE_EARTHLINGS, REV00_MD5, REV02_MD5
 from .generators import TJEGenerator, get_key_levels, item_totals, scaled_rank_thresholds
 from .items import ITEM_ID_TO_CODE, TJEItem, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, TJEItemType, \
                    create_items, create_starting_presents
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, LOCATION_GROUPS, LOCATION_NAME_TO_ID
-from .options import RankRescalingOption, TJEOptions
+from .options import RankRescalingOption, EarthlingRandomizationOption, TJEOptions
 from .regions import create_regions
 from .rom import TJEProcedurePatch, write_tokens
 
@@ -62,7 +62,8 @@ class TJEWorld(World):
                     state.prog_items[item.player]["points"] = self.rank_thresholds[current_rank+1]
                     state.prog_items[item.player]["ranks"] += 1
                 else:
-                    state.prog_items[item.player]["points"] = max(self.rank_thresholds[8], state.prog_items[item.player]["points"])
+                    state.prog_items[item.player]["points"] = max(self.rank_thresholds[8],
+                                                                  state.prog_items[item.player]["points"])
                     state.prog_items[item.player]["ranks"] = 8
             else:
                 # Check whether this pushes us over the threshold
@@ -79,6 +80,19 @@ class TJEWorld(World):
                            if self.options.elevator_keys else [])
         self.ship_item_levels = self.generator.generate_ship_piece_levels(self.options.last_level.value)
         self.map_reveal_potencies = self.generator.generate_map_reveal_potencies(self.options.last_level.value)
+
+        match self.options.earthling_rando:
+            case EarthlingRandomizationOption.BASE:
+                self.earthling_list = BASE_EARTHLINGS
+            case EarthlingRandomizationOption.BASE_SHUFFLE:
+                self.earthling_list = list(BASE_EARTHLINGS)
+                self.random.shuffle(self.earthling_list)
+            case EarthlingRandomizationOption.NICE_RANDOM:
+                self.earthling_list = self.generator.generate_nice_random_earthlings()
+            case EarthlingRandomizationOption.EARTHLINGSANITY:
+                self.earthling_list = self.generator.generate_full_random_earthlings()
+
+        self.earthling_list = [[0xFF]*(20 - len(l)) + l for l in self.earthling_list]
 
         match self.options.rank_rescaling:
             case RankRescalingOption.NONE:
