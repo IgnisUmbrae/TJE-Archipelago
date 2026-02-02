@@ -1,5 +1,6 @@
 import copy
 import struct
+from itertools import chain
 from math import sqrt, ceil
 
 from settings import get_settings
@@ -11,8 +12,6 @@ from .constants import EMPTY_PRESENT, INITIAL_PRESENT_ADDRS, BASE_LEVEL_TYPES, I
 from .generators import map_reveal_text
 from .items import ITEM_ID_TO_CODE
 from .options import CharacterOption, SoundRandoOption, StartingPresentOption, GameOverOption, MapRandomizationOption
-
-
 
 class TJEProcedurePatch(APProcedurePatch, APTokenMixin):
     game = "ToeJam and Earl"
@@ -33,7 +32,7 @@ class TJEProcedurePatch(APProcedurePatch, APTokenMixin):
         return base_rom_bytes
 
 def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
-    patch.write_token(APTokenTypes.WRITE, 0x001f0001, struct.pack(">H", world.options.death_link.value))
+    patch.write_token(APTokenTypes.WRITE, 0x001f0001, struct.pack(">B", world.options.death_link.value))
 
     patch.write_token(APTokenTypes.WRITE, 0x00097704, struct.pack(">26H", *world.seeds))
 
@@ -236,6 +235,11 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
     if world.options.max_items != world.options.max_items.default:
         patch.write_token(APTokenTypes.WRITE, 0x00014c2c+3, struct.pack(">B", world.options.max_items.value))
         patch.write_token(APTokenTypes.WRITE, 0x00014c32+1, struct.pack(">B", world.options.max_items.value))
+
+    # Earthling randomization
+
+    if world.options.earthling_rando != world.options.earthling_rando.default:
+        patch.write_token(APTokenTypes.WRITE, 0x0002646e, struct.pack(f">480B", *chain(*world.earthling_list)))
 
     # Fewer levels
 
