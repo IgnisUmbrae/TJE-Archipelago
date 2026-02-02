@@ -147,6 +147,7 @@ class TJEClient(BizHawkClient):
             "cmd": "Get",
             "keys": ["awarded_count"] + list(SAVE_DATA_POINTS_ALL)
         }])
+        ctx.save_retrieved = True
 
     async def process_tje_cmd(self, ctx: "BizHawkClientContext", cmd: str, args: dict) -> None:
         match cmd:
@@ -231,11 +232,10 @@ class TJEClient(BizHawkClient):
         await self.game_controller.level_monitor.tick()
         if await self.game_controller.check_if_on_menu(ctx):
             self.game_controller.current_level = -1
-            # retrieve save data after local reset; if not connected, on_package will request the same on connect
-            if not ctx.save_retrieved:
-                await self.retrieve_server_save(ctx)
-                ctx.save_retrieved = True
-                self.game_controller.awaiting_load = True
+            # # retrieve save data after local reset; if not connected, on_package will request the same on connect
+            # if not ctx.save_retrieved:
+            #     await self.retrieve_server_save(ctx)
+            #     self.game_controller.awaiting_load = True
         else:
             await self.game_controller.tick(ctx)
             if not ctx.finished_game:

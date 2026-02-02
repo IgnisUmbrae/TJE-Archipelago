@@ -159,11 +159,10 @@ class SaveManager():
                 await bizhawk.unlock(ctx.bizhawk_ctx)
                 logger.debug("Loading complete")
             self.game_controller.awaiting_load = False
-            self.ctx.save_retrieved = False
-        else:
-            logger.debug("Possible reset from in-game detected")
-            self.game_controller.awaiting_load = True
-            self.ctx.save_retrieved = False
+        # else:
+        #     logger.debug("Possible reset from in-game detected")
+        #     self.game_controller.awaiting_load = True
+        #     self.ctx.save_retrieved = False
 
 class AddressMonitor():
     @staticmethod
