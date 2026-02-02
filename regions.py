@@ -96,10 +96,9 @@ def handle_final_ship_piece(multiworld, options: TJEOptions, player):
 def handle_rank_options(multiworld, world, player,  options: TJEOptions, level_regions):
     if options.max_rank_check > 0:
         menu_region = multiworld.get_region("Menu", player)
-        #add_rank_events(menu_region, world, player, options)
         add_rank_checks(menu_region, world, player, options)
         for i in range(1, options.last_level.value+1):
-            add_reach_level_event(level_regions[i], player, i)
+            # add_reach_level_event(level_regions[i], player, i)
             add_exploration_points(level_regions[i], player, i)
 
 def handle_reach_options(player, world, options: TJEOptions, level_regions: list[Region]):
@@ -160,12 +159,6 @@ def create_event(player: int, event: str, point_value: int = 0, progression = Tr
                     None, player)
     item.point_value = point_value
     return item
-
-def add_reach_level_event(level: Region, player: int, number: int):
-    reach_loc = TJELocation(player, f"Reached Level {number}", None, level)
-    reach_loc.place_locked_item(create_event(player, f"Reached Level {number}"))
-    reach_loc.show_in_spoiler = False
-    level.locations.append(reach_loc)
 
 # Points for exploring the map (values are tentative)
 def add_exploration_points(level: Region, player: int, level_number: int):
