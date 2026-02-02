@@ -102,7 +102,7 @@ class TJEClient(BizHawkClient):
         ctx.sent_death_time = None
         ctx.save_retrieved = False
 
-        death_link = bool(await self.peek_rom(ctx, 0x001f0001, 1))
+        death_link = bool(int.from_bytes(await self.peek_rom(ctx, 0x001f0001, 1)))
         await ctx.update_death_link(death_link)
 
         success = await self.setup_game_controller(ctx, death_link)
@@ -172,7 +172,7 @@ class TJEClient(BizHawkClient):
                         "cmd": "Sync"
                     }])
             case "ReceivedItems":
-                if self.queue.awarded_count is not None:
+                if ctx.save_retrieved and self.queue.awarded_count is not None:
                     await self.process_network_items(ctx, args)
 
     async def goal_in(self, ctx: "BizHawkClientContext") -> None:
