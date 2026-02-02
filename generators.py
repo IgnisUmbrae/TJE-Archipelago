@@ -199,6 +199,9 @@ def expected_map_points_on_level(level: int) -> int:
         case 5: return 45
         case _: return 50
 
+def expected_map_points(last_level: int) -> int:
+    return sum(expected_map_points_on_level(i) for i in range(last_level+1))
+
 # Half the items on a level are presents on average and they're worth 2 points each
 def expected_present_points_on_level(level: int, min_items: int = 12, max_items: int = 28) -> int:
     return num_items_on_level(level, min_items, max_items)
