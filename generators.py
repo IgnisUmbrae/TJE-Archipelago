@@ -6,6 +6,7 @@ from .constants import MAP_REVEAL_DIALOGUE_TEMPLATE, MAP_REVEAL_DIALOGUE_TEMPLAT
                        EARTHLING_LIST, EARTHLING_TOTAL, EARTHLING_UNIQUE, EARTHLING_WEIGHTS, EARTHLING_MAX_PER_LEVEL, \
                        EARTHLING_WEIGHTS_PER_LEVEL, SHIP_PIECE_RANGES, PRESENT_LIST, PRESENT_WEIGHTS, A_BUCK, \
                        BAD_PRESENT_INDICES, LV1_FORBIDDEN_PRESENT_INDICES, FOOD_LIST, FOOD_WEIGHTS, BAD_FOOD_INDICES
+from .options import TJEOptions
 
 class TJEGenerator():
     def __init__(self, world):
@@ -108,20 +109,34 @@ class TJEGenerator():
             return self.get_random_food(include_bad)
         return A_BUCK
 
-    # def generate_padding_items(self, number : int) -> list[int]:
-    #     return self.random.choices(PADDING_LIST, weights=PADDING_WEIGHTS, k=number)
-
-    def generate_items_for_level(self, level: int, singleplayer: bool = True) -> list[int]:
-        if level <= 0:
-            return []
-        num_items = num_items_on_level(level, singleplayer=singleplayer)
-        return [self.get_random_item(level_one=(level == 1)) for _ in range(num_items)]
-
-    def generate_all_level_items(self, singleplayer: bool = True) -> list[list[int]]:
-        return [self.generate_items_for_level(level, singleplayer=singleplayer) for level in range(0,26)]
-
     def generate_item_blob(self, number: int, include_bad: bool = True) -> list[int]:
         return [self.get_random_item(level_one=False, include_bad=include_bad) for _ in range(number)]
+
+    def add_extra_promotions(self, item_pool: list[int], rank_thresholds: list[int], options: TJEOptions,
+                             paranoia_level: float = 1.5) -> None:
+        def item_value(item_code: int, prom_val: int) -> int:
+            if item_code == 0x0B:
+                return prom_val
+            if item_code in PRESENT_LIST:
+                return 2
+            return 0
+
+        if options.max_rank_check.value > 0:
+            avg_promotion_value = sum(rank_thresholds[n+1] - rank_thresholds[n]
+                                    for n in range(options.max_rank_check.value))//options.max_rank_check.value
+            est_total_points = sum([item_value(i, avg_promotion_value) for i in item_pool])
+            num_proms = item_pool.count(0x0B)
+            extra_proms = ceil((paranoia_level*rank_thresholds[options.max_rank_check.value] - 
+                                (expected_map_points(options.last_level.value)+est_total_points))/avg_promotion_value) \
+                                - num_proms
+            if extra_proms > 0:
+                for n, item in enumerate(item_pool):
+                    if item != 0x0B:
+                        item_pool[n] = 0x0B
+                        extra_proms -= 1
+                    if extra_proms == 0:
+                        break
+
 
     def generate_initial_inventory(self, include_bad=False) -> list[int]:
         present_list, present_distro = self.get_present_distribution(level_one=False, include_bad=include_bad)

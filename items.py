@@ -1,12 +1,13 @@
 from typing import NamedTuple
 from enum import IntEnum
+from math import ceil
 
 from BaseClasses import Item, ItemClassification, MultiWorld
 
 from .constants import BASE_TJE_ID, TRAP_NAMES
-from .generators import item_totals, map_reveal_ranges, num_items_on_level
+from .generators import item_totals, map_reveal_ranges, num_items_on_level, expected_map_points, PRESENT_LIST
 from .locations import FLOOR_ITEM_LOC_TEMPLATE
-from .options import TJEOptions, GameOverOption, StartingPresentOption
+from .options import TJEOptions, GameOverOption, StartingPresentOption, RankRescalingOption
 
 # TO DO: lots of redundancy here; needs a big clean-up
 
@@ -16,7 +17,6 @@ from .options import TJEOptions, GameOverOption, StartingPresentOption
 
 class TJEItem(Item):
     game: str = "ToeJam & Earl"
-    type: str
     point_value: int = 0
 
 # "Ethereal" is used for extra items such as elevator keys that do not exist in the base game
@@ -151,12 +151,12 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
     differential = create_rank_items(world, options, item_list) \
                    + create_elevator_keys(world, item_list) \
                    + create_map_reveals(multiworld, world, options, player, item_list) \
-                   + create_instatraps(world, options, total_locations, item_list) \
+                   + create_instatraps(world, options, total_locations, item_list)
 
     if options.reach_level_checks:
         differential -= options.last_level-1
 
-    create_main_items(world, item_list, total_locations, differential)
+    create_main_items(world, item_list, total_locations, differential, options)
 
     multiworld.itempool.extend(item_list)
 
@@ -202,7 +202,7 @@ def create_elevator_keys(world, item_list) -> int:
 def create_rank_items(world, options: TJEOptions, item_list) -> int:
     differential = 0
     if options.max_rank_check > 0:
-        differential -= 8
+        differential -= options.max_rank_check
     return differential
 
 def create_map_reveals(multiworld, world, options: TJEOptions, player, item_list) -> int:
@@ -221,9 +221,10 @@ def create_map_reveals(multiworld, world, options: TJEOptions, player, item_list
         return 5
     return 0
 
-def create_main_items(world, item_list, total_locations, differential) -> None:
+def create_main_items(world, item_list, total_locations, differential, options: TJEOptions) -> None:
 
     item_pool_raw = world.generator.generate_item_blob(total_locations - differential)
+    world.generator.add_extra_promotions(item_pool_raw, world.rank_thresholds, options)
 
     for item in item_pool_raw:
         item_id = ITEM_CODE_TO_ID[item]
