@@ -261,9 +261,7 @@ class ElevatorKeyGap(NamedRange):
 
 class MaxRankCheck(NamedRange):
     """
-    Enabling this (value > 0) adds eight additional checks, one for each rank.
-    The number means the highest rank that *can* have a progression item.
-    Higher ranks will still be checks, but are excluded from having progression items.
+    Adds one additional check for each rank up to the value chosen.
 
     If this setting is enabled, two extra Mole safeguards will be automatically patched in:
     - Moles will not steal Promotion presents.
@@ -275,7 +273,7 @@ class MaxRankCheck(NamedRange):
     Set to 0 to disable.
     """
 
-    display_name = "Highest Big Rank Check"
+    display_name = "Maximum Rank Check"
 
     range_start = 0
     range_end = 8
@@ -302,7 +300,6 @@ class RankRescalingMode(Choice):
     - None: No rescaling. Rank thresholds are vanilla.
             ⚠ Likely to result in fill errors if last_level is low and max_rank_check is high.
     - Max check: Rescales point thresholds so that you reach your chosen max_rank_check towards the end of the game.
-                 Usually fine, but can result in fill warnings when higher ranks are impossible to reach.
     - Funk Lord (default): Rescales point thresholds so that you reach Funk Lord towards the end of the game.
 
     """
