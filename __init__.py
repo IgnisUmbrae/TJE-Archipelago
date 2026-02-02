@@ -2,6 +2,7 @@ import logging
 import os
 import pkgutil
 from typing import Optional, Any, ClassVar
+from itertools import takewhile
 
 from BaseClasses import CollectionState, ItemClassification
 import settings
@@ -61,15 +62,11 @@ class TJEWorld(World):
                 if current_rank < 8:
                     state.prog_items[item.player]["points"] = self.rank_thresholds[current_rank+1]
                     state.prog_items[item.player]["ranks"] += 1
-                else:
-                    state.prog_items[item.player]["points"] = max(self.rank_thresholds[8],
-                                                                  state.prog_items[item.player]["points"])
-                    state.prog_items[item.player]["ranks"] = 8
             else:
                 # Check whether this pushes us over the threshold
                 state.prog_items[item.player]["points"] += item.point_value
-                rank = max(i for i in range(len(self.rank_thresholds))
-                        if self.rank_thresholds[i] <= state.prog_items[item.player]["points"])
+                *_, rank = takewhile(lambda i: self.rank_thresholds[i] <= state.prog_items[item.player]["points"],
+                                     range(len(self.rank_thresholds)))
                 state.prog_items[item.player]["ranks"] = rank
         return change
 
