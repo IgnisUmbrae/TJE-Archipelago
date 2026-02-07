@@ -102,6 +102,10 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
         patch.write_token(APTokenTypes.WRITE, 0x000abc34, b"\x15\x10\x22\x17\x01\x12\x10") # Change name to Up-Warp
         patch.write_token(APTokenTypes.WRITE, 0x0000a750, b"\x75\x70\x2D\x77\x61\x72\x70\x20") # And in mailbox
 
+    if world.options.death_link:
+        patch.write_token(APTokenTypes.WRITE, 0x0000bcc6, b"\x4E\xB9\x00\x10\xA4\x00\x4E\x71\x4E\x71")
+        patch.write_token(APTokenTypes.WRITE, 0x0010a400, b"\x30\x03\x48\xC0\x20\x7C\x00\xFF\xA2\x48\x13\xFC\x00\x01"
+                                                          b"\x00\xFF\xF6\xA2\x4E\x75")
     if world.options.game_overs == GameOverOption.DISABLE:
         patch.write_token(APTokenTypes.WRITE, 0x0000bcd0, b"\x4E\x71\x4E\x71") # Skip life subtraction
     elif world.options.game_overs == GameOverOption.DROP_DOWN:

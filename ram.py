@@ -209,7 +209,7 @@ class AddressMonitor():
     def log_state(self, state=None):
         if state is None:
             state = self.enabled
-        logger.debug("%s monitoring %s", self.name, "enabled" if state else "disabled")
+        #logger.debug("%s monitoring %s", self.name, "enabled" if state else "disabled")
 
     def set_monitor_level(self, level: MonitorLevel):
         self.monitor_level = level
@@ -361,12 +361,12 @@ class TJEGameController():
         if death_link:
             self.other_monitors.append(
                 AddressMonitor(
-                    "Lives",
-                    "LIVES",
+                    "AP death flag",
+                    "AP_DEATH",
                     1,
                     level,
                     lambda: not self.is_awaiting_load(),
-                    self.handle_lives_change,
+                    self.handle_death_flag,
                     self,
                     ctx
                 ),
@@ -546,9 +546,10 @@ class TJEGameController():
         hp = int.from_bytes(await self.peek_ram(ctx, get_ram_addr("HEALTH", self.char), 1))
         return (sprite in DEAD_SPRITES and hp == 0)
 
-    async def handle_lives_change(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
+    async def handle_death_flag(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
                                   old_data: bytes, new_data: bytes):
-        if int.from_bytes(new_data) < int.from_bytes(old_data):
+        if int.from_bytes(new_data) == 1:
+            await self.poke_ram(ctx, get_ram_addr("AP_DEATH", self.char), b"\x00")
             await ctx.send_death()
             ctx.sent_death_time = ctx.last_death_link
 
