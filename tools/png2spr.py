@@ -126,7 +126,7 @@ def png_to_data(filepath: Path) -> None:
         out_data.append(palette_index)
 
     print("Saving binary data…")
-    out_path = (filepath.absolute().parents[2] / "data" / "sprites" / filepath.name).with_suffix(".bin")
+    out_path = (filepath.absolute().parents[2] / "data" / "sprites_bin" / filepath.name).with_suffix(".bin")
     with out_path.open("wb") as f:
         f.write(out_data)
     print("Done!")

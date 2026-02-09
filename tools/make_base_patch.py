@@ -5,8 +5,8 @@ import copy
 import bsdiff4
 import pyjson5
 
-SPRITE_PATH = Path("../data/sprites")
-CODE_PATH = Path("./asm/bin")
+SPRITE_PATH = Path("../data/sprites_bin")
+CODE_PATH = Path("../data/asm_bin")
 
 class BinType(IntEnum):
     SPRITE = auto()
@@ -28,14 +28,14 @@ def extract_patches(parsed_json5: str, type: BinType):
         for addr in patch.get("addresses")
     )
 
-with open("code_patches.json5", "r") as f:
+with open("./asm/code_patches.json5", "r") as f:
     code_patches = pyjson5.decode(f.read())
-with open("sprite_patches.json5", "r") as f:
+with open("./asm/sprite_patches.json5", "r") as f:
     sprite_patches = pyjson5.decode(f.read())
 
 static_rom_patches = extract_patches(code_patches, BinType.CODE) + extract_patches(sprite_patches, BinType.SPRITE)
 
-with open("TJEREV02-orig.bin", "rb") as f:
+with open("./rom_data/TJEREV02-orig.bin", "rb") as f:
     original_rom = bytearray(f.read())
     patched_rom = copy.copy(original_rom) + b"\x00"*len(original_rom)
 
