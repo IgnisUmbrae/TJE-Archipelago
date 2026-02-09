@@ -1,0 +1,337 @@
+{
+	patches: [
+		// Header-related
+		{
+			filename: "cart_expansion",
+			addresses: [
+				0x000001a5
+			]
+		},
+
+		// Initialization-related
+		{
+			filename: "init_all_jumps",
+			addresses: [
+				0x0001f9a6
+			]
+		},
+		{
+			filename: "init_ship_pieces",
+			addresses: [
+				0x0010a500
+			]
+		},
+		{
+			filename: "init_id_presents",
+			addresses: [
+				0x0010a900
+			]
+		},
+		{
+			filename: "init_extra",
+			addresses: [
+				0x0010b400
+			]
+		},
+		
+		// Cursor-related
+		{
+			filename: "mailbox_menu",
+			addresses: [
+				0x0010c100
+			]
+		},
+		{
+			filename: "mailbox_menu_jump",
+			addresses: [
+				0x000098f6
+			]
+		},
+		{
+			filename: "cursor_reset",
+			addresses: [
+				0x0010c200
+			]
+		},
+		{
+			filename: "cursor_reset_jump",
+			addresses: [
+				0x0000a2e4
+			]
+		},
+
+		// Present sprite–related
+		{
+			filename: "present_sprite_table",
+			addresses: [
+				0x00105000
+			]
+		},
+		{
+			filename: "present_sprite_table_extra",
+			addresses: [
+				0x00105070
+			]
+		},
+		{
+			filename: "present_sprite_headers_extra",
+			addresses: [
+				0x00105180
+			]
+		},
+		{
+			filename: "present_sprite_table_addr1",
+			addresses: [
+				0x0000a48c,
+				0x0000a668,
+				0x0001506e,
+				0x00022148
+			]
+		},
+		{
+			filename: "present_sprite_table_addr2",
+			addresses: [
+				0x0000d3ac
+			]
+		},
+
+		// Present wrapping–related
+		{
+			filename: "present_wrapping_table_addr1",
+			addresses: [
+				0x00009a7c,
+				0x00009de2,
+				0x00009df4,
+				0x0000a47c,
+				0x0000a518,
+				0x0000a658,
+				0x0000a6c6,
+				0x00015060,
+				0x0002213a
+			]
+		},
+		{
+			filename: "present_wrapping_table_addr2",
+			addresses: [
+				0x0001427c
+			]
+		},
+
+		// AP item–related
+		{
+			filename: "item_override",
+			addresses: [
+				0x0010b700
+			]
+		},
+		{
+			filename: "item_override_jump",
+			addresses: [
+				0x00014e04
+			]
+		},
+		{
+			filename: "pickup_item",
+			addresses: [
+				0x0010a000
+			]
+		},
+		{
+			filename: "pickup_item_jump",
+			addresses: [
+				0x00015352
+			]
+		},
+		{
+			filename: "elev_key_logic",
+			addresses: [
+				0x0010bd00
+			]
+		},
+		{
+			filename: "elev_key_logic_jump",
+			addresses: [
+				0x00013e96
+			]
+		},
+		{
+			filename: "key_pickup",
+			addresses: [
+				0x0010bf00
+			]
+		},
+		{
+			filename: "map_rev_pickup",
+			addresses: [
+				0x0010bf50
+			]
+		},
+
+		// Ship piece collection–related
+		{
+			filename: "ship_piece_display",
+			addresses: [
+				0x00020906
+			]
+		},
+		{
+			filename: "ship_piece_touch",
+			addresses: [
+				0x0010a700
+			]
+		},
+		{
+			filename: "ship_piece_touch_jump",
+			addresses: [
+				0x00020cec
+			]
+		},
+		{
+			filename: "ship_piece_touch_skip_text",
+			addresses: [
+				0x00020d00
+			]
+		},
+		{
+			filename: "ship_piece_strings",
+			addresses: [
+				0x000205e8
+			]
+		},
+
+		// Ship piece sprite–related
+		{
+			filename: "ship_piece_hint_spr_flags",
+			addresses: [
+				0x000e13fd,
+				0x000e1407,
+				0x000e1411
+			]
+		},
+		{
+			filename: "ship_piece_hint_spr_pointer1",
+			addresses: [
+				0x000e13fe
+			]
+		},
+		{
+			filename: "ship_piece_hint_spr_pointer2",
+			addresses: [
+				0x000e1408
+			]
+		},
+		{
+			filename: "ship_piece_hint_spr_pointer3",
+			addresses: [
+				0x000e1412
+			]
+		},
+		{
+			filename: "ship_piece_sign_plinth_spr_flags",
+			addresses: [
+				0x000e0e81,
+				0x000e0e8b,
+				0x000e116d,
+				0x000e1177
+			]
+		},
+		{
+			filename: "ship_piece_sign_plinth_spr_pointer1",
+			addresses: [
+				0x000e0e82
+			]
+		},
+		{
+			filename: "ship_piece_sign_plinth_spr_pointer2",
+			addresses: [
+				0x000e0e8c
+			]
+		},
+		{
+			filename: "ship_piece_sign_plinth_spr_pointer3",
+			addresses: [
+				0x000e116e
+			]
+		},
+		{
+			filename: "ship_piece_sign_plinth_spr_pointer4",
+			addresses: [
+				0x000e1178
+			]
+		},
+
+		// Main menu–related
+		{
+			filename: "what_menu_no_fixed_world",
+			addresses: [
+				0x000243b8
+			]
+		},
+		{
+			filename: "what_menu_ap_world_string",
+			addresses: [
+				0x00024350
+			]
+		},
+		{
+			filename: "what_menu_use_fixed_seeds",
+			addresses: [
+				0x0002432e
+			]
+		},
+
+		// Item awarding–related
+		{
+			filename: "auto_handler",
+			addresses: [
+				0x0010b100
+			]
+		},
+		{
+			filename: "auto_handler_jump",
+			addresses: [
+				0x00001536
+			]
+		},
+		{
+			filename: "pres_open_point_flag_check",
+			addresses: [
+				0x0010b500
+			]
+		},
+		{
+			filename: "pres_open_point_flag_check_jump",
+			addresses: [
+				0x00017302
+			]
+		},
+
+		// Dialogue-related
+		{
+			filename: "expanded_dialogue_table",
+			addresses: [
+				0x00105500
+			]
+		},
+		{
+			filename: "expanded_dialogue_table_addr",
+			addresses: [
+				0x0001e3c0
+			]
+		},
+		{
+			filename: "expanded_dialogue_table_strings",
+			addresses: [
+				0x00105a00
+			]
+		},
+
+		// Miscellaneous string–related
+		{
+			filename: "on_vacation_strings",
+			addresses: [
+				0x0000b732
+			]
+		},
+	]
+}
