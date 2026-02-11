@@ -26,6 +26,12 @@ class TJESettings(settings.Group):
         description = "ToeJam & Earl ROM file"
         md5s = [REV00_MD5, REV02_MD5]
 
+        def browse(self, filetypes = None, **kwargs):
+            if not filetypes:
+                return super().browse([("Mega Drive/Genesis ROM", ["*.sgd", "*.md", "*.smd", "*.bin"])], **kwargs)
+            else:
+                return super().browse(filetypes, **kwargs)
+
     rom_file: ROMFile = ROMFile(ROMFile.copy_to)
 
 class TJEWeb(WebWorld):
