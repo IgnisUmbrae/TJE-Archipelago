@@ -2,4 +2,4 @@
 
     include "common.inc"
 
-    movea.l AP_DIALOGUE_TABLE,A0
+    movea.l #AP_DIALOGUE_TABLE,A0
