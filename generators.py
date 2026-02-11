@@ -33,8 +33,6 @@ class TJEGenerator():
         return earthlings
 
     def generate_nice_random_earthlings(self):
-        import random
-        self.random = random
         output = defaultdict(list)
         # Start with a base of a handful of friendly Earthlings
         choices = list(EARTHLING_UNIQUE*2)
@@ -42,7 +40,6 @@ class TJEGenerator():
         # Assign level-limited Earthlings first
         choices = sorted(choices, key=lambda c: c in EARTHLING_UNIQUE, reverse=True)
         # Assign Earthlings levels in order from rarest to most common to maximize chances of sensible placement
-        #choices = sorted(choices, key=lambda c: EARTHLING_WEIGHTS[EARTHLING_LIST.index(c)])
         for c in choices:
             target = self.random.choices(range(2,26), self.get_trimmed_level_weights(c), k=1)[0]
             output[target].append(c)
