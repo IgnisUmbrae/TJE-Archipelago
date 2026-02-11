@@ -3,7 +3,6 @@
 ReturnPoint equ $00020cfc
 
     include "common.inc"
-
     ; check if player already has 9 ship pieces
     clr.w      D4
 Check9ShipPiecesLoop:
