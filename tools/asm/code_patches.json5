@@ -189,7 +189,7 @@
 		{
 			filename: "ship_piece_touch_skip_text",
 			addresses: [
-				0x00020d00
+				0x00020cfc
 			]
 		},
 		{
