@@ -1,6 +1,7 @@
 import itertools
+import copy
 from collections import defaultdict, Counter
-from math import ceil
+from math import ceil, sqrt
 
 from .constants import MAP_REVEAL_DIALOGUE_TEMPLATE, MAP_REVEAL_DIALOGUE_TEMPLATE_DEGEN, VANILLA_RANK_THRESHOLDS, \
                        EARTHLING_LIST, EARTHLING_TOTAL, EARTHLING_UNIQUE, EARTHLING_WEIGHTS, EARTHLING_MAX_PER_LEVEL, \
@@ -18,8 +19,8 @@ class TJEGenerator():
         self.unique_earthling_levels = defaultdict(list)
 
 
-    def get_trimmed_level_weights(self, earthling):
-        candidates = EARTHLING_WEIGHTS_PER_LEVEL[EARTHLING_LIST.index(earthling)]
+    def get_trimmed_level_weights(self, earthling, level_weights):
+        candidates = level_weights[EARTHLING_LIST.index(earthling)]
         return [candidates[i]
                 if self.per_level_earthling_counts[i] < EARTHLING_MAX_PER_LEVEL[i] \
                 and i not in self.unique_earthling_levels[earthling]
@@ -32,16 +33,20 @@ class TJEGenerator():
             earthlings.append(self.random.choices(EARTHLING_LIST, (1,)*21, k=20))
         return earthlings
 
-    def generate_nice_random_earthlings(self):
+    def generate_nice_random_earthlings(self, predictability: int = 1):
         output = defaultdict(list)
-        # Start with a base of a handful of friendly Earthlings
+        # Start with a base of 8 friendly Earthlings, generate others at random based on vanilla counts
         choices = list(EARTHLING_UNIQUE*2)
         choices += self.random.choices(EARTHLING_LIST, EARTHLING_WEIGHTS, k=EARTHLING_TOTAL-8)
         # Assign level-limited Earthlings first
         choices = sorted(choices, key=lambda c: c in EARTHLING_UNIQUE, reverse=True)
         # Assign Earthlings levels in order from rarest to most common to maximize chances of sensible placement
+        if predictability > 1:
+            local_weights = [[w**sqrt(predictability) for w in weights] for weights in EARTHLING_WEIGHTS_PER_LEVEL]
+        else:
+            local_weights = EARTHLING_WEIGHTS_PER_LEVEL
         for c in choices:
-            target = self.random.choices(range(2,26), self.get_trimmed_level_weights(c), k=1)[0]
+            target = self.random.choices(range(2,26), self.get_trimmed_level_weights(c, local_weights), k=1)[0]
             output[target].append(c)
             self.per_level_earthling_counts[target] += 1
             if c in EARTHLING_UNIQUE:
