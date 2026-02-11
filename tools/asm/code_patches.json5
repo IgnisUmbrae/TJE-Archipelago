@@ -155,7 +155,7 @@
 			]
 		},
 		{
-			filename: "key_pickup",
+			filename: "elev_key_pickup",
 			addresses: [
 				0x0010bf00
 			]
