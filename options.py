@@ -511,6 +511,21 @@ class EarthlingRando(Choice):
 
     default = option_base
 
+class EarthlingRandoNiceness(Range):
+    """
+    Only has an effect if earthling_rando is set to nice_random.
+
+    Tightens the distribution of Earthlings, making "normal" Earthling placements more likely.
+    Rare spawns will never be impossible, but will become vanishingly unlikely at higher values.
+    """
+
+    display_name = "Earthling Randomization Niceness"
+
+    range_start = 1
+    range_end = 10
+
+    default = 1
+
 tje_option_groups = [
     OptionGroup("Basic Items/Locations", [
         StartingPresents,
@@ -541,6 +556,7 @@ tje_option_groups = [
         Character,
         GameOvers,
         EarthlingRando,
+        EarthlingRandoNiceness,
         SleepWhenIdle,
         WalkSpeedBoost,
         ExtendedPresentTimers,
@@ -587,3 +603,4 @@ class TJEOptions(PerGameCommonOptions):
     sound_rando: SoundRando
     game_version: GameVersion
     earthling_rando: EarthlingRando
+    earthling_rando_niceness: EarthlingRandoNiceness

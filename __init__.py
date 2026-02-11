@@ -91,7 +91,7 @@ class TJEWorld(World):
                 self.earthling_list = list(BASE_EARTHLINGS)
                 self.random.shuffle(self.earthling_list)
             case EarthlingRandomizationOption.NICE_RANDOM:
-                self.earthling_list = self.generator.generate_nice_random_earthlings()
+                self.earthling_list = self.generator.generate_nice_random_earthlings(self.options.earthling_rando_niceness.value)
             case EarthlingRandomizationOption.EARTHLINGSANITY:
                 self.earthling_list = self.generator.generate_full_random_earthlings()
 
