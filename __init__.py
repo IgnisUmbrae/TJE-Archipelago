@@ -11,8 +11,8 @@ from worlds.AutoWorld import World, WebWorld
 from .client import TJEClient # required to register with BizHawkClient
 from .constants import VANILLA_RANK_THRESHOLDS, BASE_EARTHLINGS, REV00_MD5, REV02_MD5
 from .generators import TJEGenerator, get_key_levels, item_totals, scaled_rank_thresholds
-from .items import ITEM_ID_TO_CODE, TJEItem, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, TJEItemType, \
-                   create_items, create_starting_presents
+from .items import TJEItem, ITEM_GROUPS, ITEM_ID_TO_CODE, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, \
+                   TJEItemType, create_items, create_starting_presents
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, LOCATION_GROUPS, LOCATION_NAME_TO_ID
 from .options import RankRescalingOption, EarthlingRandomizationOption, TJEOptions
 from .regions import create_regions
@@ -49,14 +49,7 @@ class TJEWorld(World):
     item_name_to_id = ITEM_NAME_TO_ID
     location_name_to_id = LOCATION_NAME_TO_ID
 
-    item_name_groups = {
-        "Ship Pieces" : {
-                        "Rocketship Windshield", "Left Megawatt Speaker", "Super Funkomatic Amplamator",
-                        "Amplamator Connector Fin", "Forward Stabilizing Unit", "Rear Leg",
-                        "Awesome Snowboard", "Righteous Rapmaster Capsule", "Right Megawatt Speaker",
-                        "Hyperfunk Thruster"
-                        }
-    }
+    item_name_groups = ITEM_GROUPS
 
     location_name_groups = LOCATION_GROUPS
 
