@@ -5,9 +5,9 @@ from math import ceil
 from BaseClasses import Item, ItemClassification, MultiWorld
 
 from .constants import BASE_TJE_ID, TRAP_NAMES
-from .generators import item_totals, map_reveal_ranges, num_items_on_level, expected_map_points, PRESENT_LIST
+from .generators import item_totals, map_reveal_ranges, num_items_on_level
 from .locations import FLOOR_ITEM_LOC_TEMPLATE
-from .options import TJEOptions, GameOverOption, StartingPresentOption, RankRescalingOption
+from .options import TJEOptions, GameOverOption, StartingPresentOption
 
 # TO DO: lots of redundancy here; needs a big clean-up
 
