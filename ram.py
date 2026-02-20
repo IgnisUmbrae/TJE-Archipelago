@@ -587,8 +587,6 @@ class TJEGameController():
         level = int.from_bytes(new_data)
         if level > 1:
             await self.client.trigger_location(ctx, BIG_ITEM_LOC_TEMPLATE.format(level))
-            if level == 25:
-                await self.client.goal_in(ctx)
 
     async def handle_rank_change(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
                                  old_data: bytes, new_data: bytes):
