@@ -242,5 +242,3 @@ class TJEClient(BizHawkClient):
                 await self.handle_queue(ctx)
                 await self.handle_deathlink(ctx)
                 await self.save_manager.tick()
-                if self.game_controller.current_level == 26:
-                    await self.goal_in(ctx)
