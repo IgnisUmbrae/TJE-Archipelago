@@ -14,7 +14,7 @@ from .constants import DEAD_SPRITES, EMPTY_ITEM, COLLECTED_SHIP_ITEM, EMPTY_PRES
 from .items import ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, \
                    PRESENT_IDS, SHIP_PIECE_IDS,INSTATRAP_IDS, BAD_PRESENT_IDS
 from .hint import generate_hints_for_current_level
-from .locations import FLOOR_ITEM_LOC_TEMPLATE, RANK_LOC_TEMPLATE, SHIP_PIECE_LOC_TEMPLATE, REACH_LOC_TEMPLATE
+from .locations import FLOOR_ITEM_LOC_TEMPLATE, RANK_LOC_TEMPLATE, BIG_ITEM_LOC_TEMPLATE, REACH_LOC_TEMPLATE
 
 if TYPE_CHECKING:
     from worlds._bizhawk.context import BizHawkClientContext
@@ -591,7 +591,7 @@ class TJEGameController():
         triggered_levels = [old_data[i] for i in range(10) if new_data[i] != old_data[i] and old_data[i] != 0]
         for level in triggered_levels:
             logger.debug("Triggering ship piece on level %i", level)
-            await self.client.trigger_location(ctx, SHIP_PIECE_LOC_TEMPLATE.format(level))
+            await self.client.trigger_location(ctx, BIG_ITEM_LOC_TEMPLATE.format(level))
 
     async def handle_rank_change(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
                                  old_data: bytes, new_data: bytes):
