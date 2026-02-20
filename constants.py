@@ -349,6 +349,7 @@ GLOBAL_RAM_ADDRS: dict[int] = {
     "AP_INIT_COMPLETE": 0xF6A0,
     "AP_LEVEL_ITEMS_SET": 0xF6A1,
     "AP_DEATH": 0xF6A2,
+    "AP_BIG_ITEM_LV": 0xF6B0,
 }
 
 def get_slot_addr(name: str, slot: int, player: int = 0) -> int | None:
