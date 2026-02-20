@@ -7,7 +7,7 @@ from BaseClasses import Item, ItemClassification, MultiWorld
 from .constants import BASE_TJE_ID, TRAP_NAMES
 from .generators import item_totals, map_reveal_ranges, num_items_on_level
 from .locations import FLOOR_ITEM_LOC_TEMPLATE
-from .options import TJEOptions, GameOverOption, StartingPresentOption
+from .options import TJEOptions, GameOverOption, StartingPresentOption, LocalShipPiecesOption
 
 # TO DO: lots of redundancy here; needs a big clean-up
 
@@ -134,7 +134,6 @@ INSTATRAP_IDS = [ITEM_NAME_TO_ID[item.name] for item in INSTATRAP_ITEMS]
 BAD_PRESENT_IDS = [ITEM_NAME_TO_ID[item.name] for item in BASE_ITEM_LIST
                     if item.type == TJEItemType.PRESENT and item.classification == ItemClassification.trap]
 
-
 ITEM_GROUPS = {
     "Ship Pieces" : { item.name for item in BASE_ITEM_LIST if item.type == TJEItemType.SHIP_PIECE }
 }
@@ -176,15 +175,13 @@ def handle_gameover_options(world, options) -> None:
         world.generator.forbid_item(ITEM_NAME_TO_CODE["Extra Life"])
 
 def create_ship_pieces(multiworld, world, options: TJEOptions, player, item_list) -> None:
-    ship_pieces_total = 10
-
     multiworld.get_location(f"Level {options.last_level.value} - Big Item", player).place_locked_item(
         world.create_item("Ship Piece: Hyperfunk Thruster", ItemClassification.progression)
     )
-    ship_pieces_total -= 1
 
-    for item in MASTER_ITEM_LIST[:ship_pieces_total]:
-        item_list.append(world.create_item(item.name, item.classification))
+    if options.local_ship_pieces.value != LocalShipPiecesOption.VANILLA:
+        item_list.extend([world.create_item(item.name, item.classification) 
+                            for item in MASTER_ITEM_LIST[:9]]) # item list begins with ship pieces
 
 def create_instatraps(world, options, total_locations, item_list) -> int:
     instatrap_total = 0
