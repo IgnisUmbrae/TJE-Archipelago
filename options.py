@@ -55,11 +55,17 @@ class EarthlingRandomizationOption(IntEnum):
     NICE_RANDOM = 2
     EARTHLINGSANITY = 3
 
+class LocalShipPiecesOption(IntEnum):
+    OFF = 0
+    NONE = 1
+    FULL = 2
+    VANILLA = 3
+
 class LastLevel(Range):
     """
     The last level of the game. Set lower for shorter runs.
     Defaults to 25 (the maximum), as in the base game.
-    Cannot be less than 11 as the game mandates ten levels with ship piece items.
+    Cannot be less than 11 as the game mandates ten levels with ship items.
     Anything whose behaviour is relative to the last or second-last level of the game (e.g. restrictions on the use
     of Up-Warps) will change in lockstep with this option.
     """
@@ -526,6 +532,27 @@ class EarthlingRandoNiceness(Range):
 
     default = 1
 
+class LocalShipPieces(Choice):
+    """
+    Forces all Ship Pieces to be local or remote, in various modes.
+
+    - Off (default): Ship Pieces can be in any world.
+    - None: all Ship Pieces will be in other worlds, with the exception of the piece on Level 25.
+    - Full: all Ship Pieces will be local, but may spawn on the ground in addition to the big flashy pedestals.
+    - Vanilla: all Ship Pieces will be local with vanilla placement (i.e. all on the big flashy pedestals).
+
+    """
+
+    display_name = "Local Ship Pieces"
+
+    option_off = LocalShipPiecesOption.OFF.value
+    option_none = LocalShipPiecesOption.NONE.value
+    option_full = LocalShipPiecesOption.FULL.value
+    option_vanilla = LocalShipPiecesOption.VANILLA.value
+
+    default = option_off
+
+
 tje_option_groups = [
     OptionGroup("Basic Items/Locations", [
         StartingPresents,
@@ -534,6 +561,7 @@ tje_option_groups = [
         MinItemCount,
         MaxItemCount,
         LastLevel,
+        LocalShipPieces,
     ]),
     OptionGroup("Bad/Trap Options", [
         AutoOpenBadPresents,
@@ -579,6 +607,7 @@ class TJEOptions(PerGameCommonOptions):
     min_items: MinItemCount
     max_items: MaxItemCount
     last_level: LastLevel
+    local_ship_pieces: LocalShipPieces
     auto_bad_presents: AutoOpenBadPresents
     bad_food: BadFood
     bad_presents: BadPresents

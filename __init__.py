@@ -1,4 +1,3 @@
-import logging
 import os
 import pkgutil
 from typing import Optional, Any, ClassVar
@@ -12,9 +11,9 @@ from .client import TJEClient # required to register with BizHawkClient
 from .constants import VANILLA_RANK_THRESHOLDS, BASE_EARTHLINGS, REV00_MD5, REV02_MD5
 from .generators import TJEGenerator, get_key_levels, item_totals, scaled_rank_thresholds
 from .items import TJEItem, ITEM_GROUPS, ITEM_ID_TO_CODE, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, \
-                   TJEItemType, create_items, create_starting_presents
+                   TJEItemType, create_items, create_starting_presents, MASTER_ITEM_LIST
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, LOCATION_GROUPS, LOCATION_NAME_TO_ID
-from .options import RankRescalingOption, EarthlingRandomizationOption, TJEOptions
+from .options import RankRescalingOption, EarthlingRandomizationOption, LocalShipPiecesOption, TJEOptions
 from .regions import create_regions
 from .rom import TJEProcedurePatch, write_tokens
 
@@ -105,6 +104,14 @@ class TJEWorld(World):
                                                             )
         if self.options.upwarp_present:
             self.generator.fewer_upwarps()
+        
+        if self.options.local_ship_pieces.value != self.options.local_ship_pieces.default:
+            ship_pieces = {item.name for item in MASTER_ITEM_LIST[:9]}
+            match self.options.local_ship_pieces.value:
+                case LocalShipPiecesOption.FULL:
+                    self.options.local_items.value.update(ship_pieces)
+                case LocalShipPiecesOption.NONE:
+                    self.options.non_local_items.value.update(ship_pieces)
 
     def create_regions(self) -> None:
         create_regions(self.multiworld, self.player, self.options)
@@ -134,6 +141,14 @@ class TJEWorld(World):
         self.multiworld.completion_condition[self.player] = (
             lambda state: state.has_all(TJEWorld.item_name_groups["Ship Pieces"], self.player)
         )
+
+    def pre_fill(self):
+        if self.options.local_ship_pieces.value == LocalShipPiecesOption.VANILLA:
+            ship_piece_items = [self.create_item(item.name, item.classification) for item in MASTER_ITEM_LIST[:9]]
+            big_item_locs = [self.get_location(f"Level {i} - Big Item") for i in self.ship_item_levels[:9]]
+            self.random.shuffle(ship_piece_items)
+            for i, piece in enumerate(ship_piece_items):
+                big_item_locs[i].place_locked_item(piece)
 
     def generate_output(self, output_directory: str):
         self.create_patchable_item_list()
