@@ -35,16 +35,16 @@ class TJEItemData(NamedTuple):
 
 # Trap presents have a point value of 0 to reflect the assumption that the player won't choose to open them
 BASE_ITEM_LIST: list[TJEItemData] = [
-    TJEItemData(0x20, "Rocketship Windshield", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
-    TJEItemData(0x20, "Left Megawatt Speaker", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
-    TJEItemData(0x20, "Super Funkomatic Amplamator", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
-    TJEItemData(0x20, "Amplamator Connector Fin", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
-    TJEItemData(0x20, "Forward Stabilizing Unit", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
-    TJEItemData(0x20, "Rear Leg", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
-    TJEItemData(0x20, "Awesome Snowboard", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
-    TJEItemData(0x20, "Righteous Rapmaster Capsule", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
-    TJEItemData(0x20, "Right Megawatt Speaker", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
-    TJEItemData(0x20, "Hyperfunk Thruster", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
+    TJEItemData(0x20, "Ship Piece: Rocketship Windshield", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
+    TJEItemData(0x20, "Ship Piece: Left Megawatt Speaker", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
+    TJEItemData(0x20, "Ship Piece: Super Funkomatic Amplamator", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
+    TJEItemData(0x20, "Ship Piece: Amplamator Connector Fin", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
+    TJEItemData(0x20, "Ship Piece: Forward Stabilizing Unit", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
+    TJEItemData(0x20, "Ship Piece: Rear Leg", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
+    TJEItemData(0x20, "Ship Piece: Awesome Snowboard", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
+    TJEItemData(0x20, "Ship Piece: Righteous Rapmaster Capsule", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
+    TJEItemData(0x20, "Ship Piece: Right Megawatt Speaker", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
+    TJEItemData(0x20, "Ship Piece: Hyperfunk Thruster", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
 
     TJEItemData(0x00, "Icarus Wings", TJEItemType.PRESENT, ItemClassification.useful, 2),
     TJEItemData(0x01, "Spring Shoes", TJEItemType.PRESENT, ItemClassification.useful, 2),
@@ -134,6 +134,11 @@ INSTATRAP_IDS = [ITEM_NAME_TO_ID[item.name] for item in INSTATRAP_ITEMS]
 BAD_PRESENT_IDS = [ITEM_NAME_TO_ID[item.name] for item in BASE_ITEM_LIST
                     if item.type == TJEItemType.PRESENT and item.classification == ItemClassification.trap]
 
+
+ITEM_GROUPS = {
+    "Ship Pieces" : { item.name for item in BASE_ITEM_LIST if item.type == TJEItemType.SHIP_PIECE }
+}
+
 #endregion
 
 def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions) -> None:
@@ -173,8 +178,8 @@ def handle_gameover_options(world, options) -> None:
 def create_ship_pieces(multiworld, world, options: TJEOptions, player, item_list) -> None:
     ship_pieces_total = 10
 
-    multiworld.get_location(f"Level {options.last_level.value} - Ship Piece", player).place_locked_item(
-        world.create_item("Hyperfunk Thruster", ItemClassification.progression)
+    multiworld.get_location(f"Level {options.last_level.value} - Big Item", player).place_locked_item(
+        world.create_item("Ship Piece: Hyperfunk Thruster", ItemClassification.progression)
     )
     ship_pieces_total -= 1
 
