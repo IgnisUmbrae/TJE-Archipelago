@@ -42,7 +42,7 @@ CheckSufficientKeys:
     mulu.w D0,D1
     cmp.b ($4,A2),D1
     blt.b KeepDoorsClosed
-    cmpi.b #$18,($4,A2)
+    cmpi.b #$18,($4,A2) ; ⚠️ this value is repatched dynamically elsewhere
     beq.b CheckNumShipPieces
     bra.b OpenDoorsNormally
 KeepDoorsClosed:
