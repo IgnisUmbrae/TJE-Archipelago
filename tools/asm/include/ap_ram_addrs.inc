@@ -39,5 +39,9 @@ AP_INIT_COMPLETE        equ $00fff6a0
 AP_LEVEL_ITEMS_SET      equ $00fff6a1
 AP_DEATH_TRIGGERED      equ $00fff6a2
 
+; Addresses for communicating data from game to client
+;; Game writes a value, client optionally resets to 0 after use
+AP_BIG_ITEM_LV          equ $00fff6b0
+
 ; Phantom item entry for remote item awarding
 AP_PHANTOM_ITEM         equ $00fff700

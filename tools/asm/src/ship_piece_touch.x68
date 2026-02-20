@@ -3,6 +3,16 @@
 ReturnPoint equ $00020cfc
 
     include "common.inc"
+
+    ; D2 contains player
+    ; D3 contains index of which ship piece has just been collected
+
+    ; write triggered ship piece level to memory
+    movea.l #VAN_SHIP_PIECE_LEVELS,A0
+    move.b (A0,D3),D4
+    movea.l #AP_BIG_ITEM_LV,A0
+    move.b D4,(A0)
+
     ; check if player already has 9 ship pieces
     clr.w      D4
 Check9ShipPiecesLoop:
@@ -15,7 +25,6 @@ Check9ShipPiecesLoop:
     blt.b      Check9ShipPiecesLoop
 
     ; check if player is on level 25
-    ; D2 → player
     movea.l    #VAN_ENTITY_INFO_TABLE,A2
     move.b     D2,D0
     asl.l      #$7,D0
