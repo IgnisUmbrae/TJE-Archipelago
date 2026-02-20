@@ -159,10 +159,6 @@ class SaveManager():
                 await bizhawk.unlock(ctx.bizhawk_ctx)
                 logger.debug("Loading complete")
             self.game_controller.awaiting_load = False
-        # else:
-        #     logger.debug("Possible reset from in-game detected")
-        #     self.game_controller.awaiting_load = True
-        #     self.ctx.save_retrieved = False
 
 class AddressMonitor():
     @staticmethod
@@ -317,12 +313,12 @@ class TJEGameController():
                 ctx
             ),
             AddressMonitor(
-                "Ship items",
-                "TRIGGERED_SHIP_ITEMS",
-                10,
+                "Big item",
+                "AP_BIG_ITEM_LV",
+                1,
                 MonitorLevel.GLOBAL,
                 lambda: not self.is_awaiting_load(),
-                self.handle_ship_item_change,
+                self.handle_big_item_triggered,
                 self,
                 ctx
             ),
@@ -586,12 +582,13 @@ class TJEGameController():
             for (level, item_num) in level_item_pairs:
                 await self.client.trigger_location(ctx, FLOOR_ITEM_LOC_TEMPLATE.format(level, item_num+1))
 
-    async def handle_ship_item_change(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
+    async def handle_big_item_triggered(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
                                       old_data: bytes, new_data: bytes):
-        triggered_levels = [old_data[i] for i in range(10) if new_data[i] != old_data[i] and old_data[i] != 0]
-        for level in triggered_levels:
-            logger.debug("Triggering ship piece on level %i", level)
+        level = int.from_bytes(new_data)
+        if level > 1:
             await self.client.trigger_location(ctx, BIG_ITEM_LOC_TEMPLATE.format(level))
+            if level == 25:
+                await self.client.goal_in(ctx)
 
     async def handle_rank_change(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
                                  old_data: bytes, new_data: bytes):
