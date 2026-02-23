@@ -226,10 +226,11 @@ OutputDialogue:
     jsr        Fn_QueueDialogueSequence.l
     addq.l     #$8,SP
 MarkAsCollected:
-    ; check if this present was dropped by the player, don't alter collected object table if so
+    ; make sure the 'mark as collected' flag is set
     tst.b      -$1(A6)
     beq.b      FindCloseMapObject_CounterIncrement
     move.b     #-1,(A2)
+    ; make sure this isn't a present dropped by the player
     tst.b      ($17,A6)
     beq.b      FindCloseMapObject_CounterIncrement
     move.b     ($1,A2),D0
