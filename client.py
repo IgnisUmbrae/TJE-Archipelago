@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 class SpawnQueue():
     def __init__(self, cooldown: int = 0):
-        self.queue: list[NetworkItem] = []
+        self.queue: list[NetworkItem | None] = []
         self.counter = cooldown
         self.cooldown = cooldown
         self.awarded_count = None # will be initialized to 0 / saved value after checking for savedata on server
@@ -33,18 +33,18 @@ class SpawnQueue():
     def tick(self) -> None:
         self.counter = max(self.counter - 1, 0)
 
-    def oldest(self) -> NetworkItem:
+    def oldest(self) -> NetworkItem | None:
         return self.queue[0]
 
-    def add(self, nwi: NetworkItem) -> None:
+    def add(self, nwi: NetworkItem | None) -> None:
         self.queue.append(nwi)
 
-    async def mark_awarded(self, nwi: NetworkItem) -> None:
+    async def mark_awarded(self, nwi: NetworkItem | None) -> None:
         self.awarded_count += 1
         if self.save_manager:
             await self.save_manager.append_to_save_queue("awarded_count", self.awarded_count)
-        if nwi in self.queue:
-            self.queue.remove(nwi)
+        if nwi is None or nwi in self.queue:
+            self.queue.pop(0)
         self.reset_cooldown()
 
     def reset_cooldown(self) -> None:
@@ -211,15 +211,18 @@ class TJEClient(BizHawkClient):
     async def process_item(self, ctx: "BizHawkClientContext", nwi: NetworkItem) -> None:
         if self.should_spawn_from_remote(ctx, nwi):
             self.queue.add(nwi)
-        else:
-            await self.queue.mark_awarded(nwi)
+        else: # add blank item to queue (keeps everything in strict order of receipt)
+            self.queue.add(None)
 
     async def handle_queue(self, ctx: "BizHawkClientContext") -> None:
         if self.queue.awarded_count is not None:
             self.queue.tick()
             if self.queue.can_spawn():
                 oldest = self.queue.oldest()
-                success = await self.game_controller.receive_item(ctx, oldest.item)
+                if oldest is not None: # actual item
+                    success = await self.game_controller.receive_item(ctx, oldest.item)
+                else: # phantom entry for local item (to keep everything in sync)
+                    success = True
                 if success:
                     await self.queue.mark_awarded(oldest)
 
@@ -232,10 +235,6 @@ class TJEClient(BizHawkClient):
         await self.game_controller.level_monitor.tick()
         if await self.game_controller.check_if_on_menu(ctx):
             self.game_controller.current_level = -1
-            # # retrieve save data after local reset; if not connected, on_package will request the same on connect
-            # if not ctx.save_retrieved:
-            #     await self.retrieve_server_save(ctx)
-            #     self.game_controller.awaiting_load = True
         else:
             await self.game_controller.tick(ctx)
             if not ctx.finished_game:
