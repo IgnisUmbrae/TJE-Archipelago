@@ -249,7 +249,7 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
 
     if world.options.last_level != world.options.last_level.default:
         # Patch in last level
-        for addr in (0x000127e0+3, 0x0010bf20+3, 0x0010b908+1, 0x0010a726+1):
+        for addr in (0x000127e0+3, 0x0010bf20+3, 0x0010b908+1, 0x0010a738+1):
             patch.write_token(APTokenTypes.WRITE, addr, struct.pack(">B", world.options.last_level.value))
         for addr in (0x0010bd3a+3, 0x0010b900+1):
             patch.write_token(APTokenTypes.WRITE, addr, struct.pack(">B", world.options.last_level.value-1))
