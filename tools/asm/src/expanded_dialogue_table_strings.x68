@@ -10,7 +10,7 @@
     dc.b "Capsule!",0
     dc.b "R. speaker!",0
     dc.b "Thruster!",0
-    dc.b "jammin'",0
+    dc.b "Jammin",0
     dc.b "Lv 2 key!",0
     dc.b "Lv 3 key!",0
     dc.b "Lv 4 key!",0
