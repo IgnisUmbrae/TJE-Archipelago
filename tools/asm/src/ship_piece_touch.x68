@@ -29,7 +29,7 @@ Check9ShipPiecesLoop:
     move.b     D2,D0
     asl.l      #$7,D0
     adda.l     D0,A2
-    moveq      #$19,D0
+    moveq      #$19,D0 ; ⚠ this is repatched elsewhere if max_level is changed
     cmp.b      ($4c,A2),D0
     bne.b      AwardNoDisplay
 
