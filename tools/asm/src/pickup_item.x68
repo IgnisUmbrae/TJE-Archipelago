@@ -90,7 +90,8 @@ CheckDistanceToObject:
 FindEmptyInvSlot:
     move.w     D3,D0
     ext.l      D0
-    asl.l      #$4,D0 ; repatched to #$6 if expanded_inventory enabled
+DYNRP_inventory_asl_1:
+    asl.l      #$4,D0
     movea.l    #AP_INVENTORIES,A0
     move.w     D6,D1
     adda.l     D0,A0
@@ -100,7 +101,8 @@ FindEmptyInvSlot:
     ; put present in player inventory
     move.w     D3,D0
     ext.l      D0
-    asl.l      #$4,D0 ; repatched to #$6 if expanded_inventory enabled
+DYNRP_inventory_asl_2:
+    asl.l      #$4,D0
     movea.l    #AP_INVENTORIES,A0
     move.w     D6,D1
     adda.l     D0,A0
@@ -124,10 +126,12 @@ ExtraUnknownCheck:
     bra.b      CheckForFullInventory
 FindEmptyInvSlot_LoopCondition:
     addq.w     #$1,D6
-    cmpi.w     #$10,D6 ; repatched to AP_INVENTORY_SIZE if expanded_inventory enabled
+DYNRP_inventory_size_1:
+    cmpi.w     #$10,D6
     blt.b      FindEmptyInvSlot
 CheckForFullInventory:
-    cmpi.w     #$10,D6 ; repatched to AP_INVENTORY_SIZE if expanded_inventory enabled
+DYNRP_inventory_size_2:
+    cmpi.w     #$10,D6
     bne.w      MarkAsCollected
     move.w     D3,D2
     ext.l      D2

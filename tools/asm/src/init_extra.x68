@@ -2,7 +2,7 @@
 
     include "common.inc"
 
-    ; dynamic patcher changes #0 → #1 for Earl
+DYNRP_player_char:
     move.b #0,(AP_ACTIVE_CHAR).l
     
     move.b #-1,(AP_DROP_PRES).l

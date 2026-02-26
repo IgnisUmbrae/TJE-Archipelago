@@ -42,7 +42,8 @@ CheckSufficientKeys:
     mulu.w D0,D1
     cmp.b ($4,A2),D1
     blt.b KeepDoorsClosed
-    cmpi.b #$18,($4,A2) ; ⚠️ this value is repatched dynamically elsewhere
+DYNRP_last_level_minus_one:
+    cmpi.b #$18,($4,A2)
     beq.b CheckNumShipPieces
     bra.b OpenDoorsNormally
 KeepDoorsClosed:

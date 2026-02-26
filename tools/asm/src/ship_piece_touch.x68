@@ -1,9 +1,9 @@
 ;0010a700
 
 ReturnPoint equ $00020cfc
-
+ 
     include "common.inc"
-
+ 
     ; D2 contains player
     ; D3 contains index of which ship piece has just been collected
 
@@ -29,7 +29,9 @@ Check9ShipPiecesLoop:
     move.b     D2,D0
     asl.l      #$7,D0
     adda.l     D0,A2
-    moveq      #$19,D0 ; ⚠ this is repatched elsewhere if max_level is changed
+
+DYNRP_last_level:
+    moveq      #$19,D0
     cmp.b      ($4c,A2),D0
     bne.b      AwardNoDisplay
 
