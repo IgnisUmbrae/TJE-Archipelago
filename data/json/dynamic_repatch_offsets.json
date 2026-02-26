@@ -1,0 +1,22 @@
+{
+  "elev_key_logic": {
+    "last_level_minus_one": 58
+  },
+  "init_extra": {
+    "player_char": 0
+  },
+  "init_id_presents": {
+    "inventory_addr": 2,
+    "inventory_size_1": 34,
+    "inventory_size_2": 56
+  },
+  "pickup_item": {
+    "inventory_asl_1": 222,
+    "inventory_asl_2": 246,
+    "inventory_size_1": 298,
+    "inventory_size_2": 304
+  },
+  "ship_piece_touch": {
+    "last_level": 56
+  }
+}
