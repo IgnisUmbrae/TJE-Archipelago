@@ -6,6 +6,9 @@ VAN_PLAYER_BUCKS        equ $00ffa24a
 VAN_PLAYER_POINTS       equ $00ffa24c
 VAN_PLAYER_HP           equ $00ffa252
 VAN_ENTITY_INFO_TABLE   equ $00ffa25a
+VAN_ENTITY_FLAGS_1      equ $00ffa2a7
+VAN_FALLING_STATE       equ $00ffda22
+VAN_LOCK_IN_ELEV_FLAG   equ $00ffda6a
 VAN_INVENTORIES         equ $00ffdac2 ; add size of inventory for Earl's inv addr
 VAN_MAP_OBJECT_TABLE    equ $00ffdae2
 VAN_COLLECTED_OBJ_TABLE equ $00ffdde8

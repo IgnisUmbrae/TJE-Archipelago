@@ -10,6 +10,9 @@
     "inventory_size_1": 34,
     "inventory_size_2": 56
   },
+  "mole_steal_additions": {
+    "inventory_asl": 4
+  },
   "pickup_item": {
     "inventory_asl_1": 222,
     "inventory_asl_2": 246,
@@ -18,5 +21,9 @@
   },
   "ship_piece_touch": {
     "last_level": 56
+  },
+  "upwarp_handler": {
+    "last_level_minus_one": 0,
+    "last_level": 8
   }
 }
