@@ -38,9 +38,7 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
 
     patch.write_token(APTokenTypes.WRITE, 0x00097738, struct.pack(">10B", *world.ship_item_levels))
 
-    # "Who" menu: only one item / TJ or Earl only / text change
     # Menu return options: 0 for 2-player, 1 for TJ only, 2 for Earl only
-    patch.write_token(APTokenTypes.WRITE, 0x00024327, b"\x01")
     char_init = 0
     match world.options.character:
         case CharacterOption.TOEJAM:

@@ -14,8 +14,7 @@ SECTION_SEP = ""
 
 # Dirs & filenames
 
-SRC_DIR, BIN_DIR, SYM_DIR, JSON_DIR = Path("./asm/src/"), Path("../data/asm_bin/"), Path("./asm/sym/"), \
-                                      Path("../data/json/")
+SRC_DIR, BIN_DIR, SYM_DIR, JSON_DIR = Path("./asm/src/"), Path("../data/asm_bin/"), Path("./asm/sym/"), Path("../data/json/")
 REPATCH_JSON_FN = "dynamic_repatch_offsets.json"
 SRC_EXT, BIN_EXT, SYM_EXT = ".x68", ".bin", ".sym"
 BASE_CMD = "vasmm68k_mot -I./asm/include -Fbin -L {} -o {} {}"

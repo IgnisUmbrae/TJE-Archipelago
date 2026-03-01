@@ -279,6 +279,12 @@
 				0x0002432e
 			]
 		},
+		{
+			filename: "who_menu_single_item",
+			addresses: [
+				0x00024327
+			]
+		},
 
 		// Item awarding–related
 		{
