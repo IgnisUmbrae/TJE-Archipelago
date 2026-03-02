@@ -1,4 +1,5 @@
 ;00105500
+
 ;relocated and modified from vanilla table @ 00026650
 
     include "common.inc"

@@ -1,4 +1,5 @@
 ;0010c100
+
 ;modified from original function at 0000a2e0
 
 InjectionPoint equ $0000a312

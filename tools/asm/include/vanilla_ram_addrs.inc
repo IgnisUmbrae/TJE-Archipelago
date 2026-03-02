@@ -1,3 +1,5 @@
+VAN_MAPDATA_A           equ $00ff81aa
+VAN_MAPDATA_B           equ $00ff8586
 VAN_MENU_ROW_TJ         equ $00ff9368
 VAN_MENU_COL_TJ         equ $00ff936a
 VAN_MENU_INV_POS_TJ     equ $00ff9366
@@ -9,6 +11,8 @@ VAN_ENTITY_INFO_TABLE   equ $00ffa25a
 VAN_ENTITY_FLAGS_1      equ $00ffa2a7
 VAN_FALLING_STATE       equ $00ffda22
 VAN_LOCK_IN_ELEV_FLAG   equ $00ffda6a
+VAN_ELEV_SPEED          equ $00ffda76
+VAN_ELEV_ACCEL          equ $00ffda78
 VAN_INVENTORIES         equ $00ffdac2 ; add size of inventory for Earl's inv addr
 VAN_MAP_OBJECT_TABLE    equ $00ffdae2
 VAN_COLLECTED_OBJ_TABLE equ $00ffdde8
