@@ -62,6 +62,7 @@ for i, f in enumerate(in_src_files):
             errored_files.append(f.name)
             error_log.append(proc.stderr.decode())
     print(out_str, end="")
+print(SECTION_SEP)
 
 if errored_files:
     print("⚠ The following files failed to compile (see log for details):")
@@ -69,8 +70,6 @@ if errored_files:
         print(f"\t• {file}")
     with open("compile_errors.log", "w") as f:
         f.write(("-"*10+"\n\n").join(error_log))
-else:
-    print(SECTION_SEP)
 
 # Process symbol tables and collect dynamic patches
 
