@@ -479,7 +479,7 @@ class TJEGameController():
                             not (self.auto_bad_presents == 1 and item_id == ITEM_NAME_TO_ID["Randomizer"]))
 
     async def receive_item(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
-        if await self.is_warping(ctx) or not await self.is_on_land(ctx):
+        if await self.is_warping(ctx):
             return False
         if await self.should_spawn_present_as_trap(item_id):
             return await self.open_trap_present(ctx, item_id)
@@ -509,7 +509,7 @@ class TJEGameController():
 
     async def give_item_directly(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
         item_code = ITEM_ID_TO_CODE[item_id]
-        if await self.is_item_waiting(ctx):
+        if await self.is_item_waiting(ctx) or not await self.is_on_land(ctx):
             return False
         if item_id in PRESENT_IDS and await self.is_inventory_full(ctx):
             await self.poke_ram(ctx, get_ram_addr("AP_DROP_PRESENT"), item_code.to_bytes(1))
