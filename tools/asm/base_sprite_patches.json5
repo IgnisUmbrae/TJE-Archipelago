@@ -30,47 +30,5 @@
                 0x00101280
             ]
         },
-        {
-            filename: "apitemhere0",
-            addresses: [
-                0x00100120
-            ]
-        },
-        {
-            filename: "apitemhere1",
-            addresses: [
-                0x00100320
-            ]
-        },
-        {
-            filename: "apitemhere2",
-            addresses: [
-                0x00100520
-            ]
-        },
-        {
-            filename: "shippiece0tile0",
-            addresses: [
-                0x00100720
-            ]
-        },
-        {
-            filename: "shippiece0tile1",
-            addresses: [
-                0x00100920
-            ]
-        },
-        {
-            filename: "shippiece1tile0",
-            addresses: [
-                0x00100B20
-            ]
-        },
-        {
-            filename: "shippiece1tile1",
-            addresses: [
-                0x00100D20
-            ]
-        },
     ]
 }

@@ -12,7 +12,8 @@ from .constants import EMPTY_PRESENT, INITIAL_PRESENT_ADDRS, BASE_LEVEL_TYPES, I
                        PCM_SFX_ADDRS_MUSIC, PCM_SFX_USAGE_ADDRS, PCM_SFX_USAGE_ADDRS_MUSIC, PSG_SFX, PSG_SFX_USAGE_ADDRS
 from .generators import map_reveal_text
 from .items import ITEM_ID_TO_CODE
-from .options import CharacterOption, SoundRandoOption, StartingPresentOption, GameOverOption, MapRandomizationOption
+from .options import CharacterOption, SoundRandoOption, StartingPresentOption, GameOverOption, MapRandomizationOption, \
+                     LocalShipPiecesOption
 from .tools.patch_util import read_bin, BinType, set_bin_paths
 
 class TJEProcedurePatch(APProcedurePatch, APTokenMixin):
@@ -121,7 +122,7 @@ def patch_misc_qol(world, patch) -> None:
         patch.write_token(APTokenTypes.WRITE, 0x0001262a, read_bin("no_idle_sleeping"))
 
     if world.options.fast_loads:
-        patch.write_token(APTokenTypes.WRITE, 0x00013710, read_bin("elev_fast_loads"))
+        patch.write_token(APTokenTypes.WRITE, 0x0001370e, read_bin("elev_fast_loads"))
 
     if world.options.free_earthling_services:
         patch.write_token(APTokenTypes.WRITE, 0x00021a70, read_bin("earthling_opera_free1"))
@@ -257,14 +258,40 @@ def patch_map_rando(world, patch) -> None:
             patch.write_token(APTokenTypes.WRITE, 0x00004a4c, read_bin("level_gen_skip_seed_setting"))
             patch.write_token(APTokenTypes.WRITE, 0x00004506, read_bin("level_gen_skip_mapdata_storage"))
 
+def patch_ship_piece_sprites(world, patch) -> None:
+    if world.options.local_ship_pieces != LocalShipPiecesOption.VANILLA:
+        for addr in (0x000e13fd, 0x000e1407, 0x000e1411):
+            patch.write_token(APTokenTypes.WRITE, addr, read_bin("ship_piece_hint_spr_flags"))
+        patch.write_token(APTokenTypes.WRITE, 0x000e13fe, read_bin("ship_piece_hint_spr_pointer1"))
+        patch.write_token(APTokenTypes.WRITE, 0x000e1408, read_bin("ship_piece_hint_spr_pointer2"))
+        patch.write_token(APTokenTypes.WRITE, 0x000e1412, read_bin("ship_piece_hint_spr_pointer3"))
+
+        for addr in (0x000e0e81, 0x000e0e8b, 0x000e116d, 0x000e1177):
+            patch.write_token(APTokenTypes.WRITE, addr, read_bin("ship_piece_sign_plinth_spr_flags"))
+        patch.write_token(APTokenTypes.WRITE, 0x000e0e82, read_bin("ship_piece_sign_plinth_spr_pointer1"))
+        patch.write_token(APTokenTypes.WRITE, 0x000e0e8c, read_bin("ship_piece_sign_plinth_spr_pointer2"))
+        patch.write_token(APTokenTypes.WRITE, 0x000e116e, read_bin("ship_piece_sign_plinth_spr_pointer3"))
+        patch.write_token(APTokenTypes.WRITE, 0x000e1178, read_bin("ship_piece_sign_plinth_spr_pointer4"))
+
+        for addr, spr_file in zip((0x00100120, 0x00100320, 0x00100520),
+                                  ("apitemhere0", "apitemhere1", "apitemhere2")):
+            patch.write_token(APTokenTypes.WRITE, addr, read_bin(spr_file, BinType.SPRITE))
+
+        for addr, spr_file in zip((0x00100720, 0x00100920, 0x00100b20, 0x00100d20),
+                                  ("shippiece0tile0", "shippiece0tile1", "shippiece1tile0", "shippiece1tile1")):
+            patch.write_token(APTokenTypes.WRITE, addr, read_bin(spr_file, BinType.SPRITE))
+        
+        patch.write_token(APTokenTypes.WRITE, 0x000205e8, read_bin("ship_piece_strings"))
+
 #endregion
 
 def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
-    set_bin_paths(Path("./worlds/tje/data/asm_bin/"), Path("./worlds/tje/data/sprite_bin/"))
+    set_bin_paths(Path("./worlds/tje/data/asm_bin/"), Path("./worlds/tje/data/sprites_bin/"))
     patch_slot_data(world, patch)
     patch_item_list(world, patch)
     patch_main_menu(world, patch)
     patch_starting_presents(world, patch)
+    patch_expanded_inv(world, patch)
     patch_misc_qol(world, patch)
     patch_upwarp_present(world, patch)
     patch_death_link(world, patch)
@@ -277,7 +304,5 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
     patch_earthling_rando(world, patch)
     patch_sound_rando(world, patch)
     patch_map_rando(world, patch)
-    patch_expanded_inv(world, patch)
-
+    patch_ship_piece_sprites(world, patch)
     patch.write_file("token_data.bin", patch.get_token_binary())
-    
