@@ -464,6 +464,10 @@ class TJEGameController():
 
     #region Spawning functions (also receipt of ethereal items)
 
+    async def is_on_land(self, ctx: "BizHawkClientContext") -> bool:
+        # 0x90 is space, 0x80 is water
+        return (await self.peek_ram(ctx, get_ram_addr("TILE_BELOW", self.char), 1)) not in (b"\x90", b"\x80")
+
     async def is_warping(self, ctx: "BizHawkClientContext") -> bool:
         return (await self.peek_ram(ctx, get_ram_addr("END_ELEVATOR_STATE", self.char), 1)) == b"\x0C"
 
@@ -475,7 +479,7 @@ class TJEGameController():
                             not (self.auto_bad_presents == 1 and item_id == ITEM_NAME_TO_ID["Randomizer"]))
 
     async def receive_item(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
-        if await self.is_warping(ctx):
+        if await self.is_warping(ctx) or not await self.is_on_land(ctx):
             return False
         if await self.should_spawn_present_as_trap(item_id):
             return await self.open_trap_present(ctx, item_id)

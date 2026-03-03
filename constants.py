@@ -305,6 +305,7 @@ PLAYER_RAM_ADDRS: dict[tuple[int, int]] = {
     "HEALTH": (0xA252, 0x1),
     "HP_DISPLAY": (0xA254, 0x1),
     "HP_RESTORE": (0xA258, 0x1),
+    "TILE_BELOW": (0xD9F4, 0x19),
     "FALL_STATE": (0xDA22, 0x1),
     "SLEEP_TIMER": (0xDA44, 0x2),
     "GLOBAL_ELEVATOR_STATE": (0xDA6A, 0x1),
