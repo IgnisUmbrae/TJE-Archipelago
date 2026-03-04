@@ -58,25 +58,26 @@ def patch_main_menu(world, patch, dro) -> None:
         case CharacterOption.TOEJAM:
             ret_val = 1
             char_init = 0
-            menu_string = read_bin("who_menu_toejam_string", BinType.ASM)
+            menu_string_fn = "who_menu_toejam_string"
             no_2player = True
         case CharacterOption.EARL:
             ret_val = 2
             char_init = 1
-            menu_string = read_bin("who_menu_earl_string", BinType.ASM)
+            menu_string_fn = "who_menu_earl_string"
             no_2player = True
         case CharacterOption.BOTH:
             ret_val = 0
             char_init = world.random.randint(0, 1)
-            menu_string = None
+            menu_string_fn = None
             no_2player = False
 
-    patch.write_token(APTokenTypes.WRITE, 0x0010b400 + dro["init_extra"]["player_char"] + 3,
+    patch.write_token(APTokenTypes.WRITE,
+                      0x0010b400 + dro["init_extra"]["player_char"] + 3,
                       struct.pack(">B", char_init))
 
-    if menu_string:
+    if menu_string_fn:
         patch.write_token(APTokenTypes.WRITE, 0x000242c5, struct.pack(">B", ret_val))
-        patch.write_token(APTokenTypes.WRITE, 0x000242d6, menu_string)
+        patch.write_token(APTokenTypes.WRITE, 0x000242d6, read_bin(menu_string_fn))
 
     if no_2player:
         patch.write_token(APTokenTypes.WRITE, 0x00011218, read_bin("main_loop_disable_coop_join"))
@@ -94,19 +95,19 @@ def patch_expanded_inv(world, patch, dro) -> None:
 
     if world.options.expanded_inventory:
         inv_ref_addrs = copy.copy(INV_REF_ADDRS_VANILLA)
-        inv_ref_addrs.append(
-            dro["pickup_item"]["inventory_addr_1"] + 2,
-            dro["pickup_item"]["inventory_addr_2"] + 2,
-            dro["init_id_presents"]["inventory_addr"] + 2,
-        )
+        inv_ref_addrs.extend([
+            0x0010a000 + dro["pickup_item"]["inventory_addr_1"] + 2,
+            0x0010a000 + dro["pickup_item"]["inventory_addr_2"] + 2,
+            0x0010a900 + dro["init_id_presents"]["inventory_addr"] + 2,
+        ])
 
         inv_size_addrs = copy.copy(INV_SIZE_ADDRS_VANILLA)
-        inv_size_addrs.append(
-            dro["pickup_item"]["inventory_size_1"] + 3,
-            dro["pickup_item"]["inventory_size_2"] + 3,
-            dro["init_id_presents"]["inventory_size_1"] + 3,
-            dro["init_id_presents"]["inventory_size_2"] + 3,
-        )
+        inv_size_addrs.extend([
+            0x0010a000 + dro["pickup_item"]["inventory_size_1"] + 3,
+            0x0010a000 + dro["pickup_item"]["inventory_size_2"] + 3,
+            0x0010a900 + dro["init_id_presents"]["inventory_size_1"] + 3,
+            0x0010a900 + dro["init_id_presents"]["inventory_size_2"] + 3,
+        ])
 
         for addr in inv_ref_addrs:
             patch.write_token(APTokenTypes.WRITE, addr, struct.pack(">L", 0x00fff280))
@@ -116,10 +117,10 @@ def patch_expanded_inv(world, patch, dro) -> None:
             patch.write_token(APTokenTypes.WRITE, addr, (0x40+i).to_bytes(1))
 
         inv_size_addrs_asl_d0 = copy.copy(INV_SIZE_ADDRS_ASL_D0_VANILLA)
-        inv_size_addrs_asl_d0.append(
-            dro["pickup_item"]["inventory_asl_1"],
-            dro["pickup_item"]["inventory_asl_2"],
-        )
+        inv_size_addrs_asl_d0.extend([
+            0x0010a000 + dro["pickup_item"]["inventory_asl_1"],
+            0x0010a000 + dro["pickup_item"]["inventory_asl_2"],
+        ])
 
         if world.options.max_rank_check.value > 0:
             inv_size_addrs_asl_d0.remove(0x00022042)
@@ -209,7 +210,7 @@ def patch_last_level(world, patch, dro) -> None:
                      0x0010b900 + dro["upwarp_handler"]["last_level_minus_one"] + 1):
             patch.write_token(APTokenTypes.WRITE, addr, struct.pack(">B", world.options.last_level.value-1))
         for addr in (0x000127e0+3, 0x0010bf20+3,
-                     0x0010b908 + dro["upwarp_handler"]["last_level"] + 1,
+                     0x0010b900 + dro["upwarp_handler"]["last_level"] + 1,
                      0x0010a700 + dro["ship_piece_touch"]["last_level"] + 1):
             patch.write_token(APTokenTypes.WRITE, addr, struct.pack(">B", world.options.last_level.value))
 
@@ -310,7 +311,7 @@ def patch_ship_piece_sprites(world, patch, dro) -> None:
 
 def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
     set_bin_paths(Path("./worlds/tje/data/asm_bin/"), Path("./worlds/tje/data/sprites_bin/"))
-    with open("./worlds/tje/data/json/dynamic_repatch_ofsets.json") as f:
+    with open("./worlds/tje/data/json/dynamic_repatch_offsets.json") as f:
         dro = json.load(f)
 
     patch_slot_data(world, patch, dro)
