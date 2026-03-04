@@ -229,7 +229,7 @@
 		{
 			filename: "auto_handler_jump",
 			addresses: [
-				0x00001536
+				0x00001512
 			]
 		},
 		{

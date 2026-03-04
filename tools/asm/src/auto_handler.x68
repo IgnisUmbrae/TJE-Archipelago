@@ -1,11 +1,12 @@
 ;0010b100
 
-ReturnPoint equ $0000153c
+ReturnPoint equ $00001518
 
     include "common.inc"
 
-    ; relocated from injection point
-    jsr        Fn_ProcessFallingTomatoes
+    ;-- begin original function block --
+    jsr        $0000219C
+    ;-- end original function block --
     bra.w      AutoOpenPresents
 BranchToCheckCupidTrap:
     bra.w      AutoCupidTrap
