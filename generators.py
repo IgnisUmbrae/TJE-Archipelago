@@ -4,7 +4,7 @@ from collections import defaultdict, Counter
 from math import ceil, sqrt
 
 from .constants import MAP_REVEAL_DIALOGUE_TEMPLATE, MAP_REVEAL_DIALOGUE_TEMPLATE_DEGEN, VANILLA_RANK_THRESHOLDS, \
-                       EARTHLING_LIST, EARTHLING_TOTAL, EARTHLING_UNIQUE, EARTHLING_WEIGHTS, EARTHLING_MAX_PER_LEVEL, \
+                       EARTHLING_LIST, BASE_EARTHLINGS, EARTHLING_UNIQUE, EARTHLING_WEIGHTS, EARTHLING_MAX_PER_LEVEL, \
                        EARTHLING_WEIGHTS_PER_LEVEL, SHIP_PIECE_RANGES, PRESENT_LIST, PRESENT_WEIGHTS, A_BUCK, \
                        BAD_PRESENT_INDICES, LV1_FORBIDDEN_PRESENT_INDICES, FOOD_LIST, FOOD_WEIGHTS, BAD_FOOD_INDICES
 from .options import TJEOptions
@@ -18,14 +18,14 @@ class TJEGenerator():
         self.per_level_earthling_counts = Counter()
         self.unique_earthling_levels = defaultdict(list)
 
-
-    def get_trimmed_level_weights(self, earthling, level_weights):
+    # Zeroes out weights for an earthling whose count is already at maximum
+    def get_trimmed_level_weights(self, earthling, level_weights, last_level):
         candidates = level_weights[EARTHLING_LIST.index(earthling)]
         return [candidates[i]
                 if self.per_level_earthling_counts[i] < EARTHLING_MAX_PER_LEVEL[i] \
                 and i not in self.unique_earthling_levels[earthling]
                 else 0
-                for i in range(2,26)]
+                for i in range(2,last_level+1)]
 
     def generate_full_random_earthlings(self):
         earthlings = []
@@ -33,25 +33,37 @@ class TJEGenerator():
             earthlings.append(self.random.choices(EARTHLING_LIST, (1,)*21, k=20))
         return earthlings
 
-    def generate_nice_random_earthlings(self, niceness: int = 1):
-        output = defaultdict(list)
-        # Start with a base of 8 friendly Earthlings, generate others at random based on vanilla counts
-        choices = list(EARTHLING_UNIQUE*2)
-        choices += self.random.choices(EARTHLING_LIST, EARTHLING_WEIGHTS, k=EARTHLING_TOTAL-8)
-        # Assign level-limited Earthlings first
-        choices = sorted(choices, key=lambda c: c in EARTHLING_UNIQUE, reverse=True)
-        # Assign Earthlings levels in order from rarest to most common to maximize chances of sensible placement
+    def generate_nice_random_earthlings(self, niceness: int = 1, last_level: int = 25):
+        # Apply niceness to weights in local copy
         if niceness > 1:
             local_weights = [[w**sqrt(niceness) for w in weights] for weights in EARTHLING_WEIGHTS_PER_LEVEL]
         else:
             local_weights = EARTHLING_WEIGHTS_PER_LEVEL
+        # Linearly rescale and trim the per-level Earthling weights if last_level < 25
+        if last_level < 25:
+            rescaled_levels = [round(((25-2)/(last_level-2))*(x-last_level)) + 25 for x in range(2, last_level+1)]
+            local_weights = [[0, 0] + [weights[i] for i in rescaled_levels] for weights in local_weights]
+        earthling_total = sum(len(l) for l in BASE_EARTHLINGS[:last_level-1])
+        output = defaultdict(list)
+        # Start with a base of 8 friendly Earthlings, generate others at random based on vanilla counts
+        choices = list(EARTHLING_UNIQUE*2)
+        choices += self.random.choices(EARTHLING_LIST, EARTHLING_WEIGHTS, k=earthling_total-8)
+        # Assign level-limited Earthlings first
+        choices = sorted(choices, key=lambda c: c in EARTHLING_UNIQUE, reverse=True)
+        # Assign Earthlings levels in order from rarest to most common to maximize chances of sensible placement
+        i = -1
         for c in choices:
-            target = self.random.choices(range(2,26), self.get_trimmed_level_weights(c, local_weights), k=1)[0]
+            i += 1
+            target = self.random.choices(range(2,last_level+1),
+                                         self.get_trimmed_level_weights(c, local_weights, last_level),
+                                         k=1)[0]
             output[target].append(c)
             self.per_level_earthling_counts[target] += 1
             if c in EARTHLING_UNIQUE:
                 self.unique_earthling_levels[c].append(target)
         output = [sorted(output[lv]) for lv in sorted(output.keys())]
+        # Pad Earthling list out if needed to include all levels
+        output += [[0xFF]]*(24 - len(output))
         return output
 
     def forbid_item(self, item_code: int):
@@ -114,7 +126,7 @@ class TJEGenerator():
     def generate_item_blob(self, number: int, include_bad: bool = True) -> list[int]:
         return [self.get_random_item(level_one=False, include_bad=include_bad) for _ in range(number)]
 
-    def add_extra_promotions(self, item_pool: list[int], rank_thresholds: list[int], options: TJEOptions,
+    def add_extra_promotions(self, item_pool: list[int], rank_thresholds: list[int], options: "TJEOptions",
                              paranoia_level: float = 1.5) -> None:
         def item_value(item_code: int, prom_val: int) -> int:
             if item_code == 0x0B:
