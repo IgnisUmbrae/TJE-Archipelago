@@ -1,5 +1,6 @@
 import copy
 import struct
+import json
 from itertools import chain
 from math import sqrt, ceil
 from pathlib import Path
@@ -7,8 +8,8 @@ from pathlib import Path
 from settings import get_settings
 from worlds.Files import APProcedurePatch, APTokenMixin, APTokenTypes
 
-from .constants import EMPTY_PRESENT, INITIAL_PRESENT_ADDRS, BASE_LEVEL_TYPES, INV_REF_ADDRS, INV_SIZE_ADDRS, \
-                       INV_SIZE_ADDRS_ASL_D0, INV_SIZE_ADDRS_INITIAL, MAP_REVEAL_DIALOGUE_ADDRS, PCM_SFX_ADDRS, \
+from .constants import EMPTY_PRESENT, INITIAL_PRESENT_ADDRS, BASE_LEVEL_TYPES, INV_REF_ADDRS_VANILLA, INV_SIZE_ADDRS_VANILLA, \
+                       INV_SIZE_ADDRS_ASL_D0_VANILLA, INV_SIZE_ADDRS_INITIAL, MAP_REVEAL_DIALOGUE_ADDRS, PCM_SFX_ADDRS, \
                        PCM_SFX_ADDRS_MUSIC, PCM_SFX_USAGE_ADDRS, PCM_SFX_USAGE_ADDRS_MUSIC, PSG_SFX, PSG_SFX_USAGE_ADDRS
 from .generators import map_reveal_text
 from .items import ITEM_ID_TO_CODE
@@ -36,7 +37,7 @@ class TJEProcedurePatch(APProcedurePatch, APTokenMixin):
 
 #region Individual patching sections
 
-def patch_slot_data(world, patch) -> None:
+def patch_slot_data(world, patch, dro) -> None:
     patch.write_token(APTokenTypes.WRITE, 0x00097704, struct.pack(">26H", *world.seeds))
     patch.write_token(APTokenTypes.WRITE, 0x00097738, struct.pack(">10B", *world.ship_item_levels))
 
@@ -48,10 +49,10 @@ def patch_slot_data(world, patch) -> None:
     patch.write_token(APTokenTypes.WRITE, 0x001f0010, struct.pack(">B", num_key_levels))
     patch.write_token(APTokenTypes.WRITE, 0x001f0011, struct.pack(f">{num_key_levels}B", *world.key_levels))
 
-def patch_item_list(world, patch) -> None:
+def patch_item_list(world, patch, dro) -> None:
     patch.write_token(APTokenTypes.WRITE, 0x001a0000, struct.pack(f">{(world.options.last_level.value+1)*28}B",
                                                                   *world.patchable_item_list))
-def patch_main_menu(world, patch) -> None:
+def patch_main_menu(world, patch, dro) -> None:
     # Menu return options: 0 for 2-player, 1 for TJ only, 2 for Earl only
     match world.options.character:
         case CharacterOption.TOEJAM:
@@ -70,7 +71,8 @@ def patch_main_menu(world, patch) -> None:
             menu_string = None
             no_2player = False
 
-    patch.write_token(APTokenTypes.WRITE, 0x0010b400+3, struct.pack(">B", char_init)) # DYNRP_PLAYER_CHAR
+    patch.write_token(APTokenTypes.WRITE, 0x0010b400 + dro["init_extra"]["player_char"] + 3,
+                      struct.pack(">B", char_init))
 
     if menu_string:
         patch.write_token(APTokenTypes.WRITE, 0x000242c5, struct.pack(">B", ret_val))
@@ -79,7 +81,7 @@ def patch_main_menu(world, patch) -> None:
     if no_2player:
         patch.write_token(APTokenTypes.WRITE, 0x00011218, read_bin("main_loop_disable_coop_join"))
 
-def patch_starting_presents(world, patch) -> None:
+def patch_starting_presents(world, patch, dro) -> None:
     if world.options.starting_presents == StartingPresentOption.NONE:
         presents = [EMPTY_PRESENT]*8
     else:
@@ -88,22 +90,40 @@ def patch_starting_presents(world, patch) -> None:
     for i in range(8):
         patch.write_token(APTokenTypes.WRITE, INITIAL_PRESENT_ADDRS[i], presents[i])
 
-def patch_expanded_inv(world, patch) -> None:
+def patch_expanded_inv(world, patch, dro) -> None:
+
     if world.options.expanded_inventory:
-        for addr in INV_REF_ADDRS:
-            patch.write_token(APTokenTypes.WRITE, addr, b"\x00\xff\xf2\x80")
-        for addr in INV_SIZE_ADDRS:
-            patch.write_token(APTokenTypes.WRITE, addr, b"\x40")
+        inv_ref_addrs = copy.copy(INV_REF_ADDRS_VANILLA)
+        inv_ref_addrs.append(
+            dro["pickup_item"]["inventory_addr_1"] + 2,
+            dro["pickup_item"]["inventory_addr_2"] + 2,
+            dro["init_id_presents"]["inventory_addr"] + 2,
+        )
+
+        inv_size_addrs = copy.copy(INV_SIZE_ADDRS_VANILLA)
+        inv_size_addrs.append(
+            dro["pickup_item"]["inventory_size_1"] + 3,
+            dro["pickup_item"]["inventory_size_2"] + 3,
+            dro["init_id_presents"]["inventory_size_1"] + 3,
+            dro["init_id_presents"]["inventory_size_2"] + 3,
+        )
+
+        for addr in inv_ref_addrs:
+            patch.write_token(APTokenTypes.WRITE, addr, struct.pack(">L", 0x00fff280))
+        for addr in inv_size_addrs:
+            patch.write_token(APTokenTypes.WRITE, addr, struct.pack(">B", 64))
         for i, addr in enumerate(INV_SIZE_ADDRS_INITIAL):
             patch.write_token(APTokenTypes.WRITE, addr, (0x40+i).to_bytes(1))
 
+        inv_size_addrs_asl_d0 = copy.copy(INV_SIZE_ADDRS_ASL_D0_VANILLA)
+        inv_size_addrs_asl_d0.append(
+            dro["pickup_item"]["inventory_asl_1"],
+            dro["pickup_item"]["inventory_asl_2"],
+        )
+
         if world.options.max_rank_check.value > 0:
-            inv_size_addrs_asl_d0 = copy.copy(INV_SIZE_ADDRS_ASL_D0)
-            # The ASL at 0x00022042 has been relocated to 0x0010bb04 in our custom code
             inv_size_addrs_asl_d0.remove(0x00022042)
-            inv_size_addrs_asl_d0.append(0x0010bb04)
-        else:
-            inv_size_addrs_asl_d0 = INV_SIZE_ADDRS_ASL_D0
+            inv_size_addrs_asl_d0.append(0x0010bb00 + dro["mole_steal_additions"]["inventory_asl"])
 
         for addr in inv_size_addrs_asl_d0:
             patch.write_token(APTokenTypes.WRITE, addr, b"\xED\x80")
@@ -111,13 +131,13 @@ def patch_expanded_inv(world, patch) -> None:
         patch.write_token(APTokenTypes.WRITE, 0x00022068, b"\xED\x82") # using D2
 
         # Make presents scooch up properly on opening and dropping (expand range)
-        patch.write_token(APTokenTypes.WRITE, 0x00009ab2+3, b"\x3F")
-        patch.write_token(APTokenTypes.WRITE, 0x00009ba0+3, b"\x3F")
+        patch.write_token(APTokenTypes.WRITE, 0x00009ab2+3, struct.pack(">B", 39))
+        patch.write_token(APTokenTypes.WRITE, 0x00009ba0+3, struct.pack(">B", 39))
 
         # Patch menu handler to allow extra scrolling (size/2 - 3)
         patch.write_token(APTokenTypes.WRITE, 0x0000979c+3, b"\x1D")
 
-def patch_misc_qol(world, patch) -> None:
+def patch_misc_qol(world, patch, dro) -> None:
     if not world.options.sleep_when_idle:
         patch.write_token(APTokenTypes.WRITE, 0x0001262a, read_bin("no_idle_sleeping"))
 
@@ -151,7 +171,7 @@ def patch_misc_qol(world, patch) -> None:
         patch.write_token(APTokenTypes.WRITE, 0x000f038, struct.pack(">H", orthog_road_speed))
         patch.write_token(APTokenTypes.WRITE, 0x000f03c, struct.pack(">H", diag_road_speed))
 
-def patch_upwarp_present(world, patch) -> None:
+def patch_upwarp_present(world, patch, dro) -> None:
     if world.options.upwarp_present:
         patch.write_token(APTokenTypes.WRITE, 0x00010b06, read_bin("upwarp_handler_jump"))
         patch.write_token(APTokenTypes.WRITE, 0x0010b900, read_bin("upwarp_handler"))
@@ -159,19 +179,19 @@ def patch_upwarp_present(world, patch) -> None:
         patch.write_token(APTokenTypes.WRITE, 0x0000a750, read_bin("upwarp_name_mailbox"))
         patch.write_token(APTokenTypes.WRITE, 0x00017be6, read_bin("ship_piece_hint_always_show"))
 
-def patch_death_link(world, patch) -> None:
+def patch_death_link(world, patch, dro) -> None:
     if world.options.death_link:
         patch.write_token(APTokenTypes.WRITE, 0x0000bcc6, read_bin("on_death_jump"))
         patch.write_token(APTokenTypes.WRITE, 0x0010a400, read_bin("on_death"))
 
-def patch_game_overs(world, patch) -> None:
+def patch_game_overs(world, patch, dro) -> None:
     if world.options.game_overs == GameOverOption.DISABLE:
         patch.write_token(APTokenTypes.WRITE, 0x0000bcd0, read_bin("skip_life_subtraction"))
     elif world.options.game_overs == GameOverOption.DROP_DOWN:
         patch.write_token(APTokenTypes.WRITE, 0x000111ac, read_bin("dropdown_on_death_jump"))
         patch.write_token(APTokenTypes.WRITE, 0x0010a300, read_bin("dropdown_on_death"))
 
-def patch_ranks(world, patch) -> None:
+def patch_ranks(world, patch, dro) -> None:
     if world.options.max_rank_check.value > 0:
         patch.write_token(APTokenTypes.WRITE, 0x001a0310, struct.pack(">8H", *world.rank_thresholds[1:]))
         patch.write_token(APTokenTypes.WRITE, 0x0000b898, read_bin("scaled_rank_points_handler"))
@@ -179,25 +199,28 @@ def patch_ranks(world, patch) -> None:
         patch.write_token(APTokenTypes.WRITE, 0x0002203e, read_bin("mole_steal_additions_jump"))
         patch.write_token(APTokenTypes.WRITE, 0x0010bb00, read_bin("mole_steal_additions"))
 
-def patch_level_gen(world, patch) -> None:
+def patch_level_gen(world, patch, dro) -> None:
     if world.options.islandless:
         patch.write_token(APTokenTypes.WRITE, 0x00003e80, read_bin("level_gen_islandless"))
 
-def patch_last_level(world, patch) -> None:
+def patch_last_level(world, patch, dro) -> None:
     if world.options.last_level != world.options.last_level.default:
-        for addr in (0x000127e0+3, 0x0010bf20+3, 0x0010b908+1, 0x0010a738+1):
-            patch.write_token(APTokenTypes.WRITE, addr, struct.pack(">B", world.options.last_level.value))
-        for addr in (0x0010bd3a+3, 0x0010b900+1):
+        for addr in (0x0010bd00 + dro["elev_key_logic"]["last_level_minus_one"] + 3,
+                     0x0010b900 + dro["upwarp_handler"]["last_level_minus_one"] + 1):
             patch.write_token(APTokenTypes.WRITE, addr, struct.pack(">B", world.options.last_level.value-1))
+        for addr in (0x000127e0+3, 0x0010bf20+3,
+                     0x0010b908 + dro["upwarp_handler"]["last_level"] + 1,
+                     0x0010a700 + dro["ship_piece_touch"]["last_level"] + 1):
+            patch.write_token(APTokenTypes.WRITE, addr, struct.pack(">B", world.options.last_level.value))
 
-def patch_map_reveals(world, patch) -> None:
+def patch_map_reveals(world, patch, dro) -> None:
     patch.write_token(APTokenTypes.WRITE, 0x001a0300, struct.pack(">5B", *world.map_reveal_potencies))
     if world.options.last_level != world.options.last_level.default:
         map_reveal_dialogue = map_reveal_text(world.map_reveal_potencies)
         for addr, string in zip(MAP_REVEAL_DIALOGUE_ADDRS, map_reveal_dialogue):
             patch.write_token(APTokenTypes.WRITE, addr, string.encode("ascii") + b"\x00")
 
-def patch_min_max_items(world, patch) -> None:
+def patch_min_max_items(world, patch, dro) -> None:
     if world.options.min_items != world.options.min_items.default:
         patch.write_token(APTokenTypes.WRITE, 0x00014c1a+1, struct.pack(">B", world.options.min_items.value))
         patch.write_token(APTokenTypes.WRITE, 0x00014c1e+1, struct.pack(">B", world.options.min_items.value))
@@ -206,11 +229,11 @@ def patch_min_max_items(world, patch) -> None:
         patch.write_token(APTokenTypes.WRITE, 0x00014c2c+3, struct.pack(">B", world.options.max_items.value))
         patch.write_token(APTokenTypes.WRITE, 0x00014c32+1, struct.pack(">B", world.options.max_items.value))
 
-def patch_earthling_rando(world, patch) -> None:
+def patch_earthling_rando(world, patch, dro) -> None:
     if world.options.earthling_rando != world.options.earthling_rando.default:
         patch.write_token(APTokenTypes.WRITE, 0x0002646e, struct.pack(f">480B", *chain(*world.earthling_list)))
 
-def patch_sound_rando(world, patch) -> None:
+def patch_sound_rando(world, patch, dro) -> None:
     if world.options.sound_rando != world.options.sound_rando.default:
         if world.options.sound_rando == SoundRandoOption.ALL:
             pcm_sfx_addrs = PCM_SFX_ADDRS + PCM_SFX_ADDRS_MUSIC
@@ -229,7 +252,7 @@ def patch_sound_rando(world, patch) -> None:
             for rom_addr in PSG_SFX_USAGE_ADDRS[i]:
                 patch.write_token(APTokenTypes.WRITE, rom_addr + 3, struct.pack(">B", sfx_addr))
 
-def patch_map_rando(world, patch) -> None:
+def patch_map_rando(world, patch, dro) -> None:
     if world.options.map_rando != world.options.map_rando.default:
         level_types, new_params = None, None
 
@@ -258,7 +281,7 @@ def patch_map_rando(world, patch) -> None:
             patch.write_token(APTokenTypes.WRITE, 0x00004a4c, read_bin("level_gen_skip_seed_setting"))
             patch.write_token(APTokenTypes.WRITE, 0x00004506, read_bin("level_gen_skip_mapdata_storage"))
 
-def patch_ship_piece_sprites(world, patch) -> None:
+def patch_ship_piece_sprites(world, patch, dro) -> None:
     if world.options.local_ship_pieces != LocalShipPiecesOption.VANILLA:
         for addr in (0x000e13fd, 0x000e1407, 0x000e1411):
             patch.write_token(APTokenTypes.WRITE, addr, read_bin("ship_piece_hint_spr_flags"))
@@ -287,22 +310,26 @@ def patch_ship_piece_sprites(world, patch) -> None:
 
 def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
     set_bin_paths(Path("./worlds/tje/data/asm_bin/"), Path("./worlds/tje/data/sprites_bin/"))
-    patch_slot_data(world, patch)
-    patch_item_list(world, patch)
-    patch_main_menu(world, patch)
-    patch_starting_presents(world, patch)
-    patch_expanded_inv(world, patch)
-    patch_misc_qol(world, patch)
-    patch_upwarp_present(world, patch)
-    patch_death_link(world, patch)
-    patch_game_overs(world, patch)
-    patch_ranks(world, patch)
-    patch_level_gen(world, patch)
-    patch_min_max_items(world, patch)
-    patch_last_level(world, patch)
-    patch_map_reveals(world, patch)
-    patch_earthling_rando(world, patch)
-    patch_sound_rando(world, patch)
-    patch_map_rando(world, patch)
-    patch_ship_piece_sprites(world, patch)
+    with open("./worlds/tje/data/json/dynamic_repatch_ofsets.json") as f:
+        dro = json.load(f)
+
+    patch_slot_data(world, patch, dro)
+    patch_item_list(world, patch, dro)
+    patch_main_menu(world, patch, dro)
+    patch_starting_presents(world, patch, dro)
+    patch_expanded_inv(world, patch, dro)
+    patch_misc_qol(world, patch, dro)
+    patch_upwarp_present(world, patch, dro)
+    patch_death_link(world, patch, dro)
+    patch_game_overs(world, patch, dro)
+    patch_ranks(world, patch, dro)
+    patch_level_gen(world, patch, dro)
+    patch_min_max_items(world, patch, dro)
+    patch_last_level(world, patch, dro)
+    patch_map_reveals(world, patch, dro)
+    patch_earthling_rando(world, patch, dro)
+    patch_sound_rando(world, patch, dro)
+    patch_map_rando(world, patch, dro)
+    patch_ship_piece_sprites(world, patch, dro)
+
     patch.write_file("token_data.bin", patch.get_token_binary())

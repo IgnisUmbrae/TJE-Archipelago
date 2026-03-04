@@ -15,7 +15,9 @@
   },
   "pickup_item": {
     "inventory_asl_1": 222,
+    "inventory_addr_1": 224,
     "inventory_asl_2": 246,
+    "inventory_addr_2": 248,
     "inventory_size_1": 298,
     "inventory_size_2": 304
   },
