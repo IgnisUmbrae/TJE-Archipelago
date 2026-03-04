@@ -1,4 +1,3 @@
-from collections import Counter, defaultdict
 from typing import NamedTuple
 from base64 import b64encode, b64decode
 
