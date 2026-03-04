@@ -93,6 +93,7 @@ FindEmptyInvSlot:
     ext.l      D0
 DYNRP_inventory_asl_1:
     asl.l      #$4,D0
+DYNRP_inventory_addr_1:
     movea.l    #AP_INVENTORIES,A0
     move.w     D6,D1
     adda.l     D0,A0
@@ -104,6 +105,7 @@ DYNRP_inventory_asl_1:
     ext.l      D0
 DYNRP_inventory_asl_2:
     asl.l      #$4,D0
+DYNRP_inventory_addr_2:
     movea.l    #AP_INVENTORIES,A0
     move.w     D6,D1
     adda.l     D0,A0
