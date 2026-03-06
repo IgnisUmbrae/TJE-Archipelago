@@ -272,5 +272,31 @@
 				0x0000b732
 			]
 		},
+
+		// Cause of death–related
+		{
+			filename: "youch_additions",
+			addresses: [
+				0x0010c400
+			]
+		},
+		{
+			filename: "youch_additions_jump",
+			addresses: [
+				0x0001b27c
+			]
+		},
+		{
+			filename: "cactus_damage",
+			addresses: [
+				0x0001566c
+			]
+		},
+		{
+			filename: "rosebush_damage",
+			addresses: [
+				0x0001d1a8
+			]
+		},
 	]
 }

@@ -43,5 +43,8 @@ AP_DEATH_TRIGGERED      equ $00fff6a2
 ;; Game writes a value, client optionally resets to 0 after use
 AP_BIG_ITEM_LV          equ $00fff6b0
 
+; Written to by game, used by client to determine cause of death
+AP_LAST_DMG_SOURCE      equ $00fff6c0
+
 ; Phantom item entry for remote item awarding
 AP_PHANTOM_ITEM         equ $00fff700
