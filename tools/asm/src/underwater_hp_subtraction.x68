@@ -7,6 +7,6 @@ ReturnPoint equ $0000bd92
     subq.b #$1,(A4,D0.l)
 ; -- end original function block --
 
-    move.b #$23,AP_LAST_DMG_SOURCE
+    move.b #$22,AP_LAST_DMG_SOURCE
 
     jmp ReturnPoint
