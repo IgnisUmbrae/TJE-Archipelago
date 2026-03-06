@@ -184,6 +184,10 @@ def patch_death_link(world, patch, dro) -> None:
     if world.options.death_link:
         patch.write_token(APTokenTypes.WRITE, 0x0000bcc6, read_bin("on_death_jump"))
         patch.write_token(APTokenTypes.WRITE, 0x0010a400, read_bin("on_death"))
+        if world.options.game_overs != GameOverOption.DROP_DOWN:
+            patch.write_token(APTokenTypes.WRITE,
+                              0x0010a400 + dro["on_death"]["dropdown_life_check"],
+                              read_bin("on_death_remove_life_check"))
 
 def patch_game_overs(world, patch, dro) -> None:
     if world.options.game_overs == GameOverOption.DISABLE:
