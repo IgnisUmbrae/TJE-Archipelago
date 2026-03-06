@@ -1,3 +1,4 @@
+from calendar import c
 from typing import TYPE_CHECKING
 import time
 import logging
@@ -64,6 +65,8 @@ class TJEClient(BizHawkClient):
     save_manager = None
 
     queue = SpawnQueue()
+
+    on_menu = True
 
     auto_bad_presents = 0
 
@@ -232,14 +235,18 @@ class TJEClient(BizHawkClient):
             await self.game_controller.kill_player(ctx)
 
     async def game_watcher(self, ctx: "BizHawkClientContext") -> None:
-        await self.game_controller.level_monitor.tick()
         if await self.game_controller.check_if_on_menu(ctx):
-            self.game_controller.current_level = -1
+            if not self.on_menu:
+                self.game_controller.awaiting_load = True
+                ctx.save_retrieved = False
+                await self.retrieve_server_save(ctx)
+            self.on_menu = True
         else:
+            self.on_menu = False
             await self.game_controller.tick(ctx)
             if not ctx.finished_game:
                 await self.handle_queue(ctx)
                 await self.handle_deathlink(ctx)
                 await self.save_manager.tick()
-                if self.game_controller.current_level == 26:
+                if await self.game_controller.check_clear_condition(ctx):
                     await self.goal_in(ctx)
