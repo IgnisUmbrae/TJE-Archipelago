@@ -13,7 +13,7 @@ from .constants import DEAD_SPRITES, EMPTY_ITEM, COLLECTED_SHIP_ITEM, EMPTY_PRES
                        get_datastructure, get_max_health, get_slot_addr, get_ram_addr, expand_inv_constants
 from .items import ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, \
                    PRESENT_IDS, SHIP_PIECE_IDS,INSTATRAP_IDS, BAD_PRESENT_IDS
-from .hint import generate_hints_for_current_level
+# from .hint import generate_hints_for_current_level
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, RANK_LOC_TEMPLATE, BIG_ITEM_LOC_TEMPLATE, REACH_LOC_TEMPLATE
 
 if TYPE_CHECKING:
@@ -205,7 +205,6 @@ class AddressMonitor():
     def log_state(self, state=None):
         if state is None:
             state = self.enabled
-        #logger.debug("%s monitoring %s", self.name, "enabled" if state else "disabled")
 
     def set_monitor_level(self, level: MonitorLevel):
         self.monitor_level = level
@@ -248,14 +247,10 @@ class TJEGameController():
     def __init__(self, client: "BizHawkClient"):
         self.client = client
 
-        logger.debug("Resetting game…")
-
         # Game state–related
 
         # self.is_playing: bool = False
         self.game_complete: bool = False
-
-        self.current_level = -1
 
         # Saving and loading–related
 
@@ -289,17 +284,17 @@ class TJEGameController():
 
         self.char = char
 
-        self.level_monitor = AddressMonitor(
-                                "Level",
-                                "LEVEL",
-                                1,
-                                level,
-                                lambda: True,
-                                self.handle_level_change,
-                                self,
-                                ctx,
-                                enabled=True
-                            )
+        # self.level_monitor = AddressMonitor(
+        #                         "Level",
+        #                         "LEVEL",
+        #                         1,
+        #                         level,
+        #                         lambda: True,
+        #                         self.handle_level_change,
+        #                         self,
+        #                         ctx,
+        #                         enabled=True
+        #                     )
 
         self.other_monitors = [
             AddressMonitor(
@@ -391,37 +386,12 @@ class TJEGameController():
         except (bizhawk.RequestFailedError, bizhawk.NotConnectedError):
             return None
 
-    async def get_empty_dropped_present_slot(self, ctx: "BizHawkClientContext") -> Optional[int]:
-        dropped_presents_table = await self.peek_ram(ctx, get_ram_addr("DROPPED_PRESENTS", self.char), 256)
-        if dropped_presents_table:
-            dropped_present_types = [dropped_presents_table[i:i+8][0:1]
-                                     for i in range(0, len(dropped_presents_table), 8)]
-            try:
-                return dropped_present_types.index(EMPTY_ITEM)
-            except ValueError:
-                return None
-        else:
-            return None
-
-    async def get_empty_floor_item_slot(self, ctx: "BizHawkClientContext") -> Optional[int]:
-        floor_item_table = await self.peek_ram(ctx, get_ram_addr("FLOOR_ITEMS", self.char), 256)
-        if floor_item_table:
-            floor_item_types = [floor_item_table[i:i+8][0:1]
-                                for i in range(0, len(floor_item_table), 8)]
-            try:
-                return floor_item_types.index(EMPTY_ITEM)
-            except ValueError:
-                return None
-        else:
-            return None
-
     #endregion
 
     #region Trap activation functions
 
     async def receive_trap(self, ctx: "BizHawkClientContext", trap_id: int) -> tuple[bool, tuple[str, str]]:
         trap_name = ITEM_ID_TO_NAME[trap_id]
-        logger.debug("Attempting to activate %s", trap_name)
         match trap_name:
             case "Burp Trap":
                 success = await self.trap_burp(ctx)
@@ -436,7 +406,6 @@ class TJEGameController():
             case "Randomizer Trap":
                 success = await self.trap_present(ctx, b"\x12")
             case _:
-                logger.error("Attempted to activate a non-existent trap")
                 success = True
         return success, STATIC_DIALOGUE_LIST[trap_name]
 
@@ -495,7 +464,6 @@ class TJEGameController():
         return success
 
     async def spawn_item(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
-        logger.debug("Attempting to spawn item %s", ITEM_ID_TO_NAME[item_id])
         dialogue = (None, None)
         if item_id in SHIP_PIECE_IDS:
             success, dialogue = await self.award_ship_piece(ctx, item_id)
@@ -564,20 +532,22 @@ class TJEGameController():
         if not await self.is_player_dead(ctx) and await self.is_safe_to_kill_player(ctx):
             await self.poke_ram(ctx, get_ram_addr("HEALTH", self.char), b"\x00")
 
-    async def handle_items_set(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
-                                  old_data: bytes, new_data: bytes):
-        if int.from_bytes(new_data) == 1 and self.current_level != -1:
-            map_data = await self.peek_ram(ctx, get_ram_addr("CURRENT_LEVEL_DATA"), 988)
-            floor_item_data = await self.peek_ram(ctx, get_ram_addr("FLOOR_ITEMS"), 256)
-            if self.dynamic_hints.get(self.current_level, None) is None:
-                hints = generate_hints_for_current_level(self.current_level, map_data, floor_item_data)
-                self.dynamic_hints.update(hints)
-            await self.poke_ram(ctx, get_ram_addr("AP_LEVEL_ITEMS_SET"), b"\x00")
+    # async def handle_items_set(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
+    #                               old_data: bytes, new_data: bytes):
+    #     if int.from_bytes(new_data) == 1 and self.current_level != -1:
+    #         map_data = await self.peek_ram(ctx, get_ram_addr("CURRENT_LEVEL_DATA"), 988)
+    #         floor_item_data = await self.peek_ram(ctx, get_ram_addr("FLOOR_ITEMS"), 256)
+    #         if self.dynamic_hints.get(self.current_level, None) is None:
+    #             hints = generate_hints_for_current_level(self.current_level, map_data, floor_item_data)
+    #             self.dynamic_hints.update(hints)
+    #         await self.poke_ram(ctx, get_ram_addr("AP_LEVEL_ITEMS_SET"), b"\x00")
 
-    async def handle_level_change(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
-                                  old_data: bytes, new_data: bytes):
-        old_level = self.current_level
-        self.current_level = int.from_bytes(new_data)
+    # async def handle_level_change(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
+    #                               old_data: bytes, new_data: bytes):
+    #     old_level = self.current_level
+    #     self.current_level = int.from_bytes(new_data)
+    #     if old_level != -1 and self.current_level == -1:
+    #         print("RESET DETECTED")
 
     async def handle_collected_item_change(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
                                        old_data: bytes, new_data: bytes):
@@ -609,7 +579,10 @@ class TJEGameController():
             loc = REACH_LOC_TEMPLATE.format(level)
             await self.client.trigger_location(ctx, loc)
 
-    async def check_if_on_menu(self, ctx: "BizHawkClientContext") -> None:
+    async def check_if_on_menu(self, ctx: "BizHawkClientContext") -> bool:
         return (await self.peek_ram(ctx, get_ram_addr("STATE", self.char), 1)) == b"\x00"
+
+    async def check_clear_condition(self, ctx: "BizHawkClientContext") -> bool:
+        return (await self.peek_ram(ctx, get_ram_addr("LEVEL", self.char), 1)) == b"\x1a"
 
     #endregion
