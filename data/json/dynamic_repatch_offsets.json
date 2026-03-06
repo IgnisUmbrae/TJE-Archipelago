@@ -13,6 +13,9 @@
   "mole_steal_additions": {
     "inventory_asl": 4
   },
+  "on_death": {
+    "dropdown_life_check": 10
+  },
   "pickup_item": {
     "inventory_asl_1": 222,
     "inventory_addr_1": 224,
