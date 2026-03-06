@@ -2,4 +2,4 @@
 
     include "common.inc"
 
-    jmp AP_SQUISH_MOD
+    jmp AP_EARTHLING_SQUISH_MOD

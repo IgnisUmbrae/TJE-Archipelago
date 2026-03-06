@@ -382,5 +382,17 @@
 				0x0001b364
 			]
 		},
+		{
+			filename: "underwater_hp_subtraction",
+			addresses: [
+				0x0010cc00
+			]
+		},
+		{
+			filename: "underwater_hp_subtraction_jump",
+			addresses: [
+				0x0000bd68
+			]
+		},
 	]
 }
