@@ -275,13 +275,13 @@
 
 		// Cause of death–related
 		{
-			filename: "youch_additions",
+			filename: "player_youch",
 			addresses: [
 				0x0010c400
 			]
 		},
 		{
-			filename: "youch_additions_jump",
+			filename: "player_youch_jump",
 			addresses: [
 				0x0001b27c
 			]
@@ -296,6 +296,30 @@
 			filename: "rosebush_damage",
 			addresses: [
 				0x0001d1a8
+			]
+		},
+		{
+			filename: "projectile_collisions",
+			addresses: [
+				0x0010c500
+			]
+		},
+		{
+			filename: "projectile_collisions_jump",
+			addresses: [
+				0x0001c6fe
+			]
+		},
+		{
+			filename: "open_present_food_bad",
+			addresses: [
+				0x0010c600
+			]
+		},
+		{
+			filename: "open_present_food_bad_jump",
+			addresses: [
+				0x0001702a
 			]
 		},
 	]

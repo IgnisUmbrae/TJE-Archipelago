@@ -2,5 +2,5 @@
 
     include "common.inc"
 
-    jmp AP_YOUCH_MOD.l
+    jmp AP_PLAYER_YOUCH_MOD
     

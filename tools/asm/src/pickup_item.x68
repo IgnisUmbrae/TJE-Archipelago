@@ -217,6 +217,8 @@ EatFood:
     move.l     #Sfx_Eat,-(SP)
     bra.w      OutputSound
 EatBadFood:
+    ; register the bad food item ID as last source of damage
+    move.b     (A2),AP_LAST_DMG_SOURCE
     pea        ($28).w
     pea        ($12).w ; bad food sound
     jsr        Fn_PlayPSGSound.l
