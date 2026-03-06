@@ -322,5 +322,65 @@
 				0x0001702a
 			]
 		},
+		{
+			filename: "process_raincloud_1",
+			addresses: [
+				0x0010c700
+			]
+		},
+		{
+			filename: "process_raincloud_1_jump",
+			addresses: [
+				0x00016b50
+			]
+		},
+		{
+			filename: "process_raincloud_2",
+			addresses: [
+				0x0010c800
+			]
+		},
+		{
+			filename: "process_raincloud_2_jump",
+			addresses: [
+				0x00016c0e
+			]
+		},
+		{
+			filename: "open_extralife_or_totalbummer_1",
+			addresses: [
+				0x0010c900
+			]
+		},
+		{
+			filename: "open_extralife_or_totalbummer_1_jump",
+			addresses: [
+				0x000165de
+			]
+		},
+		{
+			filename: "open_extralife_or_totalbummer_2",
+			addresses: [
+				0x0010ca00
+			]
+		},
+		{
+			filename: "open_extralife_or_totalbummer_2_jump",
+			addresses: [
+				0x0001649c
+			]
+		},
+		{
+			filename: "player_squish_by_earthling",
+			addresses: [
+				0x0010cb00
+			]
+		},
+		{
+			filename: "player_squish_by_earthling_jump",
+			addresses: [
+				0x0001b364
+			]
+		},
 	]
 }
