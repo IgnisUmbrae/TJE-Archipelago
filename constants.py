@@ -64,7 +64,25 @@ DEATHLINK_MESSAGES = {
         "{player} had a total bummer"
     ],
     0x1E : [
-        "{player} drowned in the sea"
+        "{player} drowned in the sea",
+    ],
+    0x4A : [
+        "{player} gambled with mystery food and lost",
+    ],
+    0x4B : [
+        "{player} choked on some fish bones",
+    ],
+    0x4C : [
+        "{player} got ill from moldy cheese",
+    ],
+    0x4D : [
+        "{player} got ill from moldy bread",
+    ],
+    0x4E : [
+        "{player} tried eating a weird-looking mushroom",
+    ],
+    0x4F : [
+        "{player} got cabbaged",
     ]
 }
 
