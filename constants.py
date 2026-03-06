@@ -3,6 +3,71 @@ from base64 import b64encode, b64decode
 
 BASE_TJE_ID = 25101991
 
+#region Deathlink-related
+
+DEATHLINK_MESSAGES = {
+    0x1 : [
+        "{player} got poked by a devil"
+    ],
+    0x2 : [
+        "{player} got squished by a hamster"
+    ],
+    0x3 : [
+        "{player} got run over by a shopping cart"
+    ],
+    0x4 : [
+        "{player} got drilled by a dentist"
+    ],
+    0x6 : [
+        "{player} got stung all over by a swarm of bees"
+    ],
+    0x9 : [
+        "{player} got whacked by a fake mailbox"
+    ],
+    0xC : [
+        "{player} got squished by a herd of nerds"
+    ],
+    0xD : [
+        "{player} got run down by a lawnmower"
+    ],
+    0xE : [
+        "{player} got chomped by a shark"
+    ],
+    0xF : [
+        "{player} got rammed by a gang of chickens"
+    ],
+    0x10 : [
+        "{player} got scared to death by a boogie man"
+    ],
+    0x13 : [
+        "{player} got squished by an ice cream truck"
+    ],
+    0x15 : [
+        "{player} got drilled by a very angry dentist"
+    ],
+    0x16 : [
+        "{player} got stung all over by a swarm of very angry bees"
+    ],
+    0x19 : [
+        "{player} got spined to death by a cactus"
+    ],
+    0x1A : [
+        "{player} got spiked to death by their own rosebushes"
+    ],
+    0x1B : [
+        "{player} got smacked in the face by a tomato"
+    ],
+    0x1C : [
+        "{player} got zapped by lightning"
+    ],
+    0x1D : [
+        "{player} had a total bummer"
+    ],
+    0x1E : [
+        "{player} drowned in the sea"
+    ]
+}
+
 #region Sound effects
 
 PCM_SFX_ADDRS = [0x00044d8a, 0x000491c8, 0x0004c276, 0x0004d75a, 0x0004dfa0, 0x0004f79a, 0x00051472, 0x00053920,
@@ -348,6 +413,7 @@ GLOBAL_RAM_ADDRS: dict[int] = {
     "AP_LEVEL_ITEMS_SET": 0xF6A1,
     "AP_DEATH": 0xF6A2,
     "AP_BIG_ITEM_LV": 0xF6B0,
+    "AP_LAST_DMG_SOURCE" : 0xF6C0
 }
 
 def get_slot_addr(name: str, slot: int, player: int = 0) -> int | None:

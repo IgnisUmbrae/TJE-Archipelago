@@ -9,7 +9,7 @@ from worlds._bizhawk.client import BizHawkClient
 
 from .constants import DEAD_SPRITES, EMPTY_ITEM, COLLECTED_SHIP_ITEM, EMPTY_PRESENT, GLOBAL_DATA_STRUCTURES, \
                        PLAYER_DATA_STRUCTURES, RANK_NAMES, SAVE_DATA_POINTS_GLOBAL, SAVE_DATA_POINTS_PLAYER, \
-                       STATIC_DIALOGUE_LIST, IN_END_ELEVATOR, \
+                       STATIC_DIALOGUE_LIST, IN_END_ELEVATOR, DEATHLINK_MESSAGES, \
                        get_datastructure, get_max_health, get_slot_addr, get_ram_addr, expand_inv_constants
 from .items import ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, \
                    PRESENT_IDS, SHIP_PIECE_IDS,INSTATRAP_IDS, BAD_PRESENT_IDS
@@ -550,7 +550,9 @@ class TJEGameController():
                                   old_data: bytes, new_data: bytes):
         if int.from_bytes(new_data) == 1:
             await self.poke_ram(ctx, get_ram_addr("AP_DEATH", self.char), b"\x00")
-            await ctx.send_death()
+            cause = int.from_bytes(await self.peek_ram(ctx, get_ram_addr("AP_LAST_DMG_SOURCE", self.char), 1))
+            await ctx.send_death(
+                random.choice(DEATHLINK_MESSAGES[cause]).format(player=ctx.player_names.get(ctx.slot)))
             ctx.sent_death_time = ctx.last_death_link
 
     async def is_safe_to_kill_player(self, ctx: "BizHawkClientContext") -> bool:
