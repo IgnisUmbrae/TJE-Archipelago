@@ -514,13 +514,16 @@ class TJEGameController():
         hp = int.from_bytes(await self.peek_ram(ctx, get_ram_addr("HEALTH", self.char), 1))
         return (sprite in DEAD_SPRITES and hp == 0)
 
+    def get_deathlink_message(self, cause: int, name: str) -> str:
+        return random.choice(DEATHLINK_MESSAGES[cause]).format(player=name)
+
     async def handle_death_flag(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
                                   old_data: bytes, new_data: bytes):
         if int.from_bytes(new_data) == 1:
             await self.poke_ram(ctx, get_ram_addr("AP_DEATH", self.char), b"\x00")
             cause = int.from_bytes(await self.peek_ram(ctx, get_ram_addr("AP_LAST_DMG_SOURCE", self.char), 1))
-            await ctx.send_death(
-                random.choice(DEATHLINK_MESSAGES[cause]).format(player=ctx.player_names.get(ctx.slot)))
+            message = self.get_deathlink_message(cause, ctx.player_names.get(ctx.slot))
+            await ctx.send_death(message)
             ctx.sent_death_time = ctx.last_death_link
 
     async def is_safe_to_kill_player(self, ctx: "BizHawkClientContext") -> bool:
