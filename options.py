@@ -552,6 +552,13 @@ class LocalShipPieces(Choice):
 
     default = option_off
 
+class RestoreUnusedPresentSprites(DefaultOnToggle):
+    """
+    Two unused present sprites remain in the ROM but aren't used.
+    This option adds them back into the game.
+    """
+
+    display_name = "Restore Unused Present Sprites"
 
 tje_option_groups = [
     OptionGroup("Basic Items/Locations", [
@@ -594,7 +601,8 @@ tje_option_groups = [
     ]),
     OptionGroup("Misc", [
         SoundRando,
-        GameVersion
+        GameVersion,
+        RestoreUnusedPresentSprites
     ])
 ]
 
@@ -623,6 +631,8 @@ class TJEOptions(PerGameCommonOptions):
     upwarp_present: UpwarpPresent
     character: Character
     game_overs: GameOvers
+    earthling_rando: EarthlingRando
+    earthling_rando_niceness: EarthlingRandoNiceness
     sleep_when_idle: SleepWhenIdle
     walk_speed: WalkSpeedBoost
     present_timers: ExtendedPresentTimers
@@ -631,5 +641,4 @@ class TJEOptions(PerGameCommonOptions):
     expanded_inventory: ExpandedInventory
     sound_rando: SoundRando
     game_version: GameVersion
-    earthling_rando: EarthlingRando
-    earthling_rando_niceness: EarthlingRandoNiceness
+    unused_present_sprites: RestoreUnusedPresentSprites

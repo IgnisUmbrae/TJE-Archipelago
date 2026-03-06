@@ -91,6 +91,16 @@ def patch_starting_presents(world, patch, dro) -> None:
     for i in range(8):
         patch.write_token(APTokenTypes.WRITE, INITIAL_PRESENT_ADDRS[i], presents[i])
 
+def patch_unused_present_sprites(world, patch, dro) -> None:
+    # replace two random present sprites with the unused ones
+    if world.options.unused_present_sprites:
+        excl1, excl2 = world.random.sample(range(0, 30), k=2)
+        print(excl1, excl2)
+        if excl1 < 28:
+            patch.write_token(APTokenTypes.WRITE, 0x00105000 + 4*excl1, struct.pack(">L", 0x000aaee4))
+        if excl2 < 28:
+            patch.write_token(APTokenTypes.WRITE, 0x00105000 + 4*excl2, struct.pack(">L", 0x000aaf92))
+
 def patch_expanded_inv(world, patch, dro) -> None:
 
     if world.options.expanded_inventory:
@@ -322,6 +332,7 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
     patch_item_list(world, patch, dro)
     patch_main_menu(world, patch, dro)
     patch_starting_presents(world, patch, dro)
+    patch_unused_present_sprites(world, patch, dro)
     patch_expanded_inv(world, patch, dro)
     patch_misc_qol(world, patch, dro)
     patch_upwarp_present(world, patch, dro)
