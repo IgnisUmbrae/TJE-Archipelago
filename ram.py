@@ -267,6 +267,8 @@ class TJEGameController():
         self.auto_bad_presents = 0
         self.expanded_inv = False
 
+        self.died_from_deathlink = False
+
     #region Per-update high-level logic functions
 
     async def tick(self, ctx: "BizHawkClientContext"):
@@ -515,16 +517,20 @@ class TJEGameController():
         return (sprite in DEAD_SPRITES and hp == 0)
 
     def get_deathlink_message(self, cause: int, name: str) -> str:
-        return random.choice(DEATHLINK_MESSAGES[cause]).format(player=name)
+        return random.choice(DEATHLINK_MESSAGES.get(cause,
+                                                    ["{player} died in mysterious circumstances"])).format(player=name)
 
     async def handle_death_flag(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
                                   old_data: bytes, new_data: bytes):
         if int.from_bytes(new_data) == 1:
             await self.poke_ram(ctx, get_ram_addr("AP_DEATH", self.char), b"\x00")
-            cause = int.from_bytes(await self.peek_ram(ctx, get_ram_addr("AP_LAST_DMG_SOURCE", self.char), 1))
-            message = self.get_deathlink_message(cause, ctx.player_names.get(ctx.slot))
-            await ctx.send_death(message)
-            ctx.sent_death_time = ctx.last_death_link
+            if not self.died_from_deathlink:
+                cause = int.from_bytes(await self.peek_ram(ctx, get_ram_addr("AP_LAST_DMG_SOURCE", self.char), 1))
+                message = self.get_deathlink_message(cause, ctx.player_names.get(ctx.slot))
+                await ctx.send_death(message)
+                ctx.sent_death_time = ctx.last_death_link
+            else:
+                self.died_from_deathlink = False
 
     async def is_safe_to_kill_player(self, ctx: "BizHawkClientContext") -> bool:
         in_end_elev = await self.peek_ram(ctx, get_ram_addr("GLOBAL_ELEVATOR_STATE", self.char), 1) == IN_END_ELEVATOR
@@ -534,6 +540,7 @@ class TJEGameController():
     async def kill_player(self, ctx: "BizHawkClientContext"):
         if not await self.is_player_dead(ctx) and await self.is_safe_to_kill_player(ctx):
             await self.poke_ram(ctx, get_ram_addr("HEALTH", self.char), b"\x00")
+            self.died_from_deathlink = True
 
     # async def handle_items_set(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
     #                               old_data: bytes, new_data: bytes):
