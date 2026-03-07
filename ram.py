@@ -526,7 +526,7 @@ class TJEGameController():
             await self.poke_ram(ctx, get_ram_addr("AP_DEATH", self.char), b"\x00")
             if not self.died_from_deathlink:
                 cause = int.from_bytes(await self.peek_ram(ctx, get_ram_addr("AP_LAST_DMG_SOURCE", self.char), 1))
-                message = self.get_deathlink_message(cause, ctx.player_names.get(ctx.slot))
+                message = self.get_deathlink_message(cause, ctx.player_names.get(ctx.slot, "Someone"))
                 await ctx.send_death(message)
                 ctx.sent_death_time = ctx.last_death_link
             else:
