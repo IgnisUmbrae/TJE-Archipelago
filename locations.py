@@ -59,7 +59,7 @@ MAILBOX_LOC_TEMPLATE: list[TJELocationData] = [
 ]
 
 MASTER_LOCATION_LIST = list(itertools.chain(*FLOOR_ITEM_LOCATIONS)) + SHIP_PIECE_LOCATIONS + RANK_LOCATIONS \
-                                                                    + REACH_LOCATIONS + MAILBOX_LOC_TEMPLATE
+                                                                    + REACH_LOCATIONS# + MAILBOX_LOC_TEMPLATE
 
 LOCATION_NAME_TO_ID : dict[str, int] = {
     loc.name: id
