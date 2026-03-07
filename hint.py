@@ -4,7 +4,7 @@ from itertools import batched, product, accumulate
 from typing import Callable, Iterable
 from math import floor, sqrt, atan2, pi
 
-from .constants import EMPTY_ITEM, TREES
+from .constants import EMPTY_ITEM
 from .locations import floor_item_to_location_id
 
 @dataclass
@@ -389,7 +389,7 @@ def generate_hints_for_current_level(level: int, map_bytes: bytes, floor_item_by
     map_data = binary_map_data_to_tile_list(map_bytes)
 
     item_coords = item_data_to_coord_list(floor_item_bytes[:28*8], 28, lambda b: b != EMPTY_ITEM)
-    tree_coords = item_data_to_coord_list(floor_item_bytes[28*8:], 4, lambda b: b in TREES)
+    tree_coords = item_data_to_coord_list(floor_item_bytes[28*8:], 4, lambda b: b in (b"\x51", b"\x52", b"\x53"))
     tree_types = list(floor_item_bytes[28*8:][8*i] for i in range(4))
 
     return {floor_item_to_location_id(level, i): TJEHint(floor_item_to_location_id(level, i),
