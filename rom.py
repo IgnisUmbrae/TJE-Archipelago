@@ -95,7 +95,6 @@ def patch_unused_present_sprites(world, patch, dro) -> None:
     # replace two random present sprites with the unused ones
     if world.options.unused_present_sprites:
         excl1, excl2 = world.random.sample(range(0, 30), k=2)
-        print(excl1, excl2)
         if excl1 < 28:
             patch.write_token(APTokenTypes.WRITE, 0x00105000 + 4*excl1, struct.pack(">L", 0x000aaee4))
         if excl2 < 28:
