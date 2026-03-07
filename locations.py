@@ -12,6 +12,7 @@ class TJELocationType(Enum):
     SHIP_PIECE = auto()
     RANK = auto()
     REACH = auto()
+    MAILBOX = auto()
 
 class TJELocation(Location):
     game: str = "ToeJam & Earl"
@@ -26,6 +27,7 @@ FLOOR_ITEM_LOC_TEMPLATE = "Level {} - Item {}"
 BIG_ITEM_LOC_TEMPLATE = "Level {} - Big Item"
 RANK_LOC_TEMPLATE = "Promoted to {}"
 REACH_LOC_TEMPLATE = "Reach Level {}"
+MAILBOX_LOC_TEMPLATE = "Level {} Mailbox - Item {}"
 
 FLOOR_ITEM_LOCATIONS : list[list[TJELocationData]] = [[]]
 
@@ -51,8 +53,13 @@ REACH_LOCATIONS: list[TJELocationData] = [
     for level in range(2, 26)
 ]
 
-MASTER_LOCATION_LIST = list(itertools.chain(*FLOOR_ITEM_LOCATIONS)) + SHIP_PIECE_LOCATIONS \
-                                                                    + RANK_LOCATIONS + REACH_LOCATIONS
+MAILBOX_LOC_TEMPLATE: list[TJELocationData] = [
+    TJELocationData(MAILBOX_LOC_TEMPLATE.format(level, i), TJELocationType.REACH, -1, None)
+    for level in range(2, 26) for i in range(1,4)
+]
+
+MASTER_LOCATION_LIST = list(itertools.chain(*FLOOR_ITEM_LOCATIONS)) + SHIP_PIECE_LOCATIONS + RANK_LOCATIONS \
+                                                                    + REACH_LOCATIONS + MAILBOX_LOC_TEMPLATE
 
 LOCATION_NAME_TO_ID : dict[str, int] = {
     loc.name: id
@@ -74,10 +81,3 @@ LOCATION_GROUPS = dict(zip(
     )) \
        | {"Ranks" : [RANK_LOC_TEMPLATE.format(rank) for rank in RANK_NAMES[1:]]} \
        | {"Big Items" : [BIG_ITEM_LOC_TEMPLATE.format(level) for level in range(2, 26)]}
-
-def floor_item_to_location_id(level: int, item_idx: int) -> int | None:
-    if level < 1 or level > 25 or item_idx < 1 or item_idx > 28:
-        return None
-    if level == 1:
-        return BASE_TJE_ID + item_idx
-    return BASE_TJE_ID + 12 + (level-2)*28 + item_idx

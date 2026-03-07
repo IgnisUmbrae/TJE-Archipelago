@@ -4,8 +4,7 @@ from itertools import batched, product, accumulate
 from typing import Callable, Iterable
 from math import floor, sqrt, atan2, pi
 
-from .constants import EMPTY_ITEM
-from .locations import floor_item_to_location_id
+from .constants import BASE_TJE_ID, EMPTY_ITEM
 
 @dataclass
 class TJEHint:
@@ -21,7 +20,6 @@ ROAD_ENDS = (0x4, 0x7, 0xB, 0xE)
 
 # All void or sea, no items can spawn here
 NO_SPAWN_TILES = (0x22, 0x52, 0x53, 0x54, 0x55)
-
 
 #endregion
 
@@ -249,6 +247,14 @@ TREE_NEAR_DIST = 80
 #endregion
 
 #region Helper functions
+
+def floor_item_to_location_id(level: int, item_idx: int) -> int | None:
+    if level < 1 or level > 25 or item_idx < 1 or item_idx > 28:
+        return None
+    if level == 1:
+        return BASE_TJE_ID + item_idx
+    return BASE_TJE_ID + 12 + (level-2)*28 + item_idx
+
 
 def item_coords_to_tilexy(item_coords: tuple[int]) -> tuple[int]:
     return item_coords[1]/(8*8) - 1, item_coords[0]//(8*16) - 1
