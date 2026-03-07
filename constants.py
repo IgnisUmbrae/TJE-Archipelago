@@ -86,6 +86,8 @@ DEATHLINK_MESSAGES = {
     ]
 }
 
+#endregion
+
 #region Sound effects
 
 PCM_SFX_ADDRS = [0x00044d8a, 0x000491c8, 0x0004c276, 0x0004d75a, 0x0004dfa0, 0x0004f79a, 0x00051472, 0x00053920,
@@ -268,8 +270,6 @@ STATIC_DIALOGUE_LIST: dict[str, tuple[str,str]] = {
 
 #region Floor item–related
 
-TREES = (b"\x51", b"\x52", b"\x53")
-
 EMPTY_ITEM = b"\xFF"
 EMPTY_PRESENT = b"\xFF"
 
@@ -290,8 +290,6 @@ A_BUCK = 0x50
 
 COLLECTED_SHIP_ITEM = b"\x00"
 EMPTY_SHIP_PIECE = b"\xFF"
-
-FIXED_SHIP_PIECE_LEVELS = (2, 6, 10, 12, 15, 17, 20, 21, 23, 25)
 
 SHIP_PIECE_RANGES = (
     [(2, 3), (4, 5), (6, 7), (8, 9), (10, 11)], # max level 12
