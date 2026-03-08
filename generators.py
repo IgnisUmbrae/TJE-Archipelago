@@ -1,5 +1,4 @@
 import itertools
-import copy
 from collections import defaultdict, Counter
 from math import ceil, sqrt
 
@@ -287,46 +286,9 @@ def scaled_rank_thresholds(last_level: int = 25, min_items: int = 12, max_items:
     return [0] + \
            [total_points_to_next_rank(rank, last_level, min_items, max_items, desired_max_rank) for rank in range(8)]
 
-def scaled_rank_thresholds_alt(last_level: int = 25, min_items: int = 12, max_items: int = 28) -> list[int]:
-    min_factor = get_rank_rescale_factor(11, 4, 4) # Lowest rescale factor possible
-    factor = get_rank_rescale_factor(last_level, min_items, max_items)
-
-    # Map factor onto line starting at (min_factor, 1) and ending at (1, 0); its image under this map represents
-    # the % of the the rescaled second differences total that will be partitioned into 10s
-    percentage_of_tens = (factor-1)/(min_factor-1)
-    number_of_tens = ceil(percentage_of_tens*6)
-
-    # Partition out required number of tens (if this is not possible, then as many as possible)
-    diffs2_total = rescale_to_nearest_10(120, factor) # base second differences are [20]*6 → 120 total
-    quot, rem = divmod(diffs2_total, 10)
-    quot = min(number_of_tens, quot)
-    diffs2 = [10]*quot
-    diffs2_total -= 10*quot
-
-    # Partition out as many 20s as possible
-    quot, rem = divmod(diffs2_total, 20)
-    diffs2.extend([20]*quot)
-    if quot != 0 and rem != 0:
-        diffs2.append(rem)
-
-    # If we still haven't produced 6 numbers, add zeroes as required
-    diffs2.extend([0]*(6-len(diffs2)))
-
-    # Rescale base first difference and first rank threshold
-    diffs1_1 = rescale_to_nearest_10(60, factor)
-    thresh_1 = max(rescale_to_nearest_10(40, factor), 20)
-
-    diffs2 = sorted(diffs2)
-    diffs1 = sorted(itertools.accumulate([diffs1_1] + diffs2)) # Build first differences
-    thresholds = sorted(itertools.accumulate([thresh_1] + diffs1)) # Build actual sequence
-
-    return thresholds
-
 class TJEInternalRNG():
-    rng_state = 0x3039
-
     def __init__(self):
-        pass
+        self.rng_state = 0x3039
 
     def test_rng(self):
         pregenned_random_sequence = [self.get_random_number() for _ in range(59)]
@@ -370,6 +332,9 @@ class TJEInternalRNG():
             return True
         self.set_random_seed(level_seed)
         return (self.get_random_number() & 0xFFFF) % 100 > 49
+
+    def generate_mailboxes(self, seeds: list[int], last_level: int = 25) -> list[bool | None]:
+        return [i for (i, seed) in enumerate(seeds) if i <= last_level and self.is_mailbox_real(i, seed)]
 
     def test_mailboxes(self):
         FIXED_SEEDS = [0x04d2, 0xddd5, 0x6c7e, 0x63e0, 0xdd51, 0x7bab, 0x8904, 0x9f55, 0x5ee2, 0x1a46, 0xb8ed, 0x7cf6,
