@@ -13,7 +13,7 @@ from .client import TJEClient # required to register with BizHawkClient
 from .constants import MAILBOX_ITEM_REFS, VANILLA_RANK_THRESHOLDS, BASE_EARTHLINGS, REV00_MD5, REV02_MD5
 from .generators import TJEGenerator, TJEInternalRNG, get_key_levels, item_totals, scaled_rank_thresholds
 from .items import Item, TJEItem, ITEM_GROUPS, ITEM_ID_TO_CODE, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, MASTER_ITEM_LIST, \
-                   TJEItemType, create_items, create_starting_presents, get_item_price
+                   TJEItemType, create_items, create_starting_presents, create_starting_bucks, get_item_price
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, MAILBOX_LOC_TEMPLATE, LOCATION_GROUPS, LOCATION_NAME_TO_ID, MAILBOX_LOCATIONS
 from .options import RankRescalingOption, EarthlingRandomizationOption, LocalShipPiecesOption, TJEOptions
 from .regions import create_regions
@@ -170,6 +170,7 @@ class TJEWorld(World):
     def create_items(self) -> None:
         create_items(self, self.multiworld, self.player, self.options)
         create_starting_presents(self, self.multiworld, self.options)
+        create_starting_bucks(self, self.multiworld)
 
     def set_rules(self) -> None:
         self.multiworld.completion_condition[self.player] = (
