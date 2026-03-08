@@ -2,7 +2,7 @@ from typing import NamedTuple
 from itertools import product
 
 from BaseClasses import Region, MultiWorld, LocationProgressType, ItemClassification
-from worlds.generic.Rules import forbid_item, add_rule
+from worlds.generic.Rules import forbid_item, forbid_items_for_player, add_rule
 
 from .constants import RANK_NAMES, MAILBOX_ITEM_REFS
 from .items import EDIBLE_IDS, ITEM_ID_TO_NAME, TJEItem
@@ -141,10 +141,11 @@ def add_rank_checks(menu: Region, world, player, options: TJEOptions):
     for number, rank in enumerate(RANK_NAMES[1:options.max_rank_check.value+1], start=1):
         loc_name = RANK_LOC_TEMPLATE.format(rank)
         loc = TJELocation(player, loc_name, world.location_name_to_id[loc_name], menu)
-        loc.access_rule = lambda state, rank_num=number: state.has("ranks", player, rank_num)
+        loc.access_rule = lambda state, rank_num=number: state.has("points", player, world.rank_thresholds[rank_num])
+        print(world.rank_thresholds[number])
         # loc.progress_type = LocationProgressType.PRIORITY
-        # forbid_item(loc, "Promotion", player)
-        menu.locations.append(loc)
+        forbid_item(loc, "Promotion", player)
+        menu.locations.append(loc) 
 
 def add_reach_level_checks(player, world, options: TJEOptions, level_regions: list[Region]):
     for i, level in enumerate(level_regions[2:options.last_level.value+1]):
@@ -156,9 +157,9 @@ def add_reach_level_checks(player, world, options: TJEOptions, level_regions: li
 def add_mailbox_checks(player, world, options: TJEOptions, level_regions: list[Region]):
     for (i, pos) in product(world.mailboxes, MAILBOX_ITEM_REFS):
         loc_name = MAILBOX_LOC_TEMPLATE.format(i, pos)
-        level_regions[i].locations.append(
-            TJELocation(player, loc_name, world.location_name_to_id[loc_name], level_regions[i])
-        )
+        loc = TJELocation(player, loc_name, world.location_name_to_id[loc_name], level_regions[i])
+        forbid_items_for_player(loc, {"A Buck", "Extra Buck Present", "Jackpot"}, player)
+        level_regions[i].locations.append(loc)
 
 #endregion
 
