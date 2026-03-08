@@ -435,10 +435,6 @@ class TJEGameController():
 
     #region Spawning functions (also receipt of ethereal items)
 
-    async def is_on_land(self, ctx: "BizHawkClientContext") -> bool:
-        # 0x90 is space, 0x80 is water
-        return (await self.peek_ram(ctx, get_ram_addr("TILE_BELOW", self.char), 1)) not in (b"\x90", b"\x80")
-
     async def is_warping(self, ctx: "BizHawkClientContext") -> bool:
         return (await self.peek_ram(ctx, get_ram_addr("END_ELEVATOR_STATE", self.char), 1)) == b"\x0C"
 
@@ -478,9 +474,9 @@ class TJEGameController():
         return success
 
     async def give_item_directly(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
-        item_code = ITEM_ID_TO_CODE[item_id]
-        if await self.is_item_waiting(ctx) or not await self.is_on_land(ctx):
+        if await self.is_item_waiting(ctx):
             return False
+        item_code = ITEM_ID_TO_CODE[item_id]
         if item_id in PRESENT_IDS and await self.is_inventory_full(ctx):
             await self.poke_ram(ctx, get_ram_addr("AP_DROP_PRESENT"), item_code.to_bytes(1))
             return True

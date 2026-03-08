@@ -15,5 +15,6 @@ VAN_ELEV_SPEED          equ $00ffda76
 VAN_ELEV_ACCEL          equ $00ffda78
 VAN_INVENTORIES         equ $00ffdac2 ; add size of inventory for Earl's inv addr
 VAN_MAP_OBJECT_TABLE    equ $00ffdae2
+VAN_LEVEL_LOADED        equ $00ffdce4
 VAN_COLLECTED_OBJ_TABLE equ $00ffdde8
 VAN_SHIP_PIECE_LEVELS   equ $00ffe212

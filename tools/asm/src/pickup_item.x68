@@ -7,10 +7,10 @@
     ; --begin original function block--
     link.w     A6,#-8
     movem.l    A3/A2/D6/D5/D4/D3/D2,-(SP)
-    ; various sanity checks on player state to ensure it's sensible to pick up an item
     move.w     ($a,A6),D3
     move.l     ($c,A6),D5
-    move.w     ($12,A6),D4
+    move.w     ($12,A6),D4 ; object table size (only values used in vanilla are $1c and $20; auto-awarded uses $1)
+    ; preparation for various sanity checks on player state to ensure it's sensible to pick up an item
     move.w     D3,D0
     asl.w      #$7,D0
     movea.l    #VAN_ENTITY_INFO_TABLE,A0
@@ -18,6 +18,13 @@
     movea.l    A0,A3
     move.w     D3,D0
     ext.l      D0
+    ; --end original function block--
+
+    ; skip all state checks if this is an auto-awarded AP item
+    cmpi.b #$1,D4
+    beq.b SkipPlayerStateChecks
+
+    ; --begin original function block--
     movea.l    #VAN_PLAYER_LIVES,A0
     tst.b      (A0,D0.l)
     blt.b      DoNotPickup
@@ -29,6 +36,7 @@
     beq.b      DoNotPickup
     cmpi.b     #$4d,($4b,A3)
     beq.b      DoNotPickup
+SkipPlayerStateChecks:
     movea.l    ($52,A3),A0
     exg        D0,A0
     andi.l     #$41800,D0
@@ -78,6 +86,7 @@ CheckDistanceToObject:
     moveq      #$8,D2
     cmp.l      D0,D2
     ble.w      MarkAsCollected
+
     ; check if object is a present or AP item (type < $40)
     cmpi.b     #$40,(A2)
     bge.w      PickupNonPresent

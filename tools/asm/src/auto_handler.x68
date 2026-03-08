@@ -116,9 +116,9 @@ AutoAwardGroundItem:
     ; create simplified phantom ground item entry in RAM
     movea.l    #AP_PHANTOM_ITEM,A2
     move.b     (A1),(A2) ; object type → specified type
-    move.b     #$0,($1,A2) ; level → 0
+    move.b     (VAN_LEVEL_LOADED),($1,A2) ; level → receiving player's current level
     move.b     #-1,($2,A2) ; entity id → $FF
-    move.b     #-1,($3,A2) ; z sort → $FF
+    move.b     #$aa,($3,A2) ; z sort → $aa, magic value used to signify an auto-awarded item
     movea.l    #VAN_ENTITY_INFO_TABLE,A3
     clr.l      D1
     move.b     (AP_ACTIVE_CHAR).l,D1
@@ -128,8 +128,8 @@ AutoAwardGroundItem:
     ; reset flag to $FF
     move.b     #-1,(A1)
     ; force pickup
-    pea        ($0).w
-    pea        ($1).w
+    pea        ($0).w ; not dropped present
+    pea        ($1).w ; table size = 1, i.e. only check this singular item
     pea        (AP_PHANTOM_ITEM).l
     move.b     (AP_ACTIVE_CHAR).l,D0
     ext.w      D0
