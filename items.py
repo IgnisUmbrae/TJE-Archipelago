@@ -241,7 +241,7 @@ def create_main_items(world, item_list, total_locations, differential, options: 
 
         item_list.append(world.create_item(item_name, item_classification))
 
-def create_starting_presents(world, multiworld : MultiWorld, options: TJEOptions) -> None:
+def create_starting_presents(world, multiworld: MultiWorld, options: TJEOptions) -> None:
     match options.starting_presents:
         case StartingPresentOption.NONE:
             world.starting_presents = []
@@ -259,6 +259,9 @@ def create_starting_presents(world, multiworld : MultiWorld, options: TJEOptions
     for item in world.starting_presents[:4]:
         multiworld.push_precollected(world.create_item(item))
 
+def create_starting_bucks(world, multiworld):
+    for _ in range(3):
+        multiworld.push_precollected(world.create_item("A Buck"))
 
 def get_item_price(item: Item) -> int:
     if ItemClassification.trap in item.classification:
