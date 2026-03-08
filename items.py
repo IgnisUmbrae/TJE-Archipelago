@@ -82,7 +82,7 @@ BASE_ITEM_LIST: list[TJEItemData] = [
     TJEItemData(0x44, "Fries", TJEItemType.EDIBLE, ItemClassification.filler, 0),
     TJEItemData(0x45, "Pancakes", TJEItemType.EDIBLE, ItemClassification.filler, 0),
     TJEItemData(0x46, "Watermelon", TJEItemType.EDIBLE, ItemClassification.filler, 0),
-    TJEItemData(0x47, "Bacon & Eggs", TJEItemType.EDIBLE, ItemClassification.filler, 0),
+    TJEItemData(0x47, "Bacon'n Eggs", TJEItemType.EDIBLE, ItemClassification.filler, 0),
     TJEItemData(0x48, "Cherry Pie", TJEItemType.EDIBLE, ItemClassification.filler, 0),
     TJEItemData(0x49, "Pizza", TJEItemType.EDIBLE, ItemClassification.filler, 0),
     TJEItemData(0x4A, "Cereal", TJEItemType.EDIBLE, ItemClassification.filler, 0),
@@ -159,6 +159,9 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
 
     if options.reach_level_checks:
         differential -= options.last_level-1
+    
+    if options.mailbox_checks:
+        differential -= 3*len(world.mailboxes)
 
     create_main_items(world, item_list, total_locations, differential, options)
 
