@@ -8,9 +8,10 @@ from pathlib import Path
 from settings import get_settings
 from worlds.Files import APProcedurePatch, APTokenMixin, APTokenTypes
 
-from .constants import EMPTY_PRESENT, INITIAL_PRESENT_ADDRS, BASE_LEVEL_TYPES, INV_REF_ADDRS_VANILLA, INV_SIZE_ADDRS_VANILLA, \
-                       INV_SIZE_ADDRS_ASL_D0_VANILLA, INV_SIZE_ADDRS_INITIAL, MAP_REVEAL_DIALOGUE_ADDRS, PCM_SFX_ADDRS, \
-                       PCM_SFX_ADDRS_MUSIC, PCM_SFX_USAGE_ADDRS, PCM_SFX_USAGE_ADDRS_MUSIC, PSG_SFX, PSG_SFX_USAGE_ADDRS
+from .constants import EMPTY_PRESENT, INITIAL_PRESENT_ADDRS, BASE_LEVEL_TYPES, INV_REF_ADDRS_VANILLA, \
+                       INV_SIZE_ADDRS_VANILLA, INV_SIZE_ADDRS_ASL_D0_VANILLA, INV_SIZE_ADDRS_INITIAL, \
+                       MAP_REVEAL_DIALOGUE_ADDRS, PCM_SFX_ADDRS, PCM_SFX_ADDRS_MUSIC, PCM_SFX_USAGE_ADDRS, \
+                       PCM_SFX_USAGE_ADDRS_MUSIC, PSG_SFX, PSG_SFX_USAGE_ADDRS, SIMPLE_SFX, SIMPLE_SFX_USAGE_ADDRS
 from .generators import map_reveal_text
 from .items import ITEM_ID_TO_CODE
 from .options import CharacterOption, SoundRandoOption, StartingPresentOption, GameOverOption, MapRandomizationOption, \
@@ -249,22 +250,36 @@ def patch_earthling_rando(world, patch, dro) -> None:
 
 def patch_sound_rando(world, patch, dro) -> None:
     if world.options.sound_rando != world.options.sound_rando.default:
+        # Get base of static locations
         if world.options.sound_rando == SoundRandoOption.ALL:
             pcm_sfx_addrs = PCM_SFX_ADDRS + PCM_SFX_ADDRS_MUSIC
             pcm_sfx_usage_addrs = PCM_SFX_USAGE_ADDRS + PCM_SFX_USAGE_ADDRS_MUSIC
         else:
             pcm_sfx_addrs = PCM_SFX_ADDRS
             pcm_sfx_usage_addrs = PCM_SFX_USAGE_ADDRS
+        psg_sfx_usage_addrs = copy.copy(PSG_SFX_USAGE_ADDRS)
+
+        # Insert dynamic locations from DRO list
+        pcm_sfx_usage_addrs[34] = (0x0010a000 + dro["pickup_item"]["PCM_SFX_1"],)
+        pcm_sfx_usage_addrs[3] = (0x0010a000 + dro["pickup_item"]["PCM_SFX_2"],
+                                  0x0010a000 + dro["pickup_item"]["PCM_SFX_3"])
+        psg_sfx_usage_addrs[11].append(0x0010a000 + dro["pickup_item"]["PSG_SFX_1"])
+        psg_sfx_usage_addrs[0] = (0x0010a000 + dro["pickup_item"]["PSG_SFX_2"],)
 
         world.random.shuffle(pcm_sfx_addrs)
-        for i, sfx_addr in enumerate(pcm_sfx_addrs):
+        for i, sfx_addr in enumerate(pcm_sfx_addrs):    
             for rom_addr in pcm_sfx_usage_addrs[i]:
                 patch.write_token(APTokenTypes.WRITE, rom_addr + 2, struct.pack(">L", sfx_addr))
 
         world.random.shuffle(PSG_SFX)
-        for i, sfx_addr in enumerate(PSG_SFX):
-            for rom_addr in PSG_SFX_USAGE_ADDRS[i]:
-                patch.write_token(APTokenTypes.WRITE, rom_addr + 3, struct.pack(">B", sfx_addr))
+        for i, sfx_num in enumerate(PSG_SFX):
+            for rom_addr in psg_sfx_usage_addrs[i]:
+                patch.write_token(APTokenTypes.WRITE, rom_addr + 3, struct.pack(">B", sfx_num))
+
+        world.random.shuffle(SIMPLE_SFX)
+        for i, sfx_num in enumerate(SIMPLE_SFX):
+            for rom_addr in SIMPLE_SFX_USAGE_ADDRS[i]:
+                patch.write_token(APTokenTypes.WRITE, rom_addr + 3, struct.pack(">B", sfx_num))
 
 def patch_map_rando(world, patch, dro) -> None:
     if world.options.map_rando != world.options.map_rando.default:
