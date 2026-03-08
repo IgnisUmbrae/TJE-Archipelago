@@ -22,7 +22,12 @@
     "inventory_asl_2": 252,
     "inventory_addr_2": 254,
     "inventory_size_1": 304,
-    "inventory_size_2": 310
+    "inventory_size_2": 310,
+    "PCM_SFX_1": 404,
+    "PCM_SFX_2": 506,
+    "PCM_SFX_3": 550,
+    "PSG_SFX_1": 570,
+    "PSG_SFX_2": 708
   },
   "ship_piece_touch": {
     "last_level": 56

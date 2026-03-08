@@ -175,6 +175,7 @@ PickupNonPresent:
     addq.b     #$1,(A0,D0.l)
     clr.l      -(SP)
     pea        ($32).w
+DYNRP_PCM_SFX_1:
     move.l     #Sfx_Money,-(SP)
 OutputSound:
     jsr        Fn_PlayPCMSound.l
@@ -209,6 +210,7 @@ PickupFood:
     jsr        Fn_SayText.l
     clr.l      -(SP)
     pea        ($32).w
+DYNRP_PCM_SFX_2:
     move.l     #Sfx_Eat,-(SP)
     jsr        Fn_PlayPCMSound.l
     lea        ($18,SP),SP
@@ -223,12 +225,14 @@ EatFood:
     ble.b      EatBadFood
     clr.l      -(SP)
     pea        ($32).w
+DYNRP_PCM_SFX_3:
     move.l     #Sfx_Eat,-(SP)
     bra.w      OutputSound
 EatBadFood:
     ; register the bad food item ID as last source of damage
     move.b     (A2),AP_LAST_DMG_SOURCE
     pea        ($28).w
+DYNRP_PSG_SFX_1:
     pea        ($12).w ; bad food sound
     jsr        Fn_PlayPSGSound.l
     addq.l     #$8,SP
@@ -277,6 +281,7 @@ AutoIdentifyPresent:
     movea.l    #AP_PRES_WRAPPING,A0
     move.b     #$1,($1,A0,D4.l)
     pea        ($32).w
+DYNRP_PSG_SFX_2:    
     pea        ($1).w ; item pickup sound
     jsr        Fn_PlayPSGSound.l
     bra.w      ExtraUnknownCheck
