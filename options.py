@@ -325,6 +325,14 @@ class ReachLevelChecks(Toggle):
 
     display_name = "Reach Level Checks"
 
+class MailboxChecks(Toggle):
+    """
+    Adds mailbox purchases as checks. The exact number of extra checks is RNG-dependent.
+    On average this is 39–42 (13–14 mailboxes), but the actual number can be any multiple of 3 between 9 and 72.
+    """
+
+    display_name = "Mailbox Checks"
+
 class UpwarpPresent(Toggle):
     """
     Mutator that changes the Un-Fall present into an Up-Warp present that always sends you up one level,
@@ -586,6 +594,7 @@ tje_option_groups = [
         MaxRankCheck,
         RankRescalingMode,
         ReachLevelChecks,
+        MailboxChecks
     ]),
     OptionGroup("Difficulty/QoL", [
         Character,
@@ -628,6 +637,7 @@ class TJEOptions(PerGameCommonOptions):
     max_rank_check: MaxRankCheck
     rank_rescaling: RankRescalingMode
     reach_level_checks: ReachLevelChecks
+    mailbox_checks: MailboxChecks
     upwarp_present: UpwarpPresent
     character: Character
     game_overs: GameOvers

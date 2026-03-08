@@ -1,18 +1,20 @@
 import os
 import pkgutil
+import functools
+import re
 from typing import Optional, Any, ClassVar
-from itertools import takewhile
+from itertools import takewhile, product
 
 from BaseClasses import CollectionState, ItemClassification
 import settings
 from worlds.AutoWorld import World, WebWorld
 
 from .client import TJEClient # required to register with BizHawkClient
-from .constants import VANILLA_RANK_THRESHOLDS, BASE_EARTHLINGS, REV00_MD5, REV02_MD5
-from .generators import TJEGenerator, get_key_levels, item_totals, scaled_rank_thresholds
-from .items import TJEItem, ITEM_GROUPS, ITEM_ID_TO_CODE, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, \
+from .constants import MAILBOX_ITEM_REFS, VANILLA_RANK_THRESHOLDS, BASE_EARTHLINGS, REV00_MD5, REV02_MD5
+from .generators import TJEGenerator, TJEInternalRNG, get_key_levels, item_totals, scaled_rank_thresholds
+from .items import Item, TJEItem, ITEM_GROUPS, ITEM_ID_TO_CODE, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, \
                    TJEItemType, create_items, create_starting_presents, MASTER_ITEM_LIST
-from .locations import FLOOR_ITEM_LOC_TEMPLATE, LOCATION_GROUPS, LOCATION_NAME_TO_ID
+from .locations import FLOOR_ITEM_LOC_TEMPLATE, MAILBOX_LOC_TEMPLATE, LOCATION_GROUPS, LOCATION_NAME_TO_ID
 from .options import RankRescalingOption, EarthlingRandomizationOption, LocalShipPiecesOption, TJEOptions
 from .regions import create_regions
 from .rom import TJEProcedurePatch, write_tokens
@@ -71,8 +73,11 @@ class TJEWorld(World):
     def generate_early(self) -> None:
         self.seeds = [self.random.getrandbits(16) for _ in range(26)]
         self.generator = TJEGenerator(self)
+        self.tjerng = TJEInternalRNG()
         self.key_levels = (get_key_levels(self.options.key_gap.value, self.options.last_level.value)
                            if self.options.elevator_keys else [])
+        self.mailboxes = self.tjerng.generate_mailboxes(self.seeds, self.options.last_level.value)
+        print("★ Mailboxes:", self.mailboxes)
         self.ship_item_levels = self.generator.generate_ship_piece_levels(self.options.last_level.value)
         self.map_reveal_potencies = self.generator.generate_map_reveal_potencies(self.options.last_level.value)
 
@@ -153,6 +158,7 @@ class TJEWorld(World):
 
     def generate_output(self, output_directory: str):
         self.create_patchable_item_list()
+        self.create_patchable_mailbox_item_list()
         patch = TJEProcedurePatch(player=self.player, player_name=self.multiworld.player_name[self.player])
         
         if self.options.game_version.value == 0:
@@ -168,6 +174,16 @@ class TJEWorld(World):
         out_file_name = self.multiworld.get_out_file_name_base(self.player)
         patch.write(os.path.join(output_directory, f"{out_file_name}{patch.patch_file_ending}"))
 
+    def item_to_tje_hex(self, item: Item) -> int:
+        if item.player == self.player:
+            return ITEM_ID_TO_CODE.get(item.code, 0xFF)
+        else:
+            if item.classification in \
+                (ItemClassification.progression, ItemClassification.progression_skip_balancing):
+                return 0x1D # Progression AP item
+            else:
+                return 0x1C # Regular AP item
+
     def create_patchable_item_list(self):
         items_per_level = item_totals(True, self.options.min_items.value, self.options.max_items.value)
         self.patchable_item_list = [0xFF]*28
@@ -175,17 +191,56 @@ class TJEWorld(World):
             num = items_per_level[level]
             for i in range(num):
                 item = self.get_location(FLOOR_ITEM_LOC_TEMPLATE.format(level, i+1)).item
-                if item.player == self.player:
-                    item_hex =  ITEM_ID_TO_CODE.get(item.code, 0xFF)
-                else:
-                    if item.classification in \
-                        (ItemClassification.progression, ItemClassification.progression_skip_balancing):
-                        item_hex = 0x1D # Progression AP item
-                    else:
-                        item_hex = 0x1C # Regular AP item
+                item_hex = self.item_to_tje_hex(item)
                 self.patchable_item_list.append(item_hex)
             self.patchable_item_list.extend([0xFF]*(28 - num))
         assert len(self.patchable_item_list) == (self.options.last_level.value+1)*28
+
+    # TODO: attempt to break on spaces and punctuation
+    # TODO: decide better replacements for unprintable ASCII
+    def shorten_item_name(self, name: str) -> str:
+        VALID_CHARS = " !',-.0123456789?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+        strip_chars = re.compile(f"[^a-zA-Z0-9 ?!',-.]")
+        try:
+            from unidecode import unidecode
+            string_processor = functools.partial(unidecode, errors="ignore", replace_str="?")
+        except ImportError:
+            import unicodedata
+            string_processor = lambda s: unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode("ascii", "ignore")
+        
+        processed = string_processor(name)
+        strip_chars.sub("", processed)
+        return processed[:28]
+
+    def determine_item_price(self, item: Item) -> int:
+        if ItemClassification.progression in item.classification:
+            price = 2
+        elif ItemClassification.useful in item.classification:
+            price = 1
+        elif ItemClassification.filler in item.classification or ItemClassification.trap in item.classification:
+            price = 0
+        
+        if price > 0 and ItemClassification.trap in item.classification:
+            return price - 1
+        return price
+
+    def create_patchable_mailbox_item_list(self):
+        self.mailbox_item_names = []
+        self.mailbox_item_types = []
+        self.mailbox_prices = []
+        for (i, pos) in product(self.mailboxes, MAILBOX_ITEM_REFS):
+            item = self.get_location(MAILBOX_LOC_TEMPLATE.format(i, pos)).item
+            print(item.game)
+
+            name = self.shorten_item_name(item.name)
+            item_hex = self.item_to_tje_hex(item)
+            price = self.determine_item_price(item)
+            self.mailbox_item_names.append(name)
+            self.mailbox_item_types.append(item_hex)
+            self.mailbox_prices.append(price)
+        
+        for name, type, price in zip(self.mailbox_item_names, self.mailbox_item_types, self.mailbox_prices):
+            print(f"★ {name} @ ${price} (type {type})")
 
     # For tracker use
     def fill_slot_data(self) -> dict[str, Any]:

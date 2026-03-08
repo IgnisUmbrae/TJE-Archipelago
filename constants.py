@@ -331,6 +331,8 @@ RANK_NAMES = ("Wiener", "Dufus", "Poindexter", "Peanut", "Dude", "Bro", "Homey",
 
 #region Misc
 
+MAILBOX_ITEM_REFS = ("Top", "Middle", "Bottom")
+
 DEAD_SPRITES = (0x5, 0x6)
 
 TRAP_NAMES = ("cupid", "burp", "sleep", "earthling", "skates", "randomizer")

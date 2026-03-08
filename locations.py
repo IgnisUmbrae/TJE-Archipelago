@@ -4,7 +4,7 @@ import itertools
 
 from BaseClasses import Location
 
-from .constants import BASE_TJE_ID, RANK_NAMES
+from .constants import BASE_TJE_ID, RANK_NAMES, MAILBOX_ITEM_REFS
 from .generators import item_totals
 
 class TJELocationType(Enum):
@@ -27,7 +27,7 @@ FLOOR_ITEM_LOC_TEMPLATE = "Level {} - Item {}"
 BIG_ITEM_LOC_TEMPLATE = "Level {} - Big Item"
 RANK_LOC_TEMPLATE = "Promoted to {}"
 REACH_LOC_TEMPLATE = "Reach Level {}"
-MAILBOX_LOC_TEMPLATE = "Level {} Mailbox - Item {}"
+MAILBOX_LOC_TEMPLATE = "Level {} Mailbox - {} Item"
 
 FLOOR_ITEM_LOCATIONS : list[list[TJELocationData]] = [[]]
 
@@ -53,13 +53,13 @@ REACH_LOCATIONS: list[TJELocationData] = [
     for level in range(2, 26)
 ]
 
-MAILBOX_LOC_TEMPLATE: list[TJELocationData] = [
-    TJELocationData(MAILBOX_LOC_TEMPLATE.format(level, i), TJELocationType.REACH, -1, None)
-    for level in range(2, 26) for i in range(1,4)
+MAILBOX_LOCATIONS: list[TJELocationData] = [
+    TJELocationData(MAILBOX_LOC_TEMPLATE.format(level, pos), TJELocationType.REACH, -1, None)
+    for level in range(2, 26) for pos in MAILBOX_ITEM_REFS
 ]
 
 MASTER_LOCATION_LIST = list(itertools.chain(*FLOOR_ITEM_LOCATIONS)) + SHIP_PIECE_LOCATIONS + RANK_LOCATIONS \
-                                                                    + REACH_LOCATIONS# + MAILBOX_LOC_TEMPLATE
+                                                                    + REACH_LOCATIONS + MAILBOX_LOCATIONS
 
 LOCATION_NAME_TO_ID : dict[str, int] = {
     loc.name: id

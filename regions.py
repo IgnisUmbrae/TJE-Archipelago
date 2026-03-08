@@ -1,13 +1,15 @@
 from typing import NamedTuple
+from itertools import product
 
 from BaseClasses import Region, MultiWorld, LocationProgressType, ItemClassification
 from worlds.generic.Rules import forbid_item, add_rule
 
-from .constants import RANK_NAMES
+from .constants import RANK_NAMES, MAILBOX_ITEM_REFS
 from .items import EDIBLE_IDS, ITEM_ID_TO_NAME, TJEItem
 from .generators import expected_map_points_on_level, item_totals
 from .options import TJEOptions
-from .locations import TJELocation, FLOOR_ITEM_LOCATIONS, SHIP_PIECE_LOCATIONS, RANK_LOC_TEMPLATE, REACH_LOC_TEMPLATE
+from .locations import TJELocation, FLOOR_ITEM_LOCATIONS, SHIP_PIECE_LOCATIONS, RANK_LOC_TEMPLATE, REACH_LOC_TEMPLATE, \
+                                    MAILBOX_LOC_TEMPLATE
 
 class TJERegion(NamedTuple):
     name: str
@@ -62,6 +64,7 @@ def create_regions(multiworld: MultiWorld, player: int, options: TJEOptions):
     handle_key_options(multiworld, world, player, options)
     handle_rank_options(multiworld, world, player, options, level_regions)
     handle_reach_options(player, world, options, level_regions)
+    handle_mailbox_options(player, world, options, level_regions)
 
     multiworld.regions.extend(level_regions)
 
@@ -105,6 +108,10 @@ def handle_reach_options(player, world, options: TJEOptions, level_regions: list
     if options.reach_level_checks:
         add_reach_level_checks(player, world, options, level_regions)
 
+def handle_mailbox_options(player, world, options: TJEOptions, level_regions: list[Region]):
+    if options.mailbox_checks:
+        add_mailbox_checks(player, world, options, level_regions)
+
 #endregion
 
 #region Main location adding routines
@@ -143,6 +150,13 @@ def add_reach_level_checks(player, world, options: TJEOptions, level_regions: li
     for i, level in enumerate(level_regions[2:options.last_level.value+1]):
         loc_name = REACH_LOC_TEMPLATE.format(i+2)
         level.locations.append(
+            TJELocation(player, loc_name, world.location_name_to_id[loc_name], level_regions[i])
+        )
+
+def add_mailbox_checks(player, world, options: TJEOptions, level_regions: list[Region]):
+    for (i, pos) in product(world.mailboxes, MAILBOX_ITEM_REFS):
+        loc_name = MAILBOX_LOC_TEMPLATE.format(i, pos)
+        level_regions[i].locations.append(
             TJELocation(player, loc_name, world.location_name_to_id[loc_name], level_regions[i])
         )
 
