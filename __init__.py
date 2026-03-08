@@ -12,9 +12,9 @@ from worlds.AutoWorld import World, WebWorld
 from .client import TJEClient # required to register with BizHawkClient
 from .constants import MAILBOX_ITEM_REFS, VANILLA_RANK_THRESHOLDS, BASE_EARTHLINGS, REV00_MD5, REV02_MD5
 from .generators import TJEGenerator, TJEInternalRNG, get_key_levels, item_totals, scaled_rank_thresholds
-from .items import Item, TJEItem, ITEM_GROUPS, ITEM_ID_TO_CODE, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, \
-                   TJEItemType, create_items, create_starting_presents, MASTER_ITEM_LIST
-from .locations import FLOOR_ITEM_LOC_TEMPLATE, MAILBOX_LOC_TEMPLATE, LOCATION_GROUPS, LOCATION_NAME_TO_ID
+from .items import Item, TJEItem, ITEM_GROUPS, ITEM_ID_TO_CODE, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, MASTER_ITEM_LIST, \
+                   TJEItemType, create_items, create_starting_presents, get_item_price
+from .locations import FLOOR_ITEM_LOC_TEMPLATE, MAILBOX_LOC_TEMPLATE, LOCATION_GROUPS, LOCATION_NAME_TO_ID, MAILBOX_LOCATIONS
 from .options import RankRescalingOption, EarthlingRandomizationOption, LocalShipPiecesOption, TJEOptions
 from .regions import create_regions
 from .rom import TJEProcedurePatch, write_tokens
@@ -54,20 +54,43 @@ class TJEWorld(World):
 
     location_name_groups = LOCATION_GROUPS
 
+    def get_current_rank(self, state: "CollectionState", item: "TJEItem") -> int:
+        rank_progress = list(takewhile(lambda i: self.rank_thresholds[i] <= state.prog_items[item.player]["points"],
+                                        range(len(self.rank_thresholds))))
+        rank = rank_progress[-1] if rank_progress != [] else 0
+        return rank
+
     def collect(self, state: "CollectionState", item: "TJEItem") -> bool:
         change = super().collect(state, item)
         if change:
-            current_rank = state.prog_items[item.player]["ranks"]
-            if item.name == "Promotion":
-                if current_rank < 8:
-                    state.prog_items[item.player]["points"] = self.rank_thresholds[current_rank+1]
-                    state.prog_items[item.player]["ranks"] += 1
+            # Bucks
+            state.prog_items[item.player]["bucks"] += item.buck_value
+            if item.location in MAILBOX_LOCATIONS:
+                state.prog_items[item.player]["bucks"] -= get_item_price(item)
+
+            # Ranks
+            rank = self.get_current_rank(state, item)
+            if item.name == "Promotion" and rank < 8:
+                state.prog_items[item.player]["points"] = self.rank_thresholds[rank+1]
             else:
-                # Check whether this pushes us over the threshold
                 state.prog_items[item.player]["points"] += item.point_value
-                *_, rank = takewhile(lambda i: self.rank_thresholds[i] <= state.prog_items[item.player]["points"],
-                                     range(len(self.rank_thresholds)))
-                state.prog_items[item.player]["ranks"] = rank
+        return change
+    
+    def remove(self, state: "CollectionState", item: "TJEItem") -> bool:
+        change = super().collect(state, item)
+        if change:
+            # Bucks
+            if item.name == "A Buck":
+                state.prog_items[item.player]["bucks"] -= item.buck_value
+            if item.location in MAILBOX_LOCATIONS:
+                state.prog_items[item.player]["bucks"] += get_item_price(item)
+
+            # Ranks
+            rank = self.get_current_rank(state, item)
+            if item.name == "Promotion" and rank > 0:
+                state.prog_items[item.player]["points"] = self.rank_thresholds[rank-1]
+            else:
+                state.prog_items[item.player]["points"] -= item.point_value
         return change
 
     def generate_early(self) -> None:
@@ -131,11 +154,16 @@ class TJEWorld(World):
         item = TJEItem(name, classification, self.item_name_to_id[name], self.player)
         if self.options.max_rank_check.value > 0 and data.type == TJEItemType.PRESENT:
             if name == "Promotion":
-                item.classification = ItemClassification.progression
+                item.classification |= ItemClassification.progression
             else:
+                item.classification |= ItemClassification.progression_skip_balancing
+        
+        if self.options.mailbox_checks:
+            if data.buck_value > 0:
                 item.classification |= ItemClassification.progression_skip_balancing
 
         item.point_value = data.point_value
+        item.buck_value = data.buck_value
 
         return item
 
@@ -212,18 +240,6 @@ class TJEWorld(World):
         strip_chars.sub("", processed)
         return processed[:28]
 
-    def determine_item_price(self, item: Item) -> int:
-        if ItemClassification.progression in item.classification:
-            price = 2
-        elif ItemClassification.useful in item.classification:
-            price = 1
-        elif ItemClassification.filler in item.classification or ItemClassification.trap in item.classification:
-            price = 0
-        
-        if price > 0 and ItemClassification.trap in item.classification:
-            return price - 1
-        return price
-
     def create_patchable_mailbox_item_list(self):
         self.mailbox_item_names = []
         self.mailbox_item_types = []
@@ -234,13 +250,13 @@ class TJEWorld(World):
 
             name = self.shorten_item_name(item.name)
             item_hex = self.item_to_tje_hex(item)
-            price = self.determine_item_price(item)
+            price = get_item_price(item)
             self.mailbox_item_names.append(name)
             self.mailbox_item_types.append(item_hex)
             self.mailbox_prices.append(price)
         
         for name, type, price in zip(self.mailbox_item_names, self.mailbox_item_types, self.mailbox_prices):
-            print(f"★ {name} @ ${price} (type {type})")
+            print(f"★ {name} @ ${price} (type {hex(type)})")
 
     # For tracker use
     def fill_slot_data(self) -> dict[str, Any]:
