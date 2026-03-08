@@ -1,11 +1,14 @@
 import copy
 import struct
 import json
+import os
+import pkgutil
 from itertools import chain
 from math import sqrt, ceil
 from pathlib import Path
 
 from settings import get_settings
+from Utils import local_path
 from worlds.Files import APProcedurePatch, APTokenMixin, APTokenTypes
 
 from .constants import EMPTY_PRESENT, INITIAL_PRESENT_ADDRS, BASE_LEVEL_TYPES, INV_REF_ADDRS_VANILLA, \
@@ -16,7 +19,6 @@ from .generators import map_reveal_text
 from .items import ITEM_ID_TO_CODE
 from .options import CharacterOption, SoundRandoOption, StartingPresentOption, GameOverOption, MapRandomizationOption, \
                      LocalShipPiecesOption
-from .tools.patch_util import read_bin, BinType, set_bin_paths
 
 class TJEProcedurePatch(APProcedurePatch, APTokenMixin):
     game = "ToeJam and Earl"
@@ -35,6 +37,13 @@ class TJEProcedurePatch(APProcedurePatch, APTokenMixin):
             base_rom_bytes = bytes(f.read())
 
         return base_rom_bytes
+
+def read_bin(filename: str, sprite: bool = False) -> bytes | None:
+    dir = "data/sprites_bin/" if sprite else "data/asm_bin/"
+    return pkgutil.get_data(__name__, dir + filename + ".bin")
+
+def read_json(filename: str) -> str | None:
+    return pkgutil.get_data(__name__, "data/json/" + filename + ".json").decode("utf-8")
 
 #region Individual patching sections
 
@@ -267,7 +276,7 @@ def patch_sound_rando(world, patch, dro) -> None:
         psg_sfx_usage_addrs[0] = (0x0010a000 + dro["pickup_item"]["PSG_SFX_2"],)
 
         world.random.shuffle(pcm_sfx_addrs)
-        for i, sfx_addr in enumerate(pcm_sfx_addrs):    
+        for i, sfx_addr in enumerate(pcm_sfx_addrs):
             for rom_addr in pcm_sfx_usage_addrs[i]:
                 patch.write_token(APTokenTypes.WRITE, rom_addr + 2, struct.pack(">L", sfx_addr))
 
@@ -327,20 +336,18 @@ def patch_ship_piece_sprites(world, patch, dro) -> None:
 
         for addr, spr_file in zip((0x00100120, 0x00100320, 0x00100520),
                                   ("apitemhere0", "apitemhere1", "apitemhere2")):
-            patch.write_token(APTokenTypes.WRITE, addr, read_bin(spr_file, BinType.SPRITE))
+            patch.write_token(APTokenTypes.WRITE, addr, read_bin(spr_file, sprite = True))
 
         for addr, spr_file in zip((0x00100720, 0x00100920, 0x00100b20, 0x00100d20),
                                   ("shippiece0tile0", "shippiece0tile1", "shippiece1tile0", "shippiece1tile1")):
-            patch.write_token(APTokenTypes.WRITE, addr, read_bin(spr_file, BinType.SPRITE))
+            patch.write_token(APTokenTypes.WRITE, addr, read_bin(spr_file, sprite = True))
         
         patch.write_token(APTokenTypes.WRITE, 0x000205e8, read_bin("ship_piece_strings"))
 
 #endregion
 
 def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
-    set_bin_paths(Path("./worlds/tje/data/asm_bin/"), Path("./worlds/tje/data/sprites_bin/"))
-    with open("./worlds/tje/data/json/dynamic_repatch_offsets.json") as f:
-        dro = json.load(f)
+    dro = json.loads(read_json("dynamic_repatch_offsets"))
 
     patch_slot_data(world, patch, dro)
     patch_item_list(world, patch, dro)
