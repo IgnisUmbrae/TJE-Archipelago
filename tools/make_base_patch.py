@@ -4,9 +4,30 @@ from pathlib import Path
 import bsdiff4
 import pyjson5
 
-from patch_util import extract_patches, BinType, set_bin_paths
+from enum import IntEnum, auto
+from pathlib import Path
 
-set_bin_paths(Path("../data/asm_bin"), Path("../data/sprites_bin"))
+CODE_PATH, SPRITE_PATH = Path("../data/asm_bin"), Path("../data/sprites_bin")
+
+class BinType(IntEnum):
+    SPRITE = auto()
+    ASM = auto()
+
+def read_bin(filename: Path | str, type: BinType = BinType.ASM) -> bytes:
+    match type:
+        case BinType.SPRITE:
+            filename = (SPRITE_PATH / filename).with_suffix(".bin")
+        case BinType.ASM:
+            filename = (CODE_PATH / filename).with_suffix(".bin")
+    with filename.open("rb") as file:
+        return file.read()
+
+def extract_patches(parsed_json5: str, type: BinType):
+    return tuple(
+        (addr, read_bin(patch.get("filename"), type))
+        for patch in parsed_json5.get("patches")
+        for addr in patch.get("addresses")
+    )
 
 # collect and assemble base patches
 with open("./asm/base_code_patches.json5", "r") as f:
