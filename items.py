@@ -18,6 +18,7 @@ from .options import TJEOptions, GameOverOption, StartingPresentOption, LocalShi
 class TJEItem(Item):
     game: str = "ToeJam & Earl"
     point_value: int = 0
+    buck_value: int = 0
 
 # "Ethereal" is used for extra items such as elevator keys that do not exist in the base game
 class TJEItemType(IntEnum):
@@ -32,85 +33,86 @@ class TJEItemData(NamedTuple):
     type: TJEItemType
     classification: ItemClassification
     point_value: int
+    buck_value: int
 
 # Trap presents have a point value of 0 to reflect the assumption that the player won't choose to open them
 BASE_ITEM_LIST: list[TJEItemData] = [
-    TJEItemData(0x20, "Ship Piece: Rocketship Windshield", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
-    TJEItemData(0x20, "Ship Piece: Left Megawatt Speaker", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
-    TJEItemData(0x20, "Ship Piece: Super Funkomatic Amplamator", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
-    TJEItemData(0x20, "Ship Piece: Amplamator Connector Fin", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
-    TJEItemData(0x20, "Ship Piece: Forward Stabilizing Unit", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
-    TJEItemData(0x20, "Ship Piece: Rear Leg", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
-    TJEItemData(0x20, "Ship Piece: Awesome Snowboard", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
-    TJEItemData(0x20, "Ship Piece: Righteous Rapmaster Capsule", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
-    TJEItemData(0x20, "Ship Piece: Right Megawatt Speaker", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
-    TJEItemData(0x20, "Ship Piece: Hyperfunk Thruster", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0),
+    TJEItemData(0x20, "Ship Piece: Rocketship Windshield", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
+    TJEItemData(0x20, "Ship Piece: Left Megawatt Speaker", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
+    TJEItemData(0x20, "Ship Piece: Super Funkomatic Amplamator", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
+    TJEItemData(0x20, "Ship Piece: Amplamator Connector Fin", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
+    TJEItemData(0x20, "Ship Piece: Forward Stabilizing Unit", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
+    TJEItemData(0x20, "Ship Piece: Rear Leg", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
+    TJEItemData(0x20, "Ship Piece: Awesome Snowboard", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
+    TJEItemData(0x20, "Ship Piece: Righteous Rapmaster Capsule", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
+    TJEItemData(0x20, "Ship Piece: Right Megawatt Speaker", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
+    TJEItemData(0x20, "Ship Piece: Hyperfunk Thruster", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
 
-    TJEItemData(0x00, "Icarus Wings", TJEItemType.PRESENT, ItemClassification.useful, 2),
-    TJEItemData(0x01, "Spring Shoes", TJEItemType.PRESENT, ItemClassification.useful, 2),
-    TJEItemData(0x02, "Innertube", TJEItemType.PRESENT, ItemClassification.useful, 2),
-    TJEItemData(0x03, "Tomatoes", TJEItemType.PRESENT, ItemClassification.useful, 2),
-    TJEItemData(0x04, "Slingshot", TJEItemType.PRESENT, ItemClassification.useful, 2),
-    TJEItemData(0x05, "Rocket Skates", TJEItemType.PRESENT, ItemClassification.useful, 2),
-    TJEItemData(0x06, "Rose Bushes", TJEItemType.PRESENT, ItemClassification.useful, 2),
-    TJEItemData(0x07, "Super Hitops", TJEItemType.PRESENT, ItemClassification.useful, 2),
-    TJEItemData(0x08, "Doorway", TJEItemType.PRESENT, ItemClassification.useful, 2),
-    TJEItemData(0x09, "Food Present", TJEItemType.PRESENT, ItemClassification.filler, 2),
-    TJEItemData(0x0A, "Rootbeer", TJEItemType.PRESENT, ItemClassification.useful, 2),
-    TJEItemData(0x0B, "Promotion", TJEItemType.PRESENT, ItemClassification.useful, 2),
-    TJEItemData(0x0C, "Un-fall", TJEItemType.PRESENT, ItemClassification.useful, 2),
-    TJEItemData(0x0D, "Rain Cloud", TJEItemType.PRESENT, ItemClassification.trap, 2),
-    TJEItemData(0x0E, "Fudge Sundae Present", TJEItemType.PRESENT, ItemClassification.useful, 2),
-    TJEItemData(0x0F, "Decoy", TJEItemType.PRESENT, ItemClassification.useful, 2),
-    TJEItemData(0x10, "Total Bummer", TJEItemType.PRESENT, ItemClassification.trap, 2),
-    TJEItemData(0x11, "Extra Life", TJEItemType.PRESENT, ItemClassification.useful, 2),
-    TJEItemData(0x12, "Randomizer", TJEItemType.PRESENT, ItemClassification.trap, 2),
-    TJEItemData(0x13, "Telephone", TJEItemType.PRESENT, ItemClassification.useful, 2),
-    TJEItemData(0x14, "Extra Buck Present", TJEItemType.PRESENT, ItemClassification.useful, 2),
-    TJEItemData(0x15, "Jackpot", TJEItemType.PRESENT, ItemClassification.useful, 2),
-    TJEItemData(0x16, "Tomato Rain", TJEItemType.PRESENT, ItemClassification.useful, 2),
-    TJEItemData(0x17, "Earthling", TJEItemType.PRESENT, ItemClassification.trap, 2),
-    TJEItemData(0x18, "School Book", TJEItemType.PRESENT, ItemClassification.trap, 2),
-    TJEItemData(0x19, "Boombox", TJEItemType.PRESENT, ItemClassification.useful, 2),
-    TJEItemData(0x1A, "Mystery Present", TJEItemType.PRESENT, ItemClassification.filler, 2),
-    TJEItemData(0x1B, "Bonus Hitops", TJEItemType.PRESENT, ItemClassification.useful, 2),
+    TJEItemData(0x00, "Icarus Wings", TJEItemType.PRESENT, ItemClassification.useful, 2, 0),
+    TJEItemData(0x01, "Spring Shoes", TJEItemType.PRESENT, ItemClassification.useful, 2, 0),
+    TJEItemData(0x02, "Innertube", TJEItemType.PRESENT, ItemClassification.useful, 2, 0),
+    TJEItemData(0x03, "Tomatoes", TJEItemType.PRESENT, ItemClassification.useful, 2, 0),
+    TJEItemData(0x04, "Slingshot", TJEItemType.PRESENT, ItemClassification.useful, 2, 0),
+    TJEItemData(0x05, "Rocket Skates", TJEItemType.PRESENT, ItemClassification.useful, 2, 0),
+    TJEItemData(0x06, "Rose Bushes", TJEItemType.PRESENT, ItemClassification.useful, 2, 0),
+    TJEItemData(0x07, "Super Hitops", TJEItemType.PRESENT, ItemClassification.useful, 2, 0),
+    TJEItemData(0x08, "Doorway", TJEItemType.PRESENT, ItemClassification.useful, 2, 0),
+    TJEItemData(0x09, "Food Present", TJEItemType.PRESENT, ItemClassification.filler, 2, 0),
+    TJEItemData(0x0A, "Rootbeer", TJEItemType.PRESENT, ItemClassification.useful, 2, 0),
+    TJEItemData(0x0B, "Promotion", TJEItemType.PRESENT, ItemClassification.useful, 2, 0),
+    TJEItemData(0x0C, "Un-fall", TJEItemType.PRESENT, ItemClassification.useful, 2, 0),
+    TJEItemData(0x0D, "Rain Cloud", TJEItemType.PRESENT, ItemClassification.trap, 2, 0),
+    TJEItemData(0x0E, "Fudge Sundae Present", TJEItemType.PRESENT, ItemClassification.useful, 2, 0),
+    TJEItemData(0x0F, "Decoy", TJEItemType.PRESENT, ItemClassification.useful, 2, 0),
+    TJEItemData(0x10, "Total Bummer", TJEItemType.PRESENT, ItemClassification.trap, 2, 0),
+    TJEItemData(0x11, "Extra Life", TJEItemType.PRESENT, ItemClassification.useful, 2, 0),
+    TJEItemData(0x12, "Randomizer", TJEItemType.PRESENT, ItemClassification.trap, 2, 0),
+    TJEItemData(0x13, "Telephone", TJEItemType.PRESENT, ItemClassification.useful, 2, 0),
+    TJEItemData(0x14, "Extra Buck Present", TJEItemType.PRESENT, ItemClassification.useful, 2, 1),
+    TJEItemData(0x15, "Jackpot", TJEItemType.PRESENT, ItemClassification.useful, 2, 5),
+    TJEItemData(0x16, "Tomato Rain", TJEItemType.PRESENT, ItemClassification.useful, 2, 0),
+    TJEItemData(0x17, "Earthling", TJEItemType.PRESENT, ItemClassification.trap, 2, 0),
+    TJEItemData(0x18, "School Book", TJEItemType.PRESENT, ItemClassification.trap, 2, 0),
+    TJEItemData(0x19, "Boombox", TJEItemType.PRESENT, ItemClassification.useful, 2, 0),
+    TJEItemData(0x1A, "Mystery Present", TJEItemType.PRESENT, ItemClassification.filler, 2, 0),
+    TJEItemData(0x1B, "Bonus Hitops", TJEItemType.PRESENT, ItemClassification.useful, 2, 0),
 
-    TJEItemData(0x40, "Burger", TJEItemType.EDIBLE, ItemClassification.filler, 0),
-    TJEItemData(0x41, "Fudge Sundae", TJEItemType.EDIBLE, ItemClassification.filler, 0),
-    TJEItemData(0x42, "Fudge Cake", TJEItemType.EDIBLE, ItemClassification.filler, 0),
-    TJEItemData(0x43, "Candy Cane", TJEItemType.EDIBLE, ItemClassification.filler, 0),
-    TJEItemData(0x44, "Fries", TJEItemType.EDIBLE, ItemClassification.filler, 0),
-    TJEItemData(0x45, "Pancakes", TJEItemType.EDIBLE, ItemClassification.filler, 0),
-    TJEItemData(0x46, "Watermelon", TJEItemType.EDIBLE, ItemClassification.filler, 0),
-    TJEItemData(0x47, "Bacon'n Eggs", TJEItemType.EDIBLE, ItemClassification.filler, 0),
-    TJEItemData(0x48, "Cherry Pie", TJEItemType.EDIBLE, ItemClassification.filler, 0),
-    TJEItemData(0x49, "Pizza", TJEItemType.EDIBLE, ItemClassification.filler, 0),
-    TJEItemData(0x4A, "Cereal", TJEItemType.EDIBLE, ItemClassification.filler, 0),
-    TJEItemData(0x4B, "Fish Bones", TJEItemType.EDIBLE, ItemClassification.trap, 0),
-    TJEItemData(0x4C, "Moldy Cheese", TJEItemType.EDIBLE, ItemClassification.trap, 0),
-    TJEItemData(0x4D, "Moldy Bread", TJEItemType.EDIBLE, ItemClassification.trap, 0),
-    TJEItemData(0x4E, "Slimy Fungus", TJEItemType.EDIBLE, ItemClassification.trap, 0),
-    TJEItemData(0x4F, "Old Cabbage", TJEItemType.EDIBLE, ItemClassification.trap, 0),
-    TJEItemData(0x50, "A Buck", TJEItemType.EDIBLE, ItemClassification.filler, 0),
+    TJEItemData(0x40, "Burger", TJEItemType.EDIBLE, ItemClassification.filler, 0, 0),
+    TJEItemData(0x41, "Fudge Sundae", TJEItemType.EDIBLE, ItemClassification.filler, 0, 0),
+    TJEItemData(0x42, "Fudge Cake", TJEItemType.EDIBLE, ItemClassification.filler, 0, 0),
+    TJEItemData(0x43, "Candy Cane", TJEItemType.EDIBLE, ItemClassification.filler, 0, 0),
+    TJEItemData(0x44, "Fries", TJEItemType.EDIBLE, ItemClassification.filler, 0, 0),
+    TJEItemData(0x45, "Pancakes", TJEItemType.EDIBLE, ItemClassification.filler, 0, 0),
+    TJEItemData(0x46, "Watermelon", TJEItemType.EDIBLE, ItemClassification.filler, 0, 0),
+    TJEItemData(0x47, "Bacon'n Eggs", TJEItemType.EDIBLE, ItemClassification.filler, 0, 0),
+    TJEItemData(0x48, "Cherry Pie", TJEItemType.EDIBLE, ItemClassification.filler, 0, 0),
+    TJEItemData(0x49, "Pizza", TJEItemType.EDIBLE, ItemClassification.filler, 0, 0),
+    TJEItemData(0x4A, "Cereal", TJEItemType.EDIBLE, ItemClassification.filler, 0, 0),
+    TJEItemData(0x4B, "Fish Bones", TJEItemType.EDIBLE, ItemClassification.trap, 0, 0),
+    TJEItemData(0x4C, "Moldy Cheese", TJEItemType.EDIBLE, ItemClassification.trap, 0, 0),
+    TJEItemData(0x4D, "Moldy Bread", TJEItemType.EDIBLE, ItemClassification.trap, 0, 0),
+    TJEItemData(0x4E, "Slimy Fungus", TJEItemType.EDIBLE, ItemClassification.trap, 0, 0),
+    TJEItemData(0x4F, "Old Cabbage", TJEItemType.EDIBLE, ItemClassification.trap, 0, 0),
+    TJEItemData(0x50, "A Buck", TJEItemType.EDIBLE, ItemClassification.filler, 0, 1),
 
-    TJEItemData(0xFF, "Nothing", TJEItemType.ETHEREAL, ItemClassification.filler, 0)
+    TJEItemData(0xFF, "Nothing", TJEItemType.ETHEREAL, ItemClassification.filler, 0, 0)
 ]
 
 ELEVATOR_KEY_ITEMS: list[TJEItemData] = [
-    TJEItemData(0x1E, "Progressive Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0)
+    TJEItemData(0x1E, "Progressive Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0, 0)
 ]
 
 INSTATRAP_ITEMS: list[TJEItemData] = [
-    TJEItemData(0x1C, "Cupid Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
-    TJEItemData(0x1C, "Burp Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
-    TJEItemData(0x1C, "Sleep Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
-    TJEItemData(0x1C, "Earthling Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
-    TJEItemData(0x1C, "Rocket Skates Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
-    TJEItemData(0x1C, "Randomizer Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0),
+    TJEItemData(0x1C, "Cupid Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0, 0),
+    TJEItemData(0x1C, "Burp Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0, 0),
+    TJEItemData(0x1C, "Sleep Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0, 0),
+    TJEItemData(0x1C, "Earthling Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0, 0),
+    TJEItemData(0x1C, "Rocket Skates Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0, 0),
+    TJEItemData(0x1C, "Randomizer Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0, 0),
 ]
 
 MISC_ITEMS: list[TJEItemData] = [
-    TJEItemData(0x1F, "Progressive Map Reveal", TJEItemType.ETHEREAL, ItemClassification.useful, 0)
+    TJEItemData(0x1F, "Progressive Map Reveal", TJEItemType.ETHEREAL, ItemClassification.useful, 0, 0)
 ]
 
 MASTER_ITEM_LIST = BASE_ITEM_LIST + ELEVATOR_KEY_ITEMS + INSTATRAP_ITEMS + MISC_ITEMS
@@ -256,3 +258,21 @@ def create_starting_presents(world, multiworld : MultiWorld, options: TJEOptions
                                        for p in world.generator.generate_initial_inventory(include_bad=True)]*2
     for item in world.starting_presents[:4]:
         multiworld.push_precollected(world.create_item(item))
+
+
+def get_item_price(item: Item) -> int:
+    if ItemClassification.trap in item.classification:
+        base_price = -1
+    elif ItemClassification.filler in item.classification:
+        base_price = 1
+    else:
+        base_price = 0
+
+    if ItemClassification.skip_balancing in item.classification:
+        base_price -= 1
+    if ItemClassification.useful in item.classification:
+        base_price += 2
+    elif ItemClassification.progression in item.classification:
+        base_price += 3
+
+    return max(0, base_price)
