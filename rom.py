@@ -1,14 +1,11 @@
 import copy
 import struct
 import json
-import os
 import pkgutil
 from itertools import chain
 from math import sqrt, ceil
-from pathlib import Path
 
 from settings import get_settings
-from Utils import local_path
 from worlds.Files import APProcedurePatch, APTokenMixin, APTokenTypes
 
 from .constants import EMPTY_PRESENT, INITIAL_PRESENT_ADDRS, BASE_LEVEL_TYPES, INV_REF_ADDRS_VANILLA, \
