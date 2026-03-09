@@ -56,9 +56,25 @@ def patch_slot_data(world, patch, dro) -> None:
     patch.write_token(APTokenTypes.WRITE, 0x001f0010, struct.pack(">B", num_key_levels))
     patch.write_token(APTokenTypes.WRITE, 0x001f0011, struct.pack(f">{num_key_levels}B", *world.key_levels))
 
+    if world.options.mailbox_checks:
+        num_mailbox_levels = len(world.mailbox_levels)
+        patch.write_token(APTokenTypes.WRITE, 0x001f0030, struct.pack(f">{num_mailbox_levels}B", *world.mailbox_levels))
+
 def patch_item_list(world, patch, dro) -> None:
     patch.write_token(APTokenTypes.WRITE, 0x001a0000, struct.pack(f">{(world.options.last_level.value+1)*28}B",
                                                                   *world.patchable_item_list))
+def patch_mailboxes(world, patch, dro) -> None:
+    if world.options.mailbox_checks:
+        patch.write_token(APTokenTypes.WRITE, 0x00008e54, read_bin("mailbox_getitemsprices"))
+        patch.write_token(APTokenTypes.WRITE, 0x0000a6c0, read_bin("mailbox_render_items"))
+
+        num_mailbox_levels = len(world.mailbox_levels)
+        patch.write_token(APTokenTypes.WRITE, 0x001a1000, b"".join(world.mailbox_item_names))
+        patch.write_token(APTokenTypes.WRITE, 0x001a2000, struct.pack(f">{3*num_mailbox_levels}B",
+                                                                    *world.mailbox_item_types))
+        patch.write_token(APTokenTypes.WRITE, 0x001a2100, struct.pack(f">{3*num_mailbox_levels}B",
+                                                                    *world.mailbox_item_prices))
+
 def patch_main_menu(world, patch, dro) -> None:
     # Menu return options: 0 for 2-player, 1 for TJ only, 2 for Earl only
     match world.options.character:
@@ -348,6 +364,7 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
 
     patch_slot_data(world, patch, dro)
     patch_item_list(world, patch, dro)
+    patch_mailboxes(world, patch, dro)
     patch_main_menu(world, patch, dro)
     patch_starting_presents(world, patch, dro)
     patch_unused_present_sprites(world, patch, dro)

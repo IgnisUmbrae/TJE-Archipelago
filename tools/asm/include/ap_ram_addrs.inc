@@ -1,11 +1,12 @@
 ; Active character
 AP_ACTIVE_CHAR          equ $00fff000
 
-; Storage for inventory scroll position
+; Miscellaneous storage area
 ; Earl's values are +1 from TJ's
 AP_MENU_ROW_TJ          equ $00fff100
 AP_MENU_COL_TJ          equ $00fff102
 AP_MENU_INV_POS_TJ      equ $00fff104
+AP_MAILBOX_INFO_INDEX   equ $00fff110
 
 ; Expanded and relocated data
 AP_INVENTORIES          equ $00fff280
