@@ -99,8 +99,8 @@ class TJEWorld(World):
         self.tjerng = TJEInternalRNG()
         self.key_levels = (get_key_levels(self.options.key_gap.value, self.options.last_level.value)
                            if self.options.elevator_keys else [])
-        self.mailboxes = self.tjerng.generate_mailboxes(self.seeds, self.options.last_level.value)
-        print("★ Mailboxes:", self.mailboxes)
+        self.mailbox_levels = (self.tjerng.generate_mailboxes(self.seeds, self.options.last_level.value)
+                               if self.options.mailbox_checks else [])
         self.ship_item_levels = self.generator.generate_ship_piece_levels(self.options.last_level.value)
         self.map_reveal_potencies = self.generator.generate_map_reveal_potencies(self.options.last_level.value)
 
@@ -227,6 +227,7 @@ class TJEWorld(World):
 
     # TODO: attempt to break on spaces and punctuation
     # TODO: decide better replacements for unprintable ASCII
+    # TODO: can we include player/game info?
     def shorten_item_name(self, name: str) -> str:
         VALID_CHARS = " !',-.0123456789?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
         strip_chars = re.compile(f"[^a-zA-Z0-9 ?!',-.]")
@@ -236,28 +237,24 @@ class TJEWorld(World):
         except ImportError:
             import unicodedata
             string_processor = lambda s: unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode("ascii", "ignore")
-        
+
+        #self.multiworld.player_name[item.player]
+        #item.game
+
         processed = string_processor(name)
         strip_chars.sub("", processed)
-        return processed[:28]
+        return (processed[:26] + " ").ljust(30, ".") + " "
 
     def create_patchable_mailbox_item_list(self):
-        self.mailbox_item_names = []
-        self.mailbox_item_types = []
-        self.mailbox_prices = []
-        for (i, pos) in product(self.mailboxes, MAILBOX_ITEM_REFS):
+        self.mailbox_item_names, self.mailbox_item_types, self.mailbox_item_prices = [], [], []
+        for (i, pos) in product(self.mailbox_levels, MAILBOX_ITEM_REFS):
             item = self.get_location(MAILBOX_LOC_TEMPLATE.format(i, pos)).item
-            print(item.game)
-
-            name = self.shorten_item_name(item.name)
+            name = self.shorten_item_name(item.name).encode("ascii") + b"\x00"
             item_hex = self.item_to_tje_hex(item)
             price = get_item_price(item)
             self.mailbox_item_names.append(name)
             self.mailbox_item_types.append(item_hex)
-            self.mailbox_prices.append(price)
-        
-        for name, type, price in zip(self.mailbox_item_names, self.mailbox_item_types, self.mailbox_prices):
-            print(f"★ {name} @ ${price} (type {hex(type)})")
+            self.mailbox_item_prices.append(price)
 
     # For tracker use
     def fill_slot_data(self) -> dict[str, Any]:

@@ -163,7 +163,7 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
         differential -= options.last_level-1
     
     if options.mailbox_checks:
-        differential -= 3*len(world.mailboxes)
+        differential -= 3*len(world.mailbox_levels)
 
     create_main_items(world, item_list, total_locations, differential, options)
 
@@ -263,19 +263,21 @@ def create_starting_bucks(world, multiworld):
     for _ in range(3):
         multiworld.push_precollected(world.create_item("A Buck"))
 
+# TODO: test with items from other worlds
 def get_item_price(item: Item) -> int:
-    if ItemClassification.trap in item.classification:
-        base_price = -1
-    elif ItemClassification.filler in item.classification:
-        base_price = 1
+    if item.classification == ItemClassification.filler:
+        price = 1
     else:
-        base_price = 0
+        price = 2
 
+    if ItemClassification.trap in item.classification:
+        price -= 3
     if ItemClassification.skip_balancing in item.classification:
-        base_price -= 1
-    if ItemClassification.useful in item.classification:
-        base_price += 2
-    elif ItemClassification.progression in item.classification:
-        base_price += 3
+        price -= 2
 
-    return max(0, base_price)
+    if ItemClassification.useful in item.classification:
+        price += 2
+    elif ItemClassification.progression in item.classification:
+        price += 3
+
+    return max(0, price)
