@@ -19,4 +19,17 @@ DYNRP_player_char:
     
     clr.b (AP_LEVEL_ITEMS_SET).l
     clr.b (AP_DEATH_TRIGGERED).l
+
+    clr.b (AP_BIG_ITEM_LV).l
+    clr.b (AP_MAILBOX_ITEM_BOUGHT).l
+    clr.b (AP_MAILBOX_ITEM_LEVEL).l
+
+    clr.w D5
+    movea.l #AP_MAILBOX_ITEMS_BOUGHT,A0
+ClearMailboxBoughtItemsLoop:
+    clr.b (A0,D5)
+    addq.w #$1,D5
+DYNRP_num_mailbox_items:
+    cmpi.b #$48,D5 ; always overwritten at patch time to the actual number of mailbox items
+    bne.b ClearMailboxBoughtItemsLoop
     rts

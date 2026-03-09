@@ -1,8 +1,8 @@
 VAN_MAPDATA_A           equ $00ff81aa
 VAN_MAPDATA_B           equ $00ff8586
-VAN_MENU_ROW_TJ         equ $00ff9368
-VAN_MENU_COL_TJ         equ $00ff936a
-VAN_MENU_INV_POS_TJ     equ $00ff9366
+VAN_MENU_ROW            equ $00ff9368
+VAN_MENU_COL            equ $00ff936a
+VAN_MENU_INV_POS        equ $00ff9366
 VAN_MAILBOX_ITEMS       equ $00ff937a
 VAN_MAILBOX_PRICES      equ $00ff9380
 VAN_PLAYER_LIVES        equ $00ffa248

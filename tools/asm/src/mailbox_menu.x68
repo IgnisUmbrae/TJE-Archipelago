@@ -12,14 +12,14 @@
     ; temporarily store row/col/inv scroll pos for later restoration
     move.w D2,D5
     ext.l D5 ; contains player as long
-    movea.l #VAN_MENU_ROW_TJ,A0
-    movea.l #AP_MENU_ROW_TJ,A1
+    movea.l #VAN_MENU_ROW,A0
+    movea.l #AP_MENU_ROW,A1
     move.b (A0,D5.l),(A1,D5.l)
-    movea.l #VAN_MENU_COL_TJ,A0
-    movea.l #AP_MENU_COL_TJ,A1
+    movea.l #VAN_MENU_COL,A0
+    movea.l #AP_MENU_COL,A1
     move.b (A0,D5.l),(A1,D5.l)
-    movea.l #VAN_MENU_INV_POS_TJ,A0
-    movea.l #AP_MENU_INV_POS_TJ,A1
+    movea.l #VAN_MENU_INV_POS,A0
+    movea.l #AP_MENU_INV_POS,A1
     move.b (A0,D5.l),(A1,D5.l)
     
     ; --begin original function block--
@@ -41,14 +41,14 @@
     ; --end original function block--
     
     ; restore temporarily stored row/col/inv scroll pos
-    movea.l #VAN_MENU_ROW_TJ,A0
-    movea.l #AP_MENU_ROW_TJ,A1
+    movea.l #VAN_MENU_ROW,A0
+    movea.l #AP_MENU_ROW,A1
     move.b (A1,D5.l),(A0,D5.l)
-    movea.l #VAN_MENU_COL_TJ,A0
-    movea.l #AP_MENU_COL_TJ,A1
+    movea.l #VAN_MENU_COL,A0
+    movea.l #AP_MENU_COL,A1
     move.b (A1,D5.l),(A0,D5.l)
-    movea.l #VAN_MENU_INV_POS_TJ,A0
-    movea.l #AP_MENU_INV_POS_TJ,A1
+    movea.l #VAN_MENU_INV_POS,A0
+    movea.l #AP_MENU_INV_POS,A1
     move.b (A1,D5.l),(A0,D5.l)
     
     ; --begin original function block--

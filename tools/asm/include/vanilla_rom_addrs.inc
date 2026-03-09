@@ -2,6 +2,8 @@ Fn_SetRandomSeed            equ $00004ee8
 Fn_OpenPresentSelectionMenu equ $00008f3a
 Fn_OpenRandomizerPresent    equ $000093aa
 Fn_MenuLoop                 equ $00009888
+Fn_MenuDrawString           equ $00009f8a
+Fn_MenuDrawNumber           equ $00009fbe
 Fn_GetMaxHP                 equ $0000ae90
 Fn_DropPresent              equ $00014e16
 Fn_OpenPresent              equ $00016ef4

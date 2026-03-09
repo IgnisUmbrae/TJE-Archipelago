@@ -13,15 +13,15 @@ InjectionPoint equ $0000a312
     move.w ($1e,SP),D2
     move.w D2,D0 ; D0 now contains player
     ext.l D0
-    movea.l #VAN_MENU_ROW_TJ,A0
+    movea.l #VAN_MENU_ROW,A0
     clr.b (A0,D0.l)
     move.w D2,D0
     ext.l D0
-    movea.l #VAN_MENU_COL_TJ,A0
+    movea.l #VAN_MENU_COL,A0
     clr.b (A0,D0.l)
     move.w D2,D0
     ext.l D0
-    movea.l #VAN_MENU_INV_POS_TJ,A0
+    movea.l #VAN_MENU_INV_POS,A0
     clr.b (A0,D0.l)
     ; --end original function block--
 ReturnPoint:

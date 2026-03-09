@@ -3,12 +3,17 @@
     "last_level_minus_one": 58
   },
   "init_extra": {
-    "player_char": 0
+    "player_char": 0,
+    "num_mailbox_items": 112
   },
   "init_id_presents": {
     "inventory_addr": 2,
     "inventory_size_1": 34,
     "inventory_size_2": 56
+  },
+  "mailbox_order_item": {
+    "PSG_SFX_1": 120,
+    "PSG_SFX_2": 146
   },
   "mole_steal_additions": {
     "inventory_asl": 4

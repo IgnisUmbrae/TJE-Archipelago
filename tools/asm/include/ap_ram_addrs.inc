@@ -3,10 +3,11 @@ AP_ACTIVE_CHAR          equ $00fff000
 
 ; Miscellaneous storage area
 ; Earl's values are +1 from TJ's
-AP_MENU_ROW_TJ          equ $00fff100
-AP_MENU_COL_TJ          equ $00fff102
-AP_MENU_INV_POS_TJ      equ $00fff104
-AP_MAILBOX_INFO_INDEX   equ $00fff110
+AP_MENU_ROW             equ $00fff100
+AP_MENU_COL             equ $00fff102
+AP_MENU_INV_POS         equ $00fff104
+AP_MAILBOX_INFO_INDEX   equ $00fff105
+AP_MAILBOX_ITEMS_BOUGHT equ $00fff106 ; up to 72 bytes
 
 ; Expanded and relocated data
 AP_INVENTORIES          equ $00fff280
@@ -43,6 +44,8 @@ AP_DEATH_TRIGGERED      equ $00fff6a2
 ; Addresses for communicating data from game to client
 ;; Game writes a value, client optionally resets to 0 after use
 AP_BIG_ITEM_LV          equ $00fff6b0
+AP_MAILBOX_ITEM_BOUGHT  equ $00fff6b1
+AP_MAILBOX_ITEM_LEVEL   equ $00fff6b2
 
 ; Written to by game, used by client to determine cause of death
 AP_LAST_DMG_SOURCE      equ $00fff6c0
