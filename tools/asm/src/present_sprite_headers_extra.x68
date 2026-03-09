@@ -7,8 +7,8 @@
     dc.b $00 ; next-is-same flag
     dc.b $03 ; width
     dc.b $03 ; height
-    dc.b $f6 ; offset_x
-    dc.b $ef ; offset_y
+    dc.b $f4 ; offset_x
+    dc.b $e9 ; offset_y
     dc.b $f2 ; offset_z
     dc.b $42 ; no compression ($40) + palette 2 ($02)
     dc.l $00100000 ; pointer to sprite data
@@ -21,8 +21,8 @@
     dc.b $00
     dc.b $03
     dc.b $03
-    dc.b $f6
-    dc.b $ef
+    dc.b $f4
+    dc.b $e9
     dc.b $f2
     dc.b $42
     dc.l $00100f20
@@ -35,8 +35,8 @@
     dc.b $00
     dc.b $03
     dc.b $03
-    dc.b $f6
-    dc.b $ef
+    dc.b $f4
+    dc.b $e8
     dc.b $f2
     dc.b $42
     dc.l $00101040
