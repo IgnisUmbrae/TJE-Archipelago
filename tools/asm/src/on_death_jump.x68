@@ -2,6 +2,6 @@
 
     include "common.inc"
 
-    jsr.l AP_ON_DEATH
+    jsr AP_ON_DEATH
     nop
     nop
