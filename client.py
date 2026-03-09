@@ -107,12 +107,13 @@ class TJEClient(BizHawkClient):
 
         death_link = bool(int.from_bytes(await self.peek_rom(ctx, 0x001f0001, 1)))
         await ctx.update_death_link(death_link)
+        mailboxes = int.from_bytes(await self.peek_rom(ctx, 0x001f0030, 1)) == 2
 
-        success = await self.setup_game_controller(ctx, death_link)
+        success = await self.setup_game_controller(ctx, death_link, mailboxes)
 
         return success
 
-    async def setup_game_controller(self, ctx: "BizHawkClientContext", death_link: bool) -> bool:
+    async def setup_game_controller(self, ctx: "BizHawkClientContext", death_link: bool, mailboxes: bool) -> bool:
         try:
             # Game controller
 
@@ -123,7 +124,7 @@ class TJEClient(BizHawkClient):
             expanded_inv = int.from_bytes(await self.peek_rom(ctx, 0x0000979c+3, 1)) == 0x1D
 
             self.game_controller.initialize_slot_data(self.auto_bad_presents, expanded_inv)
-            self.game_controller.add_monitors(ctx, char, death_link)
+            self.game_controller.add_monitors(ctx, char, death_link, mailboxes)
 
             # Save manager
 
@@ -207,9 +208,9 @@ class TJEClient(BizHawkClient):
         # instatrap or ship piece, any source
         if nwi.item in INSTATRAP_IDS or nwi.item in SHIP_PIECE_IDS:
             return True
-        # local promotion, ship piece or reach check
+        # local promotion, ship piece, reach check or mailbox check
         loc_name = LOCATION_ID_TO_NAME[nwi.location]
-        return "Reach" in loc_name or "Promoted" in loc_name or "Ship Piece" in loc_name
+        return "Reach" in loc_name or "Promoted" in loc_name or "Ship Piece" in loc_name or "Mailbox" in loc_name
 
     async def process_item(self, ctx: "BizHawkClientContext", nwi: NetworkItem) -> None:
         if self.should_spawn_from_remote(ctx, nwi):

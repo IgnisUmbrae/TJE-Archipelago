@@ -1,4 +1,3 @@
-import copy
 import struct
 import json
 import pkgutil
@@ -66,7 +65,9 @@ def patch_item_list(world, patch, dro) -> None:
 def patch_mailboxes(world, patch, dro) -> None:
     if world.options.mailbox_checks:
         patch.write_token(APTokenTypes.WRITE, 0x00008e54, read_bin("mailbox_getitemsprices"))
-        patch.write_token(APTokenTypes.WRITE, 0x0000a6c0, read_bin("mailbox_render_items"))
+        patch.write_token(APTokenTypes.WRITE, 0x0000a6c0, read_bin("mailbox_render_items_jump"))
+        patch.write_token(APTokenTypes.WRITE, 0x0010cd00, read_bin("mailbox_render_items"))
+        patch.write_token(APTokenTypes.WRITE, 0x00009bf6, read_bin("mailbox_order_item"))
 
         num_mailbox_levels = len(world.mailbox_levels)
         patch.write_token(APTokenTypes.WRITE, 0x001a1000, b"".join(world.mailbox_item_names))
@@ -74,6 +75,10 @@ def patch_mailboxes(world, patch, dro) -> None:
                                                                     *world.mailbox_item_types))
         patch.write_token(APTokenTypes.WRITE, 0x001a2100, struct.pack(f">{3*num_mailbox_levels}B",
                                                                     *world.mailbox_item_prices))
+
+        patch.write_token(APTokenTypes.WRITE,
+                          0x0010b400 + dro["init_extra"]["num_mailbox_items"] + 3,
+                          struct.pack(">B", num_mailbox_levels*3))
 
 def patch_main_menu(world, patch, dro) -> None:
     # Menu return options: 0 for 2-player, 1 for TJ only, 2 for Earl only
@@ -124,21 +129,38 @@ def patch_unused_present_sprites(world, patch, dro) -> None:
             patch.write_token(APTokenTypes.WRITE, 0x00105000 + 4*excl2, struct.pack(">L", 0x000aaf92))
 
 def patch_expanded_inv(world, patch, dro) -> None:
-
     if world.options.expanded_inventory:
-        inv_ref_addrs = copy.copy(INV_REF_ADDRS_VANILLA)
+        inv_ref_addrs = INV_REF_ADDRS_VANILLA.copy()
+        inv_size_addrs = INV_SIZE_ADDRS_VANILLA.copy()
+        inv_size_addrs_asl_d0 = INV_SIZE_ADDRS_ASL_D0_VANILLA.copy()
+
+        # The mailbox item-ordering code does not check inventory (AP client awards items instead),
+        # so these are only required if mailbox checks are disabled
+        if not world.options.mailbox_checks:
+            inv_ref_addrs.extend([0x00009c10+2, 0x00009c98+2])
+            inv_size_addrs.extend([0x00009c04+3, 0x00009c34+3, 0x00009ce0+3])
+            inv_size_addrs_asl_d0.extend([0x00009c0e, 0x00009c96])
+
+        if world.options.max_rank_check.value > 0:
+            inv_size_addrs_asl_d0.append(0x0010bb00 + dro["mole_steal_additions"]["inventory_asl"])
+        else:
+            inv_size_addrs_asl_d0.append(0x00022042)
+
         inv_ref_addrs.extend([
             0x0010a000 + dro["pickup_item"]["inventory_addr_1"] + 2,
             0x0010a000 + dro["pickup_item"]["inventory_addr_2"] + 2,
             0x0010a900 + dro["init_id_presents"]["inventory_addr"] + 2,
         ])
 
-        inv_size_addrs = copy.copy(INV_SIZE_ADDRS_VANILLA)
         inv_size_addrs.extend([
             0x0010a000 + dro["pickup_item"]["inventory_size_1"] + 3,
             0x0010a000 + dro["pickup_item"]["inventory_size_2"] + 3,
             0x0010a900 + dro["init_id_presents"]["inventory_size_1"] + 3,
             0x0010a900 + dro["init_id_presents"]["inventory_size_2"] + 3,
+        ])
+        inv_size_addrs_asl_d0.extend([
+            0x0010a000 + dro["pickup_item"]["inventory_asl_1"],
+            0x0010a000 + dro["pickup_item"]["inventory_asl_2"],
         ])
 
         for addr in inv_ref_addrs:
@@ -147,19 +169,9 @@ def patch_expanded_inv(world, patch, dro) -> None:
             patch.write_token(APTokenTypes.WRITE, addr, struct.pack(">B", 64))
         for i, addr in enumerate(INV_SIZE_ADDRS_INITIAL):
             patch.write_token(APTokenTypes.WRITE, addr, (0x40+i).to_bytes(1))
-
-        inv_size_addrs_asl_d0 = copy.copy(INV_SIZE_ADDRS_ASL_D0_VANILLA)
-        inv_size_addrs_asl_d0.extend([
-            0x0010a000 + dro["pickup_item"]["inventory_asl_1"],
-            0x0010a000 + dro["pickup_item"]["inventory_asl_2"],
-        ])
-
-        if world.options.max_rank_check.value > 0:
-            inv_size_addrs_asl_d0.remove(0x00022042)
-            inv_size_addrs_asl_d0.append(0x0010bb00 + dro["mole_steal_additions"]["inventory_asl"])
-
         for addr in inv_size_addrs_asl_d0:
             patch.write_token(APTokenTypes.WRITE, addr, b"\xED\x80")
+
         patch.write_token(APTokenTypes.WRITE, 0x000099a6, b"\xED\x81") # using D1
         patch.write_token(APTokenTypes.WRITE, 0x00022068, b"\xED\x82") # using D2
 
@@ -272,14 +284,20 @@ def patch_earthling_rando(world, patch, dro) -> None:
 
 def patch_sound_rando(world, patch, dro) -> None:
     if world.options.sound_rando != world.options.sound_rando.default:
-        # Get base of static locations
+        # Get base of static PCM/PSG locations
         if world.options.sound_rando == SoundRandoOption.ALL:
             pcm_sfx_addrs = PCM_SFX_ADDRS + PCM_SFX_ADDRS_MUSIC
             pcm_sfx_usage_addrs = PCM_SFX_USAGE_ADDRS + PCM_SFX_USAGE_ADDRS_MUSIC
         else:
             pcm_sfx_addrs = PCM_SFX_ADDRS
             pcm_sfx_usage_addrs = PCM_SFX_USAGE_ADDRS
-        psg_sfx_usage_addrs = copy.copy(PSG_SFX_USAGE_ADDRS)
+        
+        psg_sfx_usage_addrs = PSG_SFX_USAGE_ADDRS.copy()
+        if world.options.mailbox_checks:
+            psg_sfx_usage_addrs[18].extend(0x00009bf6 + dro["mailbox_order_item"]["PSG_SFX_1"],
+                                           0x00009bf6 + dro["mailbox_order_item"]["PSG_SFX_2"])
+        else:
+            psg_sfx_usage_addrs[18].append(0x00009cd4)
 
         # Insert dynamic locations from DRO list
         pcm_sfx_usage_addrs[34] = (0x0010a000 + dro["pickup_item"]["PCM_SFX_1"],)

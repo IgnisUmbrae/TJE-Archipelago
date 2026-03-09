@@ -9,12 +9,13 @@ from worlds._bizhawk.client import BizHawkClient
 
 from .constants import DEAD_SPRITES, EMPTY_ITEM, COLLECTED_SHIP_ITEM, EMPTY_PRESENT, GLOBAL_DATA_STRUCTURES, \
                        PLAYER_DATA_STRUCTURES, RANK_NAMES, SAVE_DATA_POINTS_GLOBAL, SAVE_DATA_POINTS_PLAYER, \
-                       STATIC_DIALOGUE_LIST, IN_END_ELEVATOR, DEATHLINK_MESSAGES, \
+                       STATIC_DIALOGUE_LIST, IN_END_ELEVATOR, DEATHLINK_MESSAGES, MAILBOX_ITEM_REFS, \
                        get_datastructure, get_max_health, get_slot_addr, get_ram_addr, expand_inv_constants
 from .items import ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, \
                    PRESENT_IDS, SHIP_PIECE_IDS,INSTATRAP_IDS, BAD_PRESENT_IDS
 # from .hint import generate_hints_for_current_level
-from .locations import FLOOR_ITEM_LOC_TEMPLATE, RANK_LOC_TEMPLATE, BIG_ITEM_LOC_TEMPLATE, REACH_LOC_TEMPLATE
+from .locations import FLOOR_ITEM_LOC_TEMPLATE, RANK_LOC_TEMPLATE, BIG_ITEM_LOC_TEMPLATE, REACH_LOC_TEMPLATE, \
+                       MAILBOX_LOC_TEMPLATE
 
 if TYPE_CHECKING:
     from worlds._bizhawk.context import BizHawkClientContext
@@ -281,7 +282,7 @@ class TJEGameController():
 
     #region Initialization functions
 
-    def add_monitors(self, ctx: "BizHawkClientContext", char: int, death_link: bool):
+    def add_monitors(self, ctx: "BizHawkClientContext", char: int, death_link: bool, mailboxes: bool):
         level = character_to_monitor_level(char)
 
         self.char = char
@@ -363,6 +364,20 @@ class TJEGameController():
                     self,
                     ctx
                 ),
+            )
+
+        if mailboxes:
+            self.other_monitors.append(
+                AddressMonitor(
+                    "Mailbox purchase",
+                    "AP_MAILBOX_ITEM_LEVEL",
+                    1,
+                    level,
+                    lambda: not self.is_awaiting_load(),
+                    self.handle_mailbox_purchase,
+                    self,
+                    ctx
+                )
             )
 
     def initialize_slot_data(self, auto_bad_presents: int, expanded_inv: bool):
@@ -538,22 +553,16 @@ class TJEGameController():
             await self.poke_ram(ctx, get_ram_addr("HEALTH", self.char), b"\x00")
             self.died_from_deathlink = True
 
-    # async def handle_items_set(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
-    #                               old_data: bytes, new_data: bytes):
-    #     if int.from_bytes(new_data) == 1 and self.current_level != -1:
-    #         map_data = await self.peek_ram(ctx, get_ram_addr("CURRENT_LEVEL_DATA"), 988)
-    #         floor_item_data = await self.peek_ram(ctx, get_ram_addr("FLOOR_ITEMS"), 256)
-    #         if self.dynamic_hints.get(self.current_level, None) is None:
-    #             hints = generate_hints_for_current_level(self.current_level, map_data, floor_item_data)
-    #             self.dynamic_hints.update(hints)
-    #         await self.poke_ram(ctx, get_ram_addr("AP_LEVEL_ITEMS_SET"), b"\x00")
+    async def handle_mailbox_purchase(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
+                                  old_data: bytes, new_data: bytes):
+        level = int.from_bytes(new_data)
+        if level > 1:
+            which = int.from_bytes(await self.peek_ram(ctx, get_ram_addr("AP_MAILBOX_ITEM_BOUGHT", self.char), 1))
+            loc = MAILBOX_LOC_TEMPLATE.format(level, MAILBOX_ITEM_REFS[which])
+            await self.client.trigger_location(ctx, loc)
 
-    # async def handle_level_change(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
-    #                               old_data: bytes, new_data: bytes):
-    #     old_level = self.current_level
-    #     self.current_level = int.from_bytes(new_data)
-    #     if old_level != -1 and self.current_level == -1:
-    #         print("RESET DETECTED")
+            await self.poke_ram(ctx, get_ram_addr("AP_MAILBOX_ITEM_LEVEL", self.char), b"\x00")
+            await self.poke_ram(ctx, get_ram_addr("AP_MAILBOX_ITEM_BOUGHT", self.char), b"\x00")
 
     async def handle_collected_item_change(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
                                        old_data: bytes, new_data: bytes):
