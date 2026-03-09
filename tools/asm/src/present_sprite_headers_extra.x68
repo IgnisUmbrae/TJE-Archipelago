@@ -36,7 +36,7 @@
     dc.b $03
     dc.b $03
     dc.b $f4
-    dc.b $e8
+    dc.b $ea
     dc.b $f2
     dc.b $42
     dc.l $00101040
@@ -49,8 +49,8 @@
     dc.b $00
     dc.b $03
     dc.b $03
-    dc.b $f6
-    dc.b $ef
+    dc.b $f4
+    dc.b $e9
     dc.b $f2
     dc.b $42
     dc.l $00101160
