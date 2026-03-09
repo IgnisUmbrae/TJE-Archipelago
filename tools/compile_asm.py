@@ -45,12 +45,11 @@ for i, f in enumerate(in_src_files):
     basename = f.name.removesuffix(SRC_EXT)
     retcode = None
     if getmtime(f) > yaml_data.get("last_compiled_time", 0):
-        cmd = BASE_CMD.format(
-            SYM_DIR.joinpath(basename + SYM_EXT).as_posix(),
-            BIN_DIR.joinpath(basename + BIN_EXT).as_posix(),
-            SRC_DIR.joinpath(basename + SRC_EXT).as_posix()
-            )
-        proc = subprocess.run(cmd, capture_output=True)
+        cmd = ["vasmm68k_mot", "-I./asm/include", "-Fbin",
+               "-L", SYM_DIR.joinpath(basename + SYM_EXT).as_posix(),
+               "-o", BIN_DIR.joinpath(basename + BIN_EXT).as_posix(),
+                SRC_DIR.joinpath(basename + SRC_EXT).as_posix()]
+        proc = subprocess.run(cmd, stdout=subprocess.DEVNULL)
         retcode = proc.returncode
     match retcode:
         case None:
@@ -60,16 +59,16 @@ for i, f in enumerate(in_src_files):
         case _:
             out_str = "✕"
             errored_files.append(f.name)
-            error_log.append(proc.stderr.decode())
+            #error_log.append(proc.stderr.decode())
     print(out_str, end="")
 print(SECTION_SEP)
 
-if errored_files:
-    print("⚠ The following files failed to compile (see log for details):")
-    for file in errored_files:
-        print(f"\t• {file}")
-    with open("compile_errors.log", "w") as f:
-        f.write(("-"*10+"\n\n").join(error_log))
+# if errored_files:
+#     print("⚠ The following files failed to compile (see log for details):")
+#     for file in errored_files:
+#         print(f"\t• {file}")
+#     with open("compile_errors.log", "w") as f:
+#         f.write(("-"*10+"\n\n").join(error_log))
 
 # Process symbol tables and collect dynamic patches
 
