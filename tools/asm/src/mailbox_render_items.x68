@@ -40,7 +40,7 @@ InStockItem:
 SoldOutItem:
     pea (Str_SoldOut,PC)
     jsr Fn_MenuDrawString
-    addq.l #$4,SP
+    addq.l #$4,SP ; not sure why this stack realignment is needed, but it is
     ; skip over number-drawing routine
     jmp ReturnNoNumber
 
