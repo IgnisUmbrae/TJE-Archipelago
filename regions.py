@@ -68,6 +68,9 @@ def create_regions(multiworld: MultiWorld, player: int, options: TJEOptions):
 
     multiworld.regions.extend(level_regions)
 
+    from Utils import visualize_regions
+    visualize_regions(multiworld.get_region("Menu", player), "my_world.puml", show_entrance_names=True, show_locations=True)
+
 def connect_regions_basic(level_regions, options: TJEOptions):
     for i in range(1, options.last_level.value):
         level_regions[i].connect(level_regions[i+1], f"Level {i} Elevator")
@@ -101,7 +104,6 @@ def handle_rank_options(multiworld, world, player,  options: TJEOptions, level_r
         menu_region = multiworld.get_region("Menu", player)
         add_rank_checks(menu_region, world, player, options)
         for i in range(1, options.last_level.value+1):
-            # add_reach_level_event(level_regions[i], player, i)
             add_exploration_points(level_regions[i], player, i)
 
 def handle_reach_options(player, world, options: TJEOptions, level_regions: list[Region]):
@@ -149,8 +151,9 @@ def add_rank_checks(menu: Region, world, player, options: TJEOptions):
 def add_reach_level_checks(player, world, options: TJEOptions, level_regions: list[Region]):
     for i, level in enumerate(level_regions[2:options.last_level.value+1]):
         loc_name = REACH_LOC_TEMPLATE.format(i+2)
+        print(f"Adding {loc_name} to level {level.name}")
         level.locations.append(
-            TJELocation(player, loc_name, world.location_name_to_id[loc_name], level_regions[i])
+            TJELocation(player, loc_name, world.location_name_to_id[loc_name], level)
         )
 
 def add_mailbox_checks(player, world, options: TJEOptions, level_regions: list[Region]):
