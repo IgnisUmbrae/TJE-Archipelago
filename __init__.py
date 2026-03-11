@@ -13,7 +13,7 @@ from .client import TJEClient # required to register with BizHawkClient
 from .constants import MAILBOX_ITEM_REFS, VANILLA_RANK_THRESHOLDS, BASE_EARTHLINGS, REV00_MD5, REV02_MD5
 from .generators import TJEGenerator, TJEInternalRNG, get_key_levels, item_totals, scaled_rank_thresholds
 from .items import Item, TJEItem, ITEM_GROUPS, ITEM_ID_TO_CODE, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, MASTER_ITEM_LIST, \
-                   TJEItemType, create_items, create_starting_presents, create_starting_bucks, get_item_price
+                   TJEItemType, create_items, create_starting_presents, create_starting_bucks, generate_item_prices
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, MAILBOX_LOC_TEMPLATE, LOCATION_GROUPS, LOCATION_NAME_TO_ID, MAILBOX_LOCATIONS
 from .options import RankRescalingOption, EarthlingRandomizationOption, LocalShipPiecesOption, TJEOptions
 from .regions import create_regions
@@ -65,8 +65,9 @@ class TJEWorld(World):
         if change:
             # Bucks
             state.prog_items[item.player]["bucks"] += item.buck_value
-            if item.location in MAILBOX_LOCATIONS:
-                state.prog_items[item.player]["bucks"] -= get_item_price(item)
+            if item.location is not None:
+                if item.location.name in LOCATION_GROUPS["Mailboxes"] and hasattr(item.location, "price"):
+                    state.prog_items[item.player]["bucks"] -= item.location.price
 
             # Ranks
             rank = self.get_current_rank(state, item)
@@ -82,8 +83,9 @@ class TJEWorld(World):
             # Bucks
             if item.name == "A Buck":
                 state.prog_items[item.player]["bucks"] -= item.buck_value
-            if item.location in MAILBOX_LOCATIONS:
-                state.prog_items[item.player]["bucks"] += get_item_price(item)
+            if item.location is not None:
+                if item.location.name in LOCATION_GROUPS["Mailboxes"] and hasattr(item.location, "price"):
+                    state.prog_items[item.player]["bucks"] += item.location.price
 
             # Ranks
             rank = self.get_current_rank(state, item)
@@ -103,6 +105,7 @@ class TJEWorld(World):
                                if self.options.mailbox_checks else [])
         self.ship_item_levels = self.generator.generate_ship_piece_levels(self.options.last_level.value)
         self.map_reveal_potencies = self.generator.generate_map_reveal_potencies(self.options.last_level.value)
+        self.mailbox_item_prices = generate_item_prices(self, len(self.mailbox_levels))
 
         match self.options.earthling_rando:
             case EarthlingRandomizationOption.BASE:
@@ -246,12 +249,11 @@ class TJEWorld(World):
         return (processed[:26] + " ").ljust(30, ".") + " "
 
     def create_patchable_mailbox_item_list(self):
-        self.mailbox_item_names, self.mailbox_item_types, self.mailbox_item_prices = [], [], []
+        self.mailbox_item_names, self.mailbox_item_types = [], []
         for (i, pos) in product(self.mailbox_levels, MAILBOX_ITEM_REFS):
             item = self.get_location(MAILBOX_LOC_TEMPLATE.format(i, pos)).item
             self.mailbox_item_names.append(self.shorten_item_name(item.name).encode("ascii") + b"\x00")
             self.mailbox_item_types.append(self.item_to_tje_hex(item))
-            self.mailbox_item_prices.append(get_item_price(item))
 
     # For tracker use
     def fill_slot_data(self) -> dict[str, Any]:
@@ -261,6 +263,7 @@ class TJEWorld(World):
             "ship_item_levels": self.ship_item_levels,
             "rank_thresholds": self.rank_thresholds,
             "map_reveal_potencies": self.map_reveal_potencies,
-            "reach_level_checks": self.options.reach_level_checks,
+            "reach_level_checks": bool(self.options.reach_level_checks.value),
             "mailbox_levels": self.mailbox_levels,
+            "mailbox_item_prices": self.mailbox_item_prices,
         }
