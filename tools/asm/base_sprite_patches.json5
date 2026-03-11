@@ -1,13 +1,13 @@
 {
     patches: [
         {
-            filename: "apitem-v2",
+            filename: "apitem-v3",
             addresses: [
                 0x00100000
             ]
         },
         {
-            filename: "apitem-important",
+            filename: "apitem-v3-important",
             addresses: [
                 0x00100f20
             ]

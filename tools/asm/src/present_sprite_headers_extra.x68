@@ -6,7 +6,7 @@
     dc.b $00 ; y offset
     dc.b $00 ; next-is-same flag
     dc.b $03 ; width
-    dc.b $03 ; height
+    dc.b $02 ; height
     dc.b $f4 ; offset_x
     dc.b $e9 ; offset_y
     dc.b $f2 ; offset_z
@@ -20,7 +20,7 @@
     dc.b $00
     dc.b $00
     dc.b $03
-    dc.b $03
+    dc.b $02
     dc.b $f4
     dc.b $e9
     dc.b $f2
@@ -34,9 +34,9 @@
     dc.b $00
     dc.b $00
     dc.b $03
-    dc.b $03
+    dc.b $02
     dc.b $f4
-    dc.b $ea
+    dc.b $f1
     dc.b $f2
     dc.b $42
     dc.l $00101040
@@ -48,9 +48,9 @@
     dc.b $00
     dc.b $00
     dc.b $03
-    dc.b $03
+    dc.b $02
     dc.b $f4
-    dc.b $e9
+    dc.b $f1
     dc.b $f2
     dc.b $42
     dc.l $00101160
