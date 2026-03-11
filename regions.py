@@ -151,7 +151,6 @@ def add_rank_checks(menu: Region, world, player, options: TJEOptions):
 def add_reach_level_checks(player, world, options: TJEOptions, level_regions: list[Region]):
     for i, level in enumerate(level_regions[2:options.last_level.value+1]):
         loc_name = REACH_LOC_TEMPLATE.format(i+2)
-        print(f"Adding {loc_name} to level {level.name}")
         level.locations.append(
             TJELocation(player, loc_name, world.location_name_to_id[loc_name], level)
         )
