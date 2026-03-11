@@ -249,12 +249,9 @@ class TJEWorld(World):
         self.mailbox_item_names, self.mailbox_item_types, self.mailbox_item_prices = [], [], []
         for (i, pos) in product(self.mailbox_levels, MAILBOX_ITEM_REFS):
             item = self.get_location(MAILBOX_LOC_TEMPLATE.format(i, pos)).item
-            name = self.shorten_item_name(item.name).encode("ascii") + b"\x00"
-            item_hex = self.item_to_tje_hex(item)
-            price = get_item_price(item)
-            self.mailbox_item_names.append(name)
-            self.mailbox_item_types.append(item_hex)
-            self.mailbox_item_prices.append(price)
+            self.mailbox_item_names.append(self.shorten_item_name(item.name).encode("ascii") + b"\x00")
+            self.mailbox_item_types.append(self.item_to_tje_hex(item))
+            self.mailbox_item_prices.append(get_item_price(item))
 
     # For tracker use
     def fill_slot_data(self) -> dict[str, Any]:
@@ -264,4 +261,6 @@ class TJEWorld(World):
             "ship_item_levels": self.ship_item_levels,
             "rank_thresholds": self.rank_thresholds,
             "map_reveal_potencies": self.map_reveal_potencies,
+            "reach_level_checks": self.options.reach_level_checks,
+            "mailbox_levels": self.mailbox_levels,
         }
