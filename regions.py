@@ -68,15 +68,14 @@ def create_regions(multiworld: MultiWorld, player: int, options: TJEOptions):
 
     multiworld.regions.extend(level_regions)
 
-    from Utils import visualize_regions
-    visualize_regions(multiworld.get_region("Menu", player), "my_world.puml", show_entrance_names=True, show_locations=True)
-
 def connect_regions_basic(level_regions, options: TJEOptions):
     for i in range(1, options.last_level.value):
         level_regions[i].connect(level_regions[i+1], f"Level {i} Elevator")
 
     for i in range(1, options.last_level.value+1):
         level_regions[i].connect(level_regions[i-1], f"Level {i} Bummer", None)
+    
+    level_regions[25].connect(level_regions[26], "Fly home")
 
 #region Misc
 
