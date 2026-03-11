@@ -74,8 +74,9 @@ LOCATION_ID_TO_NAME : dict[int, str] = {
 LOCATION_GROUPS = dict(zip(
     [f"Level {level}" for level in range(1, 26)],
     [
+        [FLOOR_ITEM_LOC_TEMPLATE.format(lvl, i+1) for i in range(max_items_per_level[lvl])] + 
         ([BIG_ITEM_LOC_TEMPLATE.format(lvl)] if lvl > 1 else []) +
-        [FLOOR_ITEM_LOC_TEMPLATE.format(lvl, i+1) for i in range(max_items_per_level[lvl])]
+        ([MAILBOX_LOC_TEMPLATE.format(lvl, pos) for pos in MAILBOX_ITEM_REFS])
         for lvl in range(1,26)
     ]
     )) \
