@@ -156,9 +156,12 @@ def add_reach_level_checks(player, world, options: TJEOptions, level_regions: li
         )
 
 def add_mailbox_checks(player, world, options: TJEOptions, level_regions: list[Region]):
-    for (i, pos) in product(world.mailbox_levels, MAILBOX_ITEM_REFS):
+    for (n, (i, pos)) in enumerate(product(world.mailbox_levels, MAILBOX_ITEM_REFS)):
+        price = world.mailbox_item_prices[world.mailbox_item_prices[n]]
         loc_name = MAILBOX_LOC_TEMPLATE.format(i, pos)
         loc = TJELocation(player, loc_name, world.location_name_to_id[loc_name], level_regions[i])
+        loc.price = price
+        loc.access_rule = lambda state, p=price: state.has("bucks", player, p)
         forbid_items_for_player(loc, {"A Buck", "Extra Buck Present", "Jackpot"}, player)
         level_regions[i].locations.append(loc)
 
