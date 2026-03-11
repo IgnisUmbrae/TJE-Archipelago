@@ -64,7 +64,7 @@
     dc.b $03
     dc.b $02
     dc.b $f4
-    dc.b $f1
+    dc.b $f2
     dc.b $f2
     dc.b $43
     dc.l $00101280
