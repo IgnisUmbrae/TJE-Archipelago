@@ -1,4 +1,4 @@
-;00105180
+;00106500
 
 ; AP item
     dc.b $01 ; sprite data count

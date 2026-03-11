@@ -10,9 +10,10 @@ AP_GROUND_SHIP_SPRITE   equ $00101280
 
 ; Relocated tables/metadata/strings
 
-AP_PRES_SPRITE_TABLE    equ $00105000
 AP_DIALOGUE_TABLE       equ $00105500
 AP_EXTRA_DIALOGUE       equ $00105a00
+AP_PRES_SPRITE_TABLE    equ $00106000
+AP_PRES_SPRITE_HEADERS  equ $00106500
 
 ; New or modified & relocated functions required for AP integration
 

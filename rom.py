@@ -124,9 +124,9 @@ def patch_unused_present_sprites(world, patch, dro) -> None:
     if world.options.unused_present_sprites:
         excl1, excl2 = world.random.sample(range(0, 30), k=2)
         if excl1 < 26:
-            patch.write_token(APTokenTypes.WRITE, 0x00105000 + 4*excl1, struct.pack(">L", 0x000aaee4))
+            patch.write_token(APTokenTypes.WRITE, 0x00106000 + 4*excl1, struct.pack(">L", 0x000aaee4))
         if excl2 < 26:
-            patch.write_token(APTokenTypes.WRITE, 0x00105000 + 4*excl2, struct.pack(">L", 0x000aaf92))
+            patch.write_token(APTokenTypes.WRITE, 0x00106000 + 4*excl2, struct.pack(">L", 0x000aaf92))
 
 def patch_expanded_inv(world, patch, dro) -> None:
     if world.options.expanded_inventory:

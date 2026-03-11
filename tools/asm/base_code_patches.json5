@@ -64,19 +64,13 @@
 		{
 			filename: "present_sprite_table",
 			addresses: [
-				0x00105000
-			]
-		},
-		{
-			filename: "present_sprite_table_extra",
-			addresses: [
-				0x00105070
+				0x00106000
 			]
 		},
 		{
 			filename: "present_sprite_headers_extra",
 			addresses: [
-				0x00105180
+				0x00106500
 			]
 		},
 		{
