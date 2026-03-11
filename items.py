@@ -263,21 +263,5 @@ def create_starting_bucks(world, multiworld):
     for _ in range(3):
         multiworld.push_precollected(world.create_item("A Buck"))
 
-# TODO: test with items from other worlds
-def get_item_price(item: Item) -> int:
-    if item.classification == ItemClassification.filler:
-        price = 1
-    else:
-        price = 2
-
-    if ItemClassification.trap in item.classification:
-        price -= 3
-    if ItemClassification.skip_balancing in item.classification:
-        price -= 2
-
-    if ItemClassification.useful in item.classification:
-        price += 2
-    elif ItemClassification.progression in item.classification:
-        price += 3
-
-    return max(0, price)
+def generate_item_prices(world, num_mailboxes: int) -> list[int]:
+    return [world.random.randint(0,5) for _ in range(3*num_mailboxes)]
