@@ -54,7 +54,7 @@ REACH_LOCATIONS: list[TJELocationData] = [
 ]
 
 MAILBOX_LOCATIONS: list[TJELocationData] = [
-    TJELocationData(MAILBOX_LOC_TEMPLATE.format(level, pos), TJELocationType.REACH, -1, None)
+    TJELocationData(MAILBOX_LOC_TEMPLATE.format(level, pos), TJELocationType.MAILBOX, -1, None)
     for level in range(2, 26) for pos in MAILBOX_ITEM_REFS
 ]
 
@@ -80,4 +80,10 @@ LOCATION_GROUPS = dict(zip(
     ]
     )) \
        | {"Ranks" : [RANK_LOC_TEMPLATE.format(rank) for rank in RANK_NAMES[1:]]} \
-       | {"Big Items" : [BIG_ITEM_LOC_TEMPLATE.format(level) for level in range(2, 26)]}
+       | {"Big Items" : [BIG_ITEM_LOC_TEMPLATE.format(level) for level in range(2, 26)]} \
+       | {"Level Reaches" : [REACH_LOC_TEMPLATE.format(level) for level in range(2, 26)]} \
+       | {"Mailboxes" : [MAILBOX_LOC_TEMPLATE.format(level, pos)
+                         for level in range(2, 26) for pos in MAILBOX_ITEM_REFS]}
+       
+REMOTE_SPAWN_ONLY_LOCS = (LOCATION_GROUPS["Ranks"] + LOCATION_GROUPS["Ranks"] +
+                          LOCATION_GROUPS["Big Items"] + LOCATION_GROUPS["Mailboxes"])
