@@ -1,3 +1,4 @@
+import argparse
 import subprocess
 import re
 import json
@@ -7,6 +8,10 @@ from pathlib import Path
 from collections import defaultdict
 
 import yaml
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-f", "--force", action="store_true")
+args = parser.parse_args()
 
 # Printing constants
 
@@ -40,11 +45,14 @@ if not BIN_DIR.exists():
 
 errored_files = []
 error_log = []
-print("Compiling modified source files", end=" ")
+if args.force:
+    print(f"Force-recompiling all source files", end=" ")
+else:
+    print(f"Compiling modified source files", end=" ")
 for i, f in enumerate(in_src_files):
     basename = f.name.removesuffix(SRC_EXT)
     retcode = None
-    if getmtime(f) > yaml_data.get("last_compiled_time", 0):
+    if args.force or getmtime(f) > yaml_data.get("last_compiled_time", 0):
         cmd = ["vasmm68k_mot", "-I./asm/include", "-Fbin",
                "-L", SYM_DIR.joinpath(basename + SYM_EXT).as_posix(),
                "-o", BIN_DIR.joinpath(basename + BIN_EXT).as_posix(),
