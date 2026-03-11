@@ -11,7 +11,7 @@ from Utils import async_start
 from .constants import SAVE_DATA_POINTS_ALL, expand_inv_constants, ret_val_to_char
 # from .hint import TJEHint
 from .items import ITEM_ID_TO_NAME, INSTATRAP_IDS, SHIP_PIECE_IDS
-from .locations import LOCATION_ID_TO_NAME, LOCATION_NAME_TO_ID
+from .locations import LOCATION_ID_TO_NAME, LOCATION_NAME_TO_ID, REMOTE_SPAWN_ONLY_LOCS
 from .ram import TJEGameController, SaveManager
 
 if TYPE_CHECKING:
@@ -210,7 +210,7 @@ class TJEClient(BizHawkClient):
             return True
         # local promotion, ship piece, reach check or mailbox check
         loc_name = LOCATION_ID_TO_NAME[nwi.location]
-        return "Reach" in loc_name or "Promoted" in loc_name or "Ship Piece" in loc_name or "Mailbox" in loc_name
+        return loc_name in REMOTE_SPAWN_ONLY_LOCS
 
     async def process_item(self, ctx: "BizHawkClientContext", nwi: NetworkItem) -> None:
         if self.should_spawn_from_remote(ctx, nwi):
