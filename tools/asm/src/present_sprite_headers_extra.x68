@@ -62,9 +62,9 @@
     dc.b $00
     dc.b $00
     dc.b $03
-    dc.b $03
-    dc.b $f6
-    dc.b $ef
+    dc.b $02
+    dc.b $f4
+    dc.b $f1
     dc.b $f2
     dc.b $43
     dc.l $00101280
