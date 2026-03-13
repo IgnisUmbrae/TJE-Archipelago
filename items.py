@@ -66,7 +66,7 @@ BASE_ITEM_LIST: list[TJEItemData] = [
     TJEItemData(0x0F, "Decoy", TJEItemType.PRESENT, ItemClassification.useful, 2, 0),
     TJEItemData(0x10, "Total Bummer", TJEItemType.PRESENT, ItemClassification.trap, 2, 0),
     TJEItemData(0x11, "Extra Life", TJEItemType.PRESENT, ItemClassification.useful, 2, 0),
-    TJEItemData(0x12, "Randomizer", TJEItemType.PRESENT, ItemClassification.trap, 2, 0),
+    TJEItemData(0x12, "Randomizer", TJEItemType.PRESENT, ItemClassification.trap, 0, 0),
     TJEItemData(0x13, "Telephone", TJEItemType.PRESENT, ItemClassification.useful, 2, 0),
     TJEItemData(0x14, "Extra Buck Present", TJEItemType.PRESENT, ItemClassification.useful, 2, 1),
     TJEItemData(0x15, "Jackpot", TJEItemType.PRESENT, ItemClassification.useful, 2, 5),
