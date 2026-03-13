@@ -309,8 +309,8 @@ def patch_sound_rando(world, patch, dro) -> None:
         
         psg_sfx_usage_addrs = PSG_SFX_USAGE_ADDRS.copy()
         if world.options.mailbox_checks:
-            psg_sfx_usage_addrs[18].extend(0x00009bf6 + dro["mailbox_order_item"]["PSG_SFX_1"],
-                                           0x00009bf6 + dro["mailbox_order_item"]["PSG_SFX_2"])
+            psg_sfx_usage_addrs[18].extend([0x00009bf6 + dro["mailbox_order_item"]["PSG_SFX_1"],
+                                           0x00009bf6 + dro["mailbox_order_item"]["PSG_SFX_2"]])
         else:
             psg_sfx_usage_addrs[18].append(0x00009cd4)
 
