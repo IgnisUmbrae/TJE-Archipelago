@@ -80,25 +80,22 @@ class TJEGenerator():
     def fewer_upwarps(self):
         PRESENT_WEIGHTS[12] = 2
 
-    def get_present_distribution(self, level_one: bool=False, include_bad: bool=True) -> tuple[list[int], list[float]]:
+    def get_present_distribution(self, level_one: bool=False, force_good: bool=False) -> tuple[list[int], list[float]]:
         forbiddens = set()
         forbiddens |= self.global_banned_presents
         if level_one:
             forbiddens |= LV1_FORBIDDEN_PRESENT_INDICES
-        if not include_bad:
+        if force_good:
             forbiddens |= BAD_PRESENT_INDICES
 
         culled_present_list = [PRESENT_LIST[i] for i in range(len(PRESENT_LIST)) if i not in forbiddens]
         culled_present_weights = [PRESENT_WEIGHTS[i] for i in range(len(PRESENT_WEIGHTS)) if i not in forbiddens]
-        #assert(len(culled_present_list) == len(culled_present_weights))
 
         return culled_present_list, culled_present_weights
 
-    def get_food_distribution(self, include_bad: bool = True) -> tuple[list[int], list[float]]:
+    def get_food_distribution(self) -> tuple[list[int], list[float]]:
         forbiddens = set()
         forbiddens |= self.global_banned_food
-        if not include_bad:
-            forbiddens |= BAD_FOOD_INDICES
 
         culled_food_list = [FOOD_LIST[i] for i in range(len(FOOD_LIST)) if i not in forbiddens]
         culled_food_weights = [FOOD_WEIGHTS[i] for i in range(len(FOOD_WEIGHTS)) if i not in forbiddens]
@@ -106,24 +103,26 @@ class TJEGenerator():
         return culled_food_list, culled_food_weights
 
     # Not clear if this is actually uniformly randomly chosen in the code
-    def get_random_food(self, include_bad: bool = True) -> int:
-        food_list, food_distro = self.get_food_distribution(include_bad)
+    def get_random_food(self) -> int:
+        food_list, food_distro = self.get_food_distribution()
         return self.random.choices(food_list, food_distro, k=1)[0]
 
-    def get_random_present(self, level_one: bool = False, include_bad: bool = True) -> int:
-        present_list, present_distro = self.get_present_distribution(level_one, include_bad)
+    def get_random_present(self, level_one: bool = False) -> int:
+        present_list, present_distro = self.get_present_distribution(level_one)
         return self.random.choices(present_list, present_distro, k=1)[0]
 
     # Follows the high-level logic of the game but does not use the same RNG function
-    def get_random_item(self, level_one: bool = False, include_bad: bool = True) -> int:
+    def get_random_item(self, level_one: bool = False, presentsanity: bool = False) -> int:
         if level_one or self.random.random() < 0.5:
-            return self.get_random_present(level_one, include_bad)
+            if not presentsanity:
+                return self.get_random_present(level_one)
+            return 0x1A # Mystery Present
         if self.random.random() < 0.75:
-            return self.get_random_food(include_bad)
+            return self.get_random_food()
         return A_BUCK
 
-    def generate_item_blob(self, number: int, include_bad: bool = True) -> list[int]:
-        return [self.get_random_item(level_one=False, include_bad=include_bad) for _ in range(number)]
+    def generate_item_blob(self, number: int, presentsanity: bool = False) -> list[int]:
+        return [self.get_random_item(False, presentsanity) for _ in range(number)]
 
     def add_extra_promotions(self, item_pool: list[int], rank_thresholds: list[int], options: "TJEOptions",
                              paranoia_level: float = 1.5) -> None:
@@ -150,9 +149,8 @@ class TJEGenerator():
                     if extra_proms == 0:
                         break
 
-
-    def generate_initial_inventory(self, include_bad=False) -> list[int]:
-        present_list, present_distro = self.get_present_distribution(level_one=False, include_bad=include_bad)
+    def generate_initial_inventory(self, force_good: bool) -> list[int]:
+        present_list, present_distro = self.get_present_distribution(False, force_good)
         return self.random.choices(present_list, present_distro, k=4)
 
     # Follows the same procedure as the ROM but has a slightly different distribution of results as
