@@ -425,6 +425,7 @@ GLOBAL_RAM_ADDRS: dict[int] = {
     "CURRENT_LEVEL_DATA": 0x81AA,
     # Special AP addresses
     "AP_CHARACTER": 0xF000,
+    "AP_MAILBOX_ITEMS_BOUGHT": 0xF106,
     "AP_NUM_KEYS": 0xF455,
     "AP_NUM_MAP_REVEALS": 0xF456,
     "AP_LAST_REVEALED_MAP": 0xF457,
@@ -442,7 +443,7 @@ GLOBAL_RAM_ADDRS: dict[int] = {
     "AP_BIG_ITEM_LV": 0xF6B0,
     "AP_MAILBOX_ITEM_BOUGHT": 0xF6B1,
     "AP_MAILBOX_ITEM_LEVEL": 0xF6B2,
-    "AP_LAST_DMG_SOURCE" : 0xF6C0
+    "AP_LAST_DMG_SOURCE" : 0xF6C0,
 }
 
 def get_slot_addr(name: str, slot: int, player: int = 0) -> int | None:
@@ -486,6 +487,7 @@ GLOBAL_DATA_STRUCTURES: dict[str, DataStructure] = {
     "AP_NUM_KEYS": DataStructure(0, 1, 0),
     "AP_NUM_MAP_REVEALS": DataStructure(0, 1, 0),
     "AP_LAST_REVEALED_MAP": DataStructure(0, 1, 0),
+    "AP_MAILBOX_ITEMS_BOUGHT": DataStructure(71, 1, 0)
 }
 
 PLAYER_DATA_STRUCTURES: dict[str, DataStructure] = {
@@ -515,6 +517,7 @@ SAVE_DATA_POINTS_GLOBAL: tuple[str] = (
     "AP_NUM_KEYS",
     "AP_NUM_MAP_REVEALS",
     "AP_LAST_REVEALED_MAP",
+    "AP_MAILBOX_ITEMS_BOUGHT",
 )
 
 SAVE_DATA_POINTS_PLAYER: tuple[str] = (
