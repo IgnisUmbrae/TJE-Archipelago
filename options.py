@@ -122,8 +122,8 @@ class FastLoads(Toggle):
 
 class AutoOpenBadPresents(Choice):
     """
-    Whether bad presents should automatically open when received from other players.
-    Presents collected locally will not auto-open.
+    Sets whether bad presents should automatically open when received from other players.
+    Locally-collected presents will not auto-open.
     Recommended to reduce the burden of inventory management.
     Auto-opening randomizers may cause the game to softlock in certain circumstances so be prepared to rewind.
     """
@@ -135,6 +135,14 @@ class AutoOpenBadPresents(Choice):
     option_all = AutoOpenOption.ALL.value
 
     default = option_no_randomizer
+
+class AutoOpenBuckPresents(Toggle):
+    """
+    Sets whether Extra Buck and Jackpot presents should automatically open when received from other players.
+    Locally-collected presents will not auto-open.
+    """
+
+    display_name = "Automatically Open Buck Presents"
 
 class Character(Choice):
     """
@@ -587,6 +595,7 @@ tje_option_groups = [
     ]),
     OptionGroup("Bad/Trap Options", [
         AutoOpenBadPresents,
+        AutoOpenBuckPresents,
         BadFood,
         BadPresents,
         TrapWeights,
@@ -634,6 +643,7 @@ class TJEOptions(PerGameCommonOptions):
     last_level: LastLevel
     local_ship_pieces: LocalShipPieces
     auto_bad_presents: AutoOpenBadPresents
+    auto_buck_presents: AutoOpenBuckPresents
     bad_food: BadFood
     bad_presents: BadPresents
     trap_weights: TrapWeights

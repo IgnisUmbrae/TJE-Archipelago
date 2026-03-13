@@ -63,6 +63,7 @@ AP_MAILBOX_ITEM_PRICES  equ $001a2100
 AP_KEY_INTERVAL         equ $001f0000 ; 1 byte
 AP_DEATH_LINK           equ $001f0001 ; 1 byte
 AP_AUTO_TRAP_PRES       equ $001f0005 ; 1 byte
+AP_AUTO_BUCK_PRES       equ $001f0006 ; 1 byte
 AP_KEY_LEVEL_NUM        equ $001f0010 ; 1 byte
 AP_KEY_LEVEL_LIST       equ $001f0011 ; up to 23 bytes
 AP_MAILBOX_LEVEL_LIST   equ $001f0030 ; up to 24 bytes

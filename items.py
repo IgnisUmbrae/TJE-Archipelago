@@ -135,6 +135,7 @@ KEY_IDS = [ITEM_NAME_TO_ID[item.name] for item in ELEVATOR_KEY_ITEMS]
 INSTATRAP_IDS = [ITEM_NAME_TO_ID[item.name] for item in INSTATRAP_ITEMS]
 BAD_PRESENT_IDS = [ITEM_NAME_TO_ID[item.name] for item in BASE_ITEM_LIST
                     if item.type == TJEItemType.PRESENT and item.classification == ItemClassification.trap]
+BUCK_PRESENT_IDS = [ITEM_NAME_TO_ID[name] for name in ("Extra Buck Present", "Jackpot")]
 
 ITEM_GROUPS = {
     "Ship Pieces" : { item.name for item in BASE_ITEM_LIST if item.type == TJEItemType.SHIP_PIECE }

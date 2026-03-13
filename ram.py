@@ -12,7 +12,7 @@ from .constants import DEAD_SPRITES, EMPTY_ITEM, COLLECTED_SHIP_ITEM, EMPTY_PRES
                        STATIC_DIALOGUE_LIST, IN_END_ELEVATOR, DEATHLINK_MESSAGES, MAILBOX_ITEM_REFS, \
                        get_datastructure, get_max_health, get_slot_addr, get_ram_addr, expand_inv_constants
 from .items import ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, \
-                   PRESENT_IDS, SHIP_PIECE_IDS,INSTATRAP_IDS, BAD_PRESENT_IDS
+                   PRESENT_IDS, SHIP_PIECE_IDS,INSTATRAP_IDS, BAD_PRESENT_IDS, BUCK_PRESENT_IDS
 # from .hint import generate_hints_for_current_level
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, RANK_LOC_TEMPLATE, BIG_ITEM_LOC_TEMPLATE, REACH_LOC_TEMPLATE, \
                        MAILBOX_LOC_TEMPLATE
@@ -266,6 +266,7 @@ class TJEGameController():
         self.char = 0
 
         self.auto_bad_presents = 0
+        self.auto_buck_presents = False
         self.expanded_inv = False
 
         self.died_from_deathlink = False
@@ -380,8 +381,9 @@ class TJEGameController():
                 )
             )
 
-    def initialize_slot_data(self, auto_bad_presents: int, expanded_inv: bool):
+    def initialize_slot_data(self, auto_bad_presents: int, auto_buck_presents: bool, expanded_inv: bool):
         self.auto_bad_presents = auto_bad_presents
+        self.auto_buck_presents = auto_buck_presents
         self.expanded_inv = expanded_inv
         if self.expanded_inv:
             expand_inv_constants()
@@ -456,18 +458,21 @@ class TJEGameController():
     async def is_item_waiting(self, ctx: "BizHawkClientContext") -> bool:
         return (await self.peek_ram(ctx, get_ram_addr("AP_GIVE_ITEM", self.char), 1)) != b"\xFF"
 
-    async def should_spawn_present_as_trap(self, item_id: int) -> bool:
+    async def should_auto_open_bad_pres(self, item_id: int) -> bool:
         return (self.auto_bad_presents > 0 and item_id in BAD_PRESENT_IDS and
                             not (self.auto_bad_presents == 1 and item_id == ITEM_NAME_TO_ID["Randomizer"]))
+
+    async def should_auto_open_buck_pres(self, item_id: int) -> bool:
+        return (self.auto_buck_presents and item_id in BUCK_PRESENT_IDS)
 
     async def receive_item(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
         if await self.is_warping(ctx):
             return False
-        if await self.should_spawn_present_as_trap(item_id):
-            return await self.open_trap_present(ctx, item_id)
+        if await self.should_auto_open_bad_pres(item_id) or await self.should_auto_open_buck_pres(item_id):
+            return await self.auto_open_present(ctx, item_id)
         return await self.spawn_item(ctx, item_id)
 
-    async def open_trap_present(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
+    async def auto_open_present(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
         item_code = ITEM_ID_TO_CODE[item_id]
         # Locking possibly not required here
         await bizhawk.lock(ctx.bizhawk_ctx)

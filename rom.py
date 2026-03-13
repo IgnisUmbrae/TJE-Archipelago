@@ -51,6 +51,7 @@ def patch_slot_data(world, patch, dro) -> None:
     patch.write_token(APTokenTypes.WRITE, 0x001f0000, struct.pack(">B", key_gap))
     patch.write_token(APTokenTypes.WRITE, 0x001f0001, struct.pack(">B", world.options.death_link.value))
     patch.write_token(APTokenTypes.WRITE, 0x001f0005, struct.pack(">B", world.options.auto_bad_presents.value))
+    patch.write_token(APTokenTypes.WRITE, 0x001f0006, struct.pack(">B", world.options.auto_buck_presents.value))
     num_key_levels = len(world.key_levels)
     patch.write_token(APTokenTypes.WRITE, 0x001f0010, struct.pack(">B", num_key_levels))
     patch.write_token(APTokenTypes.WRITE, 0x001f0011, struct.pack(f">{num_key_levels}B", *world.key_levels))
