@@ -1,6 +1,6 @@
 import itertools
 from collections import defaultdict, Counter
-from math import ceil, sqrt
+from math import ceil, sqrt, comb, pow
 
 from .constants import MAP_REVEAL_DIALOGUE_TEMPLATE, MAP_REVEAL_DIALOGUE_TEMPLATE_DEGEN, VANILLA_RANK_THRESHOLDS, \
                        EARTHLING_LIST, BASE_EARTHLINGS, EARTHLING_UNIQUE, EARTHLING_WEIGHTS, EARTHLING_MAX_PER_LEVEL, \
@@ -179,6 +179,23 @@ class TJEGenerator():
         for i in bump_indices:
             amounts[i] += 1
         return amounts
+
+    def generate_item_prices(self, num_mailboxes: int, total_bucks: int) -> list[int]:
+        num_items = 3*num_mailboxes
+        max_price = round(2*total_bucks/num_items)
+        # assume 10% of bucks will be "misspent"
+        budget = total_bucks - round(10/100*total_bucks)
+        binom_weights = [comb(max_price, i) * pow(0.5, max_price) for i in range(0,max_price+1)]
+
+        prices = []
+        while budget > 0 and len(prices) < num_items:
+            price = self.random.choices(range(0,max_price+1), binom_weights, k=1)[0]
+            budget = max(budget - price, 0)
+            prices.append(price)
+        prices += [0]*(num_items - len(prices))
+        self.random.shuffle(prices)
+
+        return prices
 
 # Collectible items only; does not include trees
 def num_items_on_level(level: int, singleplayer: bool = True, min_items: int = 12, max_items: int = 28) -> int | None:

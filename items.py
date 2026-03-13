@@ -233,13 +233,16 @@ def create_main_items(world, item_list, total_locations, differential, options: 
     item_pool_raw = world.generator.generate_item_blob(total_locations - differential)
     world.generator.add_extra_promotions(item_pool_raw, world.rank_thresholds, options)
 
+    bucks = 0
     for item in item_pool_raw:
         item_id = ITEM_CODE_TO_ID[item]
         item_name = ITEM_ID_TO_NAME[item_id]
         item_data = ITEM_NAME_TO_DATA[item_name]
+        bucks += item_data.buck_value
         item_classification = item_data.classification
 
         item_list.append(world.create_item(item_name, item_classification))
+    world.total_bucks = bucks
 
 def create_starting_presents(world, multiworld: MultiWorld, options: TJEOptions) -> None:
     match options.starting_presents:
@@ -262,6 +265,3 @@ def create_starting_presents(world, multiworld: MultiWorld, options: TJEOptions)
 def create_starting_bucks(world, multiworld):
     for _ in range(3):
         multiworld.push_precollected(world.create_item("A Buck"))
-
-def generate_item_prices(world, num_mailboxes: int) -> list[int]:
-    return [world.random.randint(0,5) for _ in range(3*num_mailboxes)]
