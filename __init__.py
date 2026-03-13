@@ -51,7 +51,6 @@ class TJEWorld(World):
     location_name_to_id = LOCATION_NAME_TO_ID
 
     item_name_groups = ITEM_GROUPS
-
     location_name_groups = LOCATION_GROUPS
 
     def get_current_rank(self, state: "CollectionState", item: "TJEItem") -> int:
@@ -239,9 +238,6 @@ class TJEWorld(World):
             self.patchable_item_list.extend([0xFF]*(28 - num))
         assert len(self.patchable_item_list) == (self.options.last_level.value+1)*28
 
-    # TODO: attempt to break on spaces and punctuation
-    # TODO: decide better replacements for unprintable ASCII
-    # TODO: can we include player/game info?
     def shorten_item_name(self, name: str) -> str:
         strip_chars = re.compile(f"[^a-zA-Z0-9 ?!',.-]")
         try:
