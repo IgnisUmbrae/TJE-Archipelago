@@ -593,7 +593,7 @@ tje_option_groups = [
         LastLevel,
         LocalShipPieces,
     ]),
-    OptionGroup("Bad/Trap Options", [
+    OptionGroup("Auto/Bad/Trap Options", [
         AutoOpenBadPresents,
         AutoOpenBuckPresents,
         BadFood,
