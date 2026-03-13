@@ -27,10 +27,13 @@ DYNRP_inventory_size_2:
     cmpi.w #$10,D1
     blt.b CheckTJInv
 
-    ; add extra AP items into present wrapping table
-    move.b #$1c,($00fff338).l
-    move.b #$1d,($00fff33a).l
-    move.b #$1e,($00fff33c).l
-    move.b #$1f,($00fff33e).l
-    move.b #$20,($00fff340).l
+    ; add extra AP items and ground items into present wrapping table (for mailbox rendering)
+    movea.l #AP_PRES_WRAPPING_EXTRA,A1
+    moveq #$1c,D0
+IdentifyAllExtraPresentsLoop:
+    move.b D0,(A1)
+    adda.l #$2,A1
+    addq #$1,D0
+    cmpi.b #$51,D0 ; #$50 = A Buck, the last item in the game
+    blt IdentifyAllExtraPresentsLoop
     rts
