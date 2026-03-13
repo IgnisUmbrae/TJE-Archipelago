@@ -13,8 +13,8 @@ from .client import TJEClient # required to register with BizHawkClient
 from .constants import MAILBOX_ITEM_REFS, VANILLA_RANK_THRESHOLDS, BASE_EARTHLINGS, REV00_MD5, REV02_MD5
 from .generators import TJEGenerator, TJEInternalRNG, get_key_levels, item_totals, scaled_rank_thresholds
 from .items import Item, TJEItem, ITEM_GROUPS, ITEM_ID_TO_CODE, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, MASTER_ITEM_LIST, \
-                   TJEItemType, create_items, create_starting_presents, create_starting_bucks, generate_item_prices
-from .locations import FLOOR_ITEM_LOC_TEMPLATE, MAILBOX_LOC_TEMPLATE, LOCATION_GROUPS, LOCATION_NAME_TO_ID, MAILBOX_LOCATIONS
+                   TJEItemType, create_items, create_starting_presents, create_starting_bucks
+from .locations import FLOOR_ITEM_LOC_TEMPLATE, MAILBOX_LOC_TEMPLATE, LOCATION_GROUPS, LOCATION_NAME_TO_ID
 from .options import RankRescalingOption, EarthlingRandomizationOption, LocalShipPiecesOption, TJEOptions
 from .regions import create_regions
 from .rom import TJEProcedurePatch, write_tokens
@@ -105,7 +105,6 @@ class TJEWorld(World):
                                if self.options.mailbox_checks else [])
         self.ship_item_levels = self.generator.generate_ship_piece_levels(self.options.last_level.value)
         self.map_reveal_potencies = self.generator.generate_map_reveal_potencies(self.options.last_level.value)
-        self.mailbox_item_prices = generate_item_prices(self, len(self.mailbox_levels))
 
         match self.options.earthling_rando:
             case EarthlingRandomizationOption.BASE:
@@ -175,12 +174,22 @@ class TJEWorld(World):
         create_starting_presents(self, self.multiworld, self.options)
         create_starting_bucks(self, self.multiworld)
 
+    # Any rules that need setting post–item creation
+    # Currently only used for mailbox items & completion condition
     def set_rules(self) -> None:
+        self.mailbox_item_prices = self.generator.generate_item_prices(len(self.mailbox_levels), self.total_bucks)
+        if self.options.mailbox_checks:
+            for (n, (i, pos)) in enumerate(product(self.mailbox_levels, MAILBOX_ITEM_REFS)):
+                loc = self.get_location(MAILBOX_LOC_TEMPLATE.format(i, pos))
+                price = self.mailbox_item_prices[n]
+                loc.access_rule = lambda state, p=price: state.has("bucks", self.player, p)
+                loc.price = price
+
         self.multiworld.completion_condition[self.player] = (
             lambda state: state.has_all(TJEWorld.item_name_groups["Ship Pieces"], self.player)
         )
 
-    def pre_fill(self):
+    def pre_fill(self) -> None:
         if self.options.local_ship_pieces.value == LocalShipPiecesOption.VANILLA:
             ship_piece_items = [self.create_item(item.name, item.classification) for item in MASTER_ITEM_LIST[:9]]
             big_item_locs = [self.get_location(f"Level {i} - Big Item") for i in self.ship_item_levels[:9]]
