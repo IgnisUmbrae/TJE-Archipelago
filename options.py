@@ -111,6 +111,11 @@ class SoundRando(Choice):
     option_most = SoundRandoOption.MOST.value
     option_all = SoundRandoOption.ALL.value
 
+    alias_off = option_none
+    alias_disable = option_none
+    alias_some = option_most
+    alias_full = option_all
+
     default = option_none
 
 class FastLoads(Toggle):
@@ -134,6 +139,9 @@ class AutoOpenBadPresents(Choice):
     option_no_randomizer = AutoOpenOption.NO_RANDOMIZER.value
     option_all = AutoOpenOption.ALL.value
 
+    alias_disable = option_none
+    alias_off = option_none
+
     default = option_no_randomizer
 
 class AutoOpenBuckPresents(Toggle):
@@ -153,6 +161,8 @@ class Character(Choice):
     option_toejam = CharacterOption.TOEJAM.value
     option_earl = CharacterOption.EARL.value
     option_both = CharacterOption.BOTH.value
+    
+    alias_tj = option_toejam
 
     default = option_toejam
 
@@ -217,6 +227,12 @@ class MapRandomization(Choice):
     option_base_random = MapRandomizationOption.BASE_RANDOM.value
     option_full_random = MapRandomizationOption.FULL_RANDOM.value
     option_mapsanity = MapRandomizationOption.MAPSANITY.value
+
+    alias_vanilla = option_base
+    alias_vanilla_shuffle = option_base_shuffle
+    alias_shuffle_vanilla = option_base_shuffle
+    alias_vanilla_random = option_base_random
+    alias_random_vanilla = option_base_random
 
     default = option_base
 
@@ -324,6 +340,10 @@ class RankRescalingMode(Choice):
     option_max_check = RankRescalingOption.MAX_CHECK.value
     option_funk_lord = RankRescalingOption.FUNK_LORD.value
 
+    alias_off = option_none
+    alias_disable = option_none
+    alias_max = option_max_check
+
     default = option_funk_lord
 
 class ReachLevelChecks(Toggle):
@@ -364,6 +384,12 @@ class GameOvers(Choice):
     option_disable = GameOverOption.DISABLE.value
     option_drop_down = GameOverOption.DROP_DOWN.value
     option_reset = GameOverOption.RESET.value
+
+    alias_off = option_disable
+    alias_none = option_disable
+    alias_dropdown = option_drop_down
+    alias_base = option_reset
+    alias_vanilla = option_reset
 
     default = option_drop_down
 
@@ -431,6 +457,11 @@ class StartingPresents(Choice):
     option_mobility_mix = StartingPresentOption.MIX.value
     option_any_good = StartingPresentOption.ANY_GOOD.value
     option_any = StartingPresentOption.ANY.value
+
+    alias_base = option_hitops
+    alias_vanilla = option_hitops
+    alias_mobility = option_mobility_mix
+    alias_random_good = option_any_good
 
     default = option_hitops
 
@@ -507,6 +538,9 @@ class GameVersion(Choice):
     option_rev00 = GameVersionOption.REV00.value
     option_rev02 = GameVersionOption.REV02.value
 
+    alias_00 = option_rev00
+    alias_02 = option_rev02
+
     default = option_rev02
 
 
@@ -531,6 +565,10 @@ class EarthlingRando(Choice):
     option_nice_random = EarthlingRandomizationOption.NICE_RANDOM.value
     option_earthlingsanity = EarthlingRandomizationOption.EARTHLINGSANITY.value
 
+    alias_vanilla = option_base
+    alias_vanilla_shuffle = option_base_shuffle
+    alias_random_nice = option_nice_random
+    
     default = option_base
 
 class EarthlingRandoNiceness(Range):
@@ -565,6 +603,8 @@ class LocalShipPieces(Choice):
     option_none = LocalShipPiecesOption.NONE.value
     option_full = LocalShipPiecesOption.FULL.value
     option_vanilla = LocalShipPiecesOption.VANILLA.value
+
+    alias_base = option_vanilla
 
     default = option_off
 
