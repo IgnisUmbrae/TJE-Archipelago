@@ -199,7 +199,9 @@ class TJEWorld(World):
 
     def generate_output(self, output_directory: str):
         self.create_patchable_item_list()
-        self.create_patchable_mailbox_item_list()
+        if self.options.mailbox_checks:
+            self.create_patchable_mailbox_item_list()
+
         patch = TJEProcedurePatch(player=self.player, player_name=self.multiworld.player_name[self.player])
         
         if self.options.game_version.value == 0:
@@ -244,7 +246,7 @@ class TJEWorld(World):
         VALID_CHARS = " !',-.0123456789?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
         strip_chars = re.compile(f"[^a-zA-Z0-9 ?!',-.]")
         try:
-            from unidecode import unidecode
+            from ._vendor.unidecode import unidecode
             string_processor = functools.partial(unidecode, errors="ignore", replace_str="")
         except ImportError:
             import unicodedata
