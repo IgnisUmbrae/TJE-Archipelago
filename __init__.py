@@ -177,8 +177,8 @@ class TJEWorld(World):
     # Any rules that need setting post–item creation
     # Currently only used for mailbox items & completion condition
     def set_rules(self) -> None:
-        self.mailbox_item_prices = self.generator.generate_item_prices(len(self.mailbox_levels), self.total_bucks)
         if self.options.mailbox_checks:
+            self.mailbox_item_prices = self.generator.generate_item_prices(len(self.mailbox_levels), self.total_bucks)
             for (n, (i, pos)) in enumerate(product(self.mailbox_levels, MAILBOX_ITEM_REFS)):
                 loc = self.get_location(MAILBOX_LOC_TEMPLATE.format(i, pos))
                 price = self.mailbox_item_prices[n]
@@ -245,7 +245,7 @@ class TJEWorld(World):
         strip_chars = re.compile(f"[^a-zA-Z0-9 ?!',-.]")
         try:
             from unidecode import unidecode
-            string_processor = functools.partial(unidecode, errors="ignore", replace_str="?")
+            string_processor = functools.partial(unidecode, errors="ignore", replace_str="")
         except ImportError:
             import unicodedata
             string_processor = lambda s: unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode("ascii", "ignore")
@@ -273,6 +273,6 @@ class TJEWorld(World):
             "rank_thresholds": self.rank_thresholds,
             "map_reveal_potencies": self.map_reveal_potencies,
             "reach_level_checks": bool(self.options.reach_level_checks.value),
-            "mailbox_levels": self.mailbox_levels,
-            "mailbox_item_prices": self.mailbox_item_prices,
+            "mailbox_levels": self.mailbox_levels if self.options.mailbox_checks else [],
+            "mailbox_item_prices": self.mailbox_item_prices if self.options.mailbox_checks else [],
         }

@@ -16,7 +16,10 @@
     "PSG_SFX_2": 146
   },
   "mole_steal_additions": {
-    "inventory_asl": 4
+    "inventory_asl": 4,
+    "promotion_present_steal": 20,
+    "buck_present_steal": 26,
+    "jackpot_present_steal": 32
   },
   "on_death": {
     "dropdown_life_check": 10

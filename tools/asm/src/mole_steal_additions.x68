@@ -18,8 +18,15 @@ DYNRP_inventory_asl:
     ext.w   D6
     ; --end original function block--
 
-    ; check if targeted present is Promotion (0xB)
-    cmpi.w  #$b,D6
+    ; disallow stealing of various present types
+DYNRP_promotion_present_steal: ; left intact rank checks are off; compiles to 6 bytes
+    cmpi.b  #$b,D6 ; Promotion
+    beq     RetNoSteal
+DYNRP_buck_present_steal: ; left intact unless mailbox checks are off
+    cmpi.b  #$14,D6 ; Extra Buck
+    beq     RetNoSteal
+DYNRP_jackpot_present_steal: ; left intact unless mailbox checks are off
+    cmpi.b  #$15,D6 ; Jackpot
     beq     RetNoSteal
 
     ; add points for stolen present

@@ -245,8 +245,23 @@ def patch_ranks(world, patch, dro) -> None:
         patch.write_token(APTokenTypes.WRITE, 0x001a0310, struct.pack(">8H", *world.rank_thresholds[1:]))
         patch.write_token(APTokenTypes.WRITE, 0x0000b898, read_bin("scaled_rank_points_handler"))
 
-        patch.write_token(APTokenTypes.WRITE, 0x0002203e, read_bin("mole_steal_additions_jump"))
-        patch.write_token(APTokenTypes.WRITE, 0x0010bb00, read_bin("mole_steal_additions"))
+def patch_moles(world, patch, dro) -> None:
+    patch.write_token(APTokenTypes.WRITE, 0x0002203e, read_bin("mole_steal_additions_jump"))
+    patch.write_token(APTokenTypes.WRITE, 0x0010bb00, read_bin("mole_steal_additions"))
+
+    # By default, the mole code assumes rank checks and mailbox checks are both enabled
+    if world.options.max_rank_check.value == 0:
+        patch.write_token(APTokenTypes.WRITE,
+                          0x0010bb00 + dro["mole_steal_additions"]["promotion_present_steal"],
+                          read_bin("mole_steal_additions_remove_check"))
+
+    if not world.options.mailbox_checks:
+        patch.write_token(APTokenTypes.WRITE,
+                          0x0010bb00 + dro["mole_steal_additions"]["buck_present_steal"],
+                          read_bin("mole_steal_additions_remove_check"))
+        patch.write_token(APTokenTypes.WRITE,
+                          0x0010bb00 + dro["mole_steal_additions"]["jackpot_present_steal"],
+                          read_bin("mole_steal_additions_remove_check"))
 
 def patch_level_gen(world, patch, dro) -> None:
     if world.options.islandless:
@@ -392,6 +407,7 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
     patch_death_link(world, patch, dro)
     patch_game_overs(world, patch, dro)
     patch_ranks(world, patch, dro)
+    patch_moles(world, patch, dro)
     patch_level_gen(world, patch, dro)
     patch_min_max_items(world, patch, dro)
     patch_last_level(world, patch, dro)
