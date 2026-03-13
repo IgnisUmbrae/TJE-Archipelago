@@ -149,7 +149,7 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
 
     create_ship_pieces(multiworld, world, options, player, item_list)
 
-    handle_trap_options(world, options)
+    handle_bad_item_options(world, options)
     handle_gameover_options(world, options)
 
     # This number is relative to the number of *base* locations (floor items + ship pieces)
@@ -169,7 +169,7 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
 
     multiworld.itempool.extend(item_list)
 
-def handle_trap_options(world, options: TJEOptions) -> None:
+def handle_bad_item_options(world, options: TJEOptions) -> None:
     if not options.bad_presents:
         world.generator.forbid_bad_presents()
     if not options.bad_food:
@@ -229,8 +229,7 @@ def create_map_reveals(multiworld, world, options: TJEOptions, player, item_list
     return 0
 
 def create_main_items(world, item_list, total_locations, differential, options: TJEOptions) -> None:
-
-    item_pool_raw = world.generator.generate_item_blob(total_locations - differential)
+    item_pool_raw = world.generator.generate_item_blob(total_locations - differential, world.options.presentsanity)
     world.generator.add_extra_promotions(item_pool_raw, world.rank_thresholds, options)
 
     bucks = 0
@@ -255,10 +254,10 @@ def create_starting_presents(world, multiworld: MultiWorld, options: TJEOptions)
                                        ITEM_NAME_TO_ID["Spring Shoes"], ITEM_NAME_TO_ID["Rocket Skates"]]*2
         case StartingPresentOption.ANY_GOOD:
             world.starting_presents = [ITEM_CODE_TO_ID[p]
-                                       for p in world.generator.generate_initial_inventory(include_bad=False)]*2
+                                       for p in world.generator.generate_initial_inventory(force_good=True)]*2
         case StartingPresentOption.ANY:
             world.starting_presents = [ITEM_CODE_TO_ID[p]
-                                       for p in world.generator.generate_initial_inventory(include_bad=True)]*2
+                                       for p in world.generator.generate_initial_inventory(force_good=False)]*2
     for item in world.starting_presents[:4]:
         multiworld.push_precollected(world.create_item(item))
 

@@ -568,6 +568,13 @@ class RestoreUnusedPresentSprites(DefaultOnToggle):
 
     display_name = "Restore Unused Present Sprites"
 
+class Presentsanity(Toggle):
+    """
+    Turns every present into a Mystery Present. Good luck!
+    """
+
+    display_name = "Presentsanity"
+
 tje_option_groups = [
     OptionGroup("Basic Items/Locations", [
         StartingPresents,
@@ -610,6 +617,7 @@ tje_option_groups = [
     ]),
     OptionGroup("Misc", [
         SoundRando,
+        Presentsanity,
         GameVersion,
         RestoreUnusedPresentSprites
     ])
@@ -652,3 +660,4 @@ class TJEOptions(PerGameCommonOptions):
     sound_rando: SoundRando
     game_version: GameVersion
     unused_present_sprites: RestoreUnusedPresentSprites
+    presentsanity: Presentsanity
