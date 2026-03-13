@@ -243,8 +243,7 @@ class TJEWorld(World):
     # TODO: decide better replacements for unprintable ASCII
     # TODO: can we include player/game info?
     def shorten_item_name(self, name: str) -> str:
-        VALID_CHARS = " !',-.0123456789?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-        strip_chars = re.compile(f"[^a-zA-Z0-9 ?!',-.]")
+        strip_chars = re.compile(f"[^a-zA-Z0-9 ?!',.-]")
         try:
             from ._vendor.unidecode import unidecode
             string_processor = functools.partial(unidecode, errors="ignore", replace_str="")
@@ -256,8 +255,10 @@ class TJEWorld(World):
         #item.game
 
         processed = string_processor(name)
-        strip_chars.sub("", processed)
-        return (processed[:26] + " ").ljust(30, ".") + " "
+        processed = processed.replace(": ", " - ")
+        processed = strip_chars.sub("", processed)
+        n = (processed[:26] + " ").ljust(30, ".") + " "
+        return n
 
     def create_patchable_mailbox_item_list(self):
         self.mailbox_item_names, self.mailbox_item_types = [], []
