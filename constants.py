@@ -13,7 +13,7 @@ DEATHLINK_MESSAGES = {
         "{player} got squished by a hamster"
     ],
     0x3 : [
-        "{player} got run over by a shopping cart"
+        "{player} got shunted by a shopping cart"
     ],
     0x4 : [
         "{player} got drilled by a dentist"
@@ -22,13 +22,13 @@ DEATHLINK_MESSAGES = {
         "{player} got stung all over by a swarm of bees"
     ],
     0x9 : [
-        "{player} got whacked by a fake mailbox"
+        "{player} got mauled by a mailbox"
     ],
     0xC : [
         "{player} got squished by a herd of nerds"
     ],
     0xD : [
-        "{player} got run down by a lawnmower"
+        "{player} got run over by a lawnmower"
     ],
     0xE : [
         "{player} got chomped by a shark"
@@ -37,7 +37,7 @@ DEATHLINK_MESSAGES = {
         "{player} got rammed by a gang of chickens"
     ],
     0x10 : [
-        "{player} got scared to death by a boogie man"
+        "{player} got boogied to death by a boogie man"
     ],
     0x13 : [
         "{player} got squished by an ice cream truck"
