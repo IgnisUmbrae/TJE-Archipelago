@@ -175,12 +175,13 @@ class TJEWorld(World):
         
         if self.options.flat_promotions and name == "Promotion":
             item.point_value = self.flat_promotion_value
-        
+        else:
+            item.point_value = data.point_value
+
         if self.options.mailbox_checks:
             if data.buck_value > 0:
                 item.classification |= ItemClassification.progression_skip_balancing
 
-        item.point_value = data.point_value
         item.buck_value = data.buck_value
 
         return item
