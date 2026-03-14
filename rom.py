@@ -10,8 +10,9 @@ from worlds.Files import APProcedurePatch, APTokenMixin, APTokenTypes
 from .constants import EMPTY_PRESENT, INITIAL_PRESENT_ADDRS, BASE_LEVEL_TYPES, INV_REF_ADDRS_VANILLA, \
                        INV_SIZE_ADDRS_VANILLA, INV_SIZE_ADDRS_ASL_D0_VANILLA, INV_SIZE_ADDRS_INITIAL, \
                        MAP_REVEAL_DIALOGUE_ADDRS, PCM_SFX_ADDRS, PCM_SFX_ADDRS_MUSIC, PCM_SFX_USAGE_ADDRS, \
-                       PCM_SFX_USAGE_ADDRS_MUSIC, PSG_SFX, PSG_SFX_USAGE_ADDRS, SIMPLE_SFX, SIMPLE_SFX_USAGE_ADDRS
-from .generators import map_reveal_text
+                       PCM_SFX_USAGE_ADDRS_MUSIC, PSG_SFX, PSG_SFX_USAGE_ADDRS, SIMPLE_SFX, SIMPLE_SFX_USAGE_ADDRS, \
+                       FLAT_PROMOTION_PRES_NAME, FLAT_PROMOTION_DIALOGUE_TEMPLATE
+from .generators import map_reveal_text, to_inventory_name, to_mailbox_name
 from .items import ITEM_ID_TO_CODE
 from .options import CharacterOption, SoundRandoOption, StartingPresentOption, GameOverOption, MapRandomizationOption, \
                      LocalShipPiecesOption
@@ -49,9 +50,17 @@ def patch_slot_data(world, patch, dro) -> None:
 
     key_gap = world.options.key_gap.value if world.options.elevator_keys else 0
     patch.write_token(APTokenTypes.WRITE, 0x001f0000, struct.pack(">B", key_gap))
+    
     patch.write_token(APTokenTypes.WRITE, 0x001f0001, struct.pack(">B", world.options.death_link.value))
     patch.write_token(APTokenTypes.WRITE, 0x001f0005, struct.pack(">B", world.options.auto_bad_presents.value))
     patch.write_token(APTokenTypes.WRITE, 0x001f0006, struct.pack(">B", world.options.auto_buck_presents.value))
+    
+    if world.options.flat_promotions:
+        afp_val = world.options.auto_flat_promotions.value
+    else:
+        afp_val = 0
+    patch.write_token(APTokenTypes.WRITE, 0x001f0007, struct.pack(">B", afp_val))
+    
     num_key_levels = len(world.key_levels)
     patch.write_token(APTokenTypes.WRITE, 0x001f0010, struct.pack(">B", num_key_levels))
     patch.write_token(APTokenTypes.WRITE, 0x001f0011, struct.pack(f">{num_key_levels}B", *world.key_levels))
@@ -216,6 +225,21 @@ def patch_misc_qol(world, patch, dro) -> None:
         orthog_road_speed, diag_road_speed = ceil(1.25*orthog_land_speed), ceil(1.25*diag_land_speed)
         patch.write_token(APTokenTypes.WRITE, 0x000f038, struct.pack(">H", orthog_road_speed))
         patch.write_token(APTokenTypes.WRITE, 0x000f03c, struct.pack(">H", diag_road_speed))
+
+def patch_flat_promotions(world, patch, dro) -> None:
+    if world.options.flat_promotions:
+        pres_name = FLAT_PROMOTION_PRES_NAME.format(world.flat_promotion_value)
+        dialogue = FLAT_PROMOTION_DIALOGUE_TEMPLATE.format(world.flat_promotion_value)
+
+        patch.write_token(APTokenTypes.WRITE, 0x00016fb8, read_bin("open_promotion"))
+        patch.write_token(APTokenTypes.WRITE,
+                          0x00016fb8 + dro["open_promotion"]["promotion_point_value_minus_two"] + 3,
+                          struct.pack(">B", world.flat_promotion_value-2))
+        patch.write_token(APTokenTypes.WRITE, 0x000abb46, struct.pack(">14B", *to_inventory_name(pres_name)))
+        patch.write_token(APTokenTypes.WRITE, 0x000abd4c, to_mailbox_name(pres_name).encode("ascii") + b"\x00")
+        patch.write_token(APTokenTypes.WRITE,
+                          0x00105a00 + dro["expanded_dialogue_table_strings"]["flat_promotion_text"],
+                          dialogue.encode("ascii") + b"\x00")
 
 def patch_upwarp_present(world, patch, dro) -> None:
     if world.options.upwarp_present:
@@ -404,6 +428,7 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
     patch_unused_present_sprites(world, patch, dro)
     patch_expanded_inv(world, patch, dro)
     patch_misc_qol(world, patch, dro)
+    patch_flat_promotions(world, patch, dro)
     patch_upwarp_present(world, patch, dro)
     patch_death_link(world, patch, dro)
     patch_game_overs(world, patch, dro)

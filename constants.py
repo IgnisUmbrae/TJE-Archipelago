@@ -256,6 +256,8 @@ MAP_REVEAL_DIALOGUE_ADDRS = (0x00105b73, 0x00105b7e, 0x00105b8a, 0x00105b97, 0x0
 MAP_REVEAL_DIALOGUE_TEMPLATE = "Lv{}-{} map!"
 MAP_REVEAL_DIALOGUE_TEMPLATE_DEGEN = "Lv{} map!"
 
+FLAT_PROMOTION_DIALOGUE_TEMPLATE = "{} points"
+
 STATIC_DIALOGUE_LIST: dict[str, tuple[str,str]] = {
     "Ship Piece: Rocketship Windshield": ("Windshield!", "jammin'"),
     "Ship Piece: Left Megawatt Speaker": ("L. speaker!", "jammin'"),
@@ -329,6 +331,8 @@ RANK_NAMES = ("Wiener", "Dufus", "Poindexter", "Peanut", "Dude", "Bro", "Homey",
 #endregion
 
 #region Misc
+
+FLAT_PROMOTION_PRES_NAME = "{} points"
 
 MAILBOX_ITEM_REFS = ("Top", "Middle", "Bottom")
 

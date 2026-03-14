@@ -357,6 +357,7 @@
     ; new additions
 
     ; RAM-based dialogue template, used to emit messages from client (e.g. when activating traps)
+    ; id 0x3a
     dc.b $03
     dc.b $02
     dc.l AP_DIALOGUE_LINE1
@@ -364,6 +365,7 @@
     dc.l AP_DIALOGUE_LINE2
 
     ; dialogue when receiving a ship piece
+    ; from id 0x3b
 
     dc.b $03
     dc.b $02
@@ -426,6 +428,7 @@
     dc.l $00105a6a
 
     ; dialogue when receiving an elevator key
+    ; from id 0x45
 
     dc.b $03
     dc.b $02
@@ -570,45 +573,53 @@
     dc.b $03
     dc.b $02
     dc.l $00105b73
-    dc.w $0020
+    dc.w $0028
     dc.l $00105bb1
 
     dc.b $03
     dc.b $02
     dc.l $00105b7e
-    dc.w $0020
+    dc.w $0028
     dc.l $00105bb1
 
     dc.b $03
     dc.b $02
     dc.l $00105b8a
-    dc.w $0020
+    dc.w $0028
     dc.l $00105bb1
 
     dc.b $03
     dc.b $02
     dc.l $00105b97
-    dc.w $0020
+    dc.w $0028
     dc.l $00105bb1
 
     dc.b $03
     dc.b $02
     dc.l $00105ba4
-    dc.w $0020
+    dc.w $0028
     dc.l $00105bb1
 
     ; "no key..." / "where is it?"
-
+    ; id 0x61
     dc.b $03
     dc.b $02
     dc.l $00105bba
-    dc.w $0020
+    dc.w $0018
     dc.l $00105bc4
 
     ; "need 9 ship" / "pieces first"
-
+    ; id 0x62
     dc.b $03
     dc.b $02
     dc.l $00105bd1
-    dc.w $0020
+    dc.w $0018
     dc.l $00105bdd
+
+    ; "yeah!" / "__ points"
+    ; id 0x63
+    dc.b $03
+    dc.b $02
+    dc.l $00105bea
+    dc.w $0018
+    dc.l $00105bf0

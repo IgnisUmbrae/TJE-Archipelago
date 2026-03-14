@@ -95,6 +95,26 @@ class ExpandedInventory(DefaultOnToggle):
 
     display_name = "Expanded Inventory"
 
+class FlatPromotions(Toggle):
+    """
+    Changes the behaviour of Promotion presents so they give a fixed number of points instead of jumping the player
+    up to the next rank. The exact number of points awarded depends on rank scaling.
+
+    This option stops all generation failures arising from Promotion and rank logic.
+    """
+
+    display_name = "Flat Promotions"
+
+class AutoOpenFlatPromotions(Toggle):
+    """
+    Sets whether flat Promotions should automatically open when received from other players.
+    Locally-collected ones will not auto-open.
+    
+    Has no effect unless flat_promotions is enabled.
+    """
+
+    display_name = "Automatically Open Flat Promotions"
+
 class SoundRando(Choice):
     """
     Randomizes all PCM and PSG sound effects in the game. For sanity's sake, two sounds will never be randomized:
@@ -128,8 +148,10 @@ class FastLoads(Toggle):
 class AutoOpenBadPresents(Choice):
     """
     Sets whether bad presents should automatically open when received from other players.
-    Locally-collected presents will not auto-open.
+    Locally-collected ones will not auto-open.
+
     Recommended to reduce the burden of inventory management.
+
     Auto-opening randomizers may cause the game to softlock in certain circumstances so be prepared to rewind.
     """
 
@@ -147,7 +169,7 @@ class AutoOpenBadPresents(Choice):
 class AutoOpenBuckPresents(Toggle):
     """
     Sets whether Extra Buck and Jackpot presents should automatically open when received from other players.
-    Locally-collected presents will not auto-open.
+    Locally-collected ones will not auto-open.
     """
 
     display_name = "Automatically Open Buck Presents"
@@ -636,6 +658,7 @@ tje_option_groups = [
     OptionGroup("Auto/Bad/Trap Options", [
         AutoOpenBadPresents,
         AutoOpenBuckPresents,
+        AutoOpenFlatPromotions,
         BadFood,
         BadPresents,
         TrapWeights,
@@ -662,7 +685,8 @@ tje_option_groups = [
         ExtendedPresentTimers,
         FreeEarthlingServices,
         FastLoads,
-        ExpandedInventory
+        ExpandedInventory,
+        FlatPromotions,
     ]),
     OptionGroup("Misc", [
         SoundRando,
@@ -684,6 +708,7 @@ class TJEOptions(PerGameCommonOptions):
     local_ship_pieces: LocalShipPieces
     auto_bad_presents: AutoOpenBadPresents
     auto_buck_presents: AutoOpenBuckPresents
+    auto_flat_promotions: AutoOpenFlatPromotions
     bad_food: BadFood
     bad_presents: BadPresents
     trap_weights: TrapWeights
@@ -707,6 +732,7 @@ class TJEOptions(PerGameCommonOptions):
     free_earthling_services: FreeEarthlingServices
     fast_loads: FastLoads
     expanded_inventory: ExpandedInventory
+    flat_promotions: FlatPromotions
     sound_rando: SoundRando
     game_version: GameVersion
     unused_present_sprites: RestoreUnusedPresentSprites

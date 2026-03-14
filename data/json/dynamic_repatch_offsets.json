@@ -2,6 +2,9 @@
   "elev_key_logic": {
     "last_level_minus_one": 58
   },
+  "expanded_dialogue_table_strings": {
+    "flat_promotion_text": 496
+  },
   "init_extra": {
     "player_char": 0,
     "num_mailbox_items": 112
@@ -23,6 +26,9 @@
   },
   "on_death": {
     "dropdown_life_check": 10
+  },
+  "open_promotion": {
+    "promotion_point_value_minus_two": 16
   },
   "pickup_item": {
     "inventory_asl_1": 228,
