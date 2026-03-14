@@ -1,4 +1,6 @@
 import itertools
+import re
+import string
 from collections import defaultdict, Counter
 from math import ceil, sqrt, comb, pow
 
@@ -124,30 +126,40 @@ class TJEGenerator():
     def generate_item_blob(self, number: int, presentsanity: bool = False) -> list[int]:
         return [self.get_random_item(False, presentsanity) for _ in range(number)]
 
-    def add_extra_promotions(self, item_pool: list[int], rank_thresholds: list[int], options: "TJEOptions",
-                             paranoia_level: float = 1.5) -> None:
+    def total_points_in_pool(self, item_pool: list[int], promotion_value: int) -> int:
         def item_value(item_code: int, prom_val: int) -> int:
             if item_code == 0x0B:
                 return prom_val
             if item_code in PRESENT_LIST:
                 return 2
             return 0
+        
+        return sum([item_value(i, promotion_value) for i in item_pool])
+
+    def add_extra_promotions(self, item_pool: list[int], rank_thresholds: list[int], promotion_value: int | None,
+                             options: "TJEOptions") -> None:
+
 
         if options.max_rank_check.value > 0:
-            avg_promotion_value = sum(rank_thresholds[n+1] - rank_thresholds[n]
-                                    for n in range(options.max_rank_check.value))//options.max_rank_check.value
-            est_total_points = sum([item_value(i, avg_promotion_value) for i in item_pool])
-            num_proms = item_pool.count(0x0B)
-            extra_proms = ceil((paranoia_level*rank_thresholds[options.max_rank_check.value] - 
-                                (expected_map_points(options.last_level.value)+est_total_points))/avg_promotion_value) \
-                                - num_proms
-            if extra_proms > 0:
-                for n, item in enumerate(item_pool):
-                    if item != 0x0B:
-                        item_pool[n] = 0x0B
-                        extra_proms -= 1
-                    if extra_proms == 0:
-                        break
+            if options.flat_promotions:
+                promotion_value = promotion_value
+                paranoia_level = 1
+            else: # estimate average worth
+                promotion_value = round(rank_thresholds[options.max_rank_check.value]/options.max_rank_check.value)
+                paranoia_level = 2
+
+            points_available = self.total_points_in_pool(item_pool, promotion_value) + \
+                               expected_map_points(options.last_level.value)
+
+            if points_available < paranoia_level*rank_thresholds[options.max_rank_check.value]:
+                extra_proms = round((paranoia_level*rank_thresholds[options.max_rank_check.value] - points_available)/promotion_value)
+                if extra_proms > 0:
+                    for n, item in enumerate(item_pool):
+                        if item != 0x0B:
+                            item_pool[n] = 0x0B
+                            extra_proms -= 1
+                        if extra_proms == 0:
+                            break
 
     def generate_initial_inventory(self, force_good: bool) -> list[int]:
         present_list, present_distro = self.get_present_distribution(False, force_good)
@@ -236,11 +248,11 @@ def expected_map_points_on_level(level: int) -> int:
     match level:
         case 0: return 0
         case 1: return 10
-        case 2: return 30
-        case 3: return 35
-        case 4: return 40
-        case 5: return 45
-        case _: return 50
+        case 2: return 20
+        case 3: return 25
+        case 4: return 30
+        case 5: return 35
+        case _: return 40
 
 def expected_map_points(last_level: int) -> int:
     return sum(expected_map_points_on_level(i) for i in range(last_level+1))
@@ -275,8 +287,8 @@ def get_rank_rescale_factor(last_level: int = 25, min_items: int = 12, max_items
     factor_2 = VANILLA_RANK_THRESHOLDS[8]/VANILLA_RANK_THRESHOLDS[desired_max_rank]
     return factor_1 * factor_2
 
-def rescale_to_nearest_10(num: int, rescale_factor: float, bump: float = 0) -> int:
-    return round((rescale_factor*num + bump)/10)*10
+def rescale_to_nearest_mult(num: int, mult: int, rescale_factor: float = 1, bump: float = 0) -> int:
+    return round((rescale_factor*num + bump)/mult)*mult
 
 def total_points_to_next_rank(current_rank: int, last_level: int = 25, min_items: int = 12, max_items: int = 28,
                               desired_max_rank: int = 8) -> int:
@@ -294,12 +306,17 @@ def total_points_to_next_rank(current_rank: int, last_level: int = 25, min_items
     # It ensures that such games don't have comically low rank thresholds at the start, and that the rank
     # progression is smoother overall. Affects large games minimally; does not affect vanilla games whatsoever.
     bump = (25 - last_level)/(25 - 11) * (28 - max_items)/(28 - 4) * (8 - current_rank)/(8 - 0) * 10
-    return rescale_to_nearest_10(reqd, rescale_factor, bump)
+    return rescale_to_nearest_mult(reqd, 10, rescale_factor, bump)
 
 def scaled_rank_thresholds(last_level: int = 25, min_items: int = 12, max_items: int = 28,
                            desired_max_rank: int = 8) -> list[int]:
     return [0] + \
            [total_points_to_next_rank(rank, last_level, min_items, max_items, desired_max_rank) for rank in range(8)]
+
+# Determines a sensible point value for a flat promotion present
+# Calculation is roughly "half the average gap between consecutive ranks, rounded to nearest 10, slight bias lower"
+def get_flat_promotion_value(scaled_ranks: list[int], max_rank_check: int) -> int:
+    return rescale_to_nearest_mult(scaled_ranks[max_rank_check]/max_rank_check/2, 10, 1, -5)
 
 class TJEInternalRNG():
     def __init__(self):
@@ -360,3 +377,39 @@ class TJEInternalRNG():
 
         assert([self.is_mailbox_real(i, seed) for i, seed in enumerate(FIXED_SEEDS)] == FIXED_MAILBOXES)
         print("Mailboxes: OK")
+
+def to_inventory_name(name: str) -> list[int]:
+    chunker = re.compile(r"(oi|apm|ord|ste|unk|dexte|[0-9A-Za-z.,'\-! ])")
+    multialphas = ("apm","ord","ste","unk","dexte")
+    trans_dict = {
+        "oi" : 0x2E,                    # 0x1 in rank name table
+        "dexte" : (0x2F, 0x30, 0x31),   # 0x2
+        "apm" : (0x32, 0x33),           # 0x3
+        "ste" : (0x34, 0x35),           # 0x4
+        "unk" : (0x36, 0x37, 0x38),     # 0x5
+        "ord" : (0x39, 0x3A),           # 0x6
+        " " : 0x0,
+        "." : 0x1F,
+        "," : 0x20,
+        "'" : 0x21,
+        "-" : 0x22,
+        "!" : 0x23,
+    }
+    chunks, codes = chunker.findall(name.lower()), []
+    for c in chunks:
+        if c in multialphas:
+            codes.extend(trans_dict[c])
+        else:
+            match c:
+                case c if c in string.ascii_lowercase:
+                    code = ord(c) - 96
+                case c if c in string.digits:
+                    code = ord(c) - 12
+                case _:
+                    code = trans_dict.get(c, 0x1B) # 0x1B renders as "?"
+            codes.append(code)
+
+    return codes + [0]*(14 - len(codes))
+
+def to_mailbox_name(name: str) -> str:
+    return (name[:12] + " ").ljust(13, ".")
