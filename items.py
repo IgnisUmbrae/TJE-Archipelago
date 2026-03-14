@@ -246,20 +246,23 @@ def create_main_items(world, item_list, total_locations, differential, options: 
     world.total_bucks = bucks
 
 def create_starting_presents(world, multiworld: MultiWorld, options: TJEOptions) -> None:
-    match options.starting_presents:
-        case StartingPresentOption.NONE:
-            world.starting_presents = []
-        case StartingPresentOption.HITOPS:
-            world.starting_presents = [ITEM_NAME_TO_ID["Bonus Hitops"]]*8
-        case StartingPresentOption.MIX:
-            world.starting_presents = [ITEM_NAME_TO_ID["Icarus Wings"], ITEM_NAME_TO_ID["Bonus Hitops"],
-                                       ITEM_NAME_TO_ID["Spring Shoes"], ITEM_NAME_TO_ID["Rocket Skates"]]*2
-        case StartingPresentOption.ANY_GOOD:
-            world.starting_presents = [ITEM_CODE_TO_ID[p]
-                                       for p in world.generator.generate_initial_inventory(force_good=True)]*2
-        case StartingPresentOption.ANY:
-            world.starting_presents = [ITEM_CODE_TO_ID[p]
-                                       for p in world.generator.generate_initial_inventory(force_good=False)]*2
+    if options.presentsanity:
+        world.starting_presents = [ITEM_NAME_TO_ID["Mystery Present"]]*8
+    else:
+        match options.starting_presents:
+            case StartingPresentOption.NONE:
+                world.starting_presents = []
+            case StartingPresentOption.HITOPS:
+                world.starting_presents = [ITEM_NAME_TO_ID["Bonus Hitops"]]*8
+            case StartingPresentOption.MIX:
+                world.starting_presents = [ITEM_NAME_TO_ID["Icarus Wings"], ITEM_NAME_TO_ID["Bonus Hitops"],
+                                        ITEM_NAME_TO_ID["Spring Shoes"], ITEM_NAME_TO_ID["Rocket Skates"]]*2
+            case StartingPresentOption.ANY_GOOD:
+                world.starting_presents = [ITEM_CODE_TO_ID[p]
+                                        for p in world.generator.generate_initial_inventory(force_good=True)]*2
+            case StartingPresentOption.ANY:
+                world.starting_presents = [ITEM_CODE_TO_ID[p]
+                                        for p in world.generator.generate_initial_inventory(force_good=False)]*2
     for item in world.starting_presents[:4]:
         multiworld.push_precollected(world.create_item(item))
 
