@@ -138,28 +138,25 @@ class TJEGenerator():
 
     def add_extra_promotions(self, item_pool: list[int], rank_thresholds: list[int], promotion_value: int | None,
                              options: "TJEOptions") -> None:
+        if options.flat_promotions:
+            promotion_value = promotion_value
+            paranoia_level = 1
+        else: # estimate average worth
+            promotion_value = round(rank_thresholds[options.max_rank_check.value]/options.max_rank_check.value)
+            paranoia_level = 2
 
+        points_available = self.total_points_in_pool(item_pool, promotion_value) + \
+                            expected_map_points(options.last_level.value)
 
-        if options.max_rank_check.value > 0:
-            if options.flat_promotions:
-                promotion_value = promotion_value
-                paranoia_level = 1
-            else: # estimate average worth
-                promotion_value = round(rank_thresholds[options.max_rank_check.value]/options.max_rank_check.value)
-                paranoia_level = 2
-
-            points_available = self.total_points_in_pool(item_pool, promotion_value) + \
-                               expected_map_points(options.last_level.value)
-
-            if points_available < paranoia_level*rank_thresholds[options.max_rank_check.value]:
-                extra_proms = round((paranoia_level*rank_thresholds[options.max_rank_check.value] - points_available)/promotion_value)
-                if extra_proms > 0:
-                    for n, item in enumerate(item_pool):
-                        if item != 0x0B:
-                            item_pool[n] = 0x0B
-                            extra_proms -= 1
-                        if extra_proms == 0:
-                            break
+        if points_available < paranoia_level*rank_thresholds[options.max_rank_check.value]:
+            extra_proms = round((paranoia_level*rank_thresholds[options.max_rank_check.value] - points_available)/promotion_value)
+            if extra_proms > 0:
+                for n, item in enumerate(item_pool):
+                    if item != 0x0B:
+                        item_pool[n] = 0x0B
+                        extra_proms -= 1
+                    if extra_proms == 0:
+                        break
 
     def generate_initial_inventory(self, force_good: bool) -> list[int]:
         present_list, present_distro = self.get_present_distribution(False, force_good)
