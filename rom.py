@@ -233,8 +233,8 @@ def patch_flat_promotions(world, patch, dro) -> None:
 
         patch.write_token(APTokenTypes.WRITE, 0x00016fb8, read_bin("open_promotion"))
         patch.write_token(APTokenTypes.WRITE,
-                          0x00016fb8 + dro["open_promotion"]["promotion_point_value_minus_two"] + 3,
-                          struct.pack(">B", world.flat_promotion_value-2))
+                          0x00016fb8 + dro["open_promotion"]["promotion_point_value_minus_two"] + 2,
+                          struct.pack(">H", world.flat_promotion_value-2))
         patch.write_token(APTokenTypes.WRITE, 0x000abb46, struct.pack(">14B", *to_inventory_name(pres_name)))
         patch.write_token(APTokenTypes.WRITE, 0x000abd4c, to_mailbox_name(pres_name).encode("ascii") + b"\x00")
         patch.write_token(APTokenTypes.WRITE,
