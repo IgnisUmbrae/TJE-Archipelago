@@ -124,11 +124,7 @@ class TJEWorld(World):
                                                             )
 
         if self.options.flat_promotions:
-            self.flat_promotion_value = get_flat_promotion_value(self.rank_thresholds, self.options.max_rank_check.value)
-            self.generator.more_promotions()
-        else:
-            self.flat_promotion_value = get_average_promotion_value(self.rank_thresholds, self.options.max_rank_check.value)
-        
+            self.generator.more_promotions()        
         if self.options.upwarp_present:
             self.generator.fewer_upwarps()
         
@@ -157,15 +153,20 @@ class TJEWorld(World):
                 item.classification |= ItemClassification.progression_skip_balancing
         
         if name == "Promotion":
-            # if flat_promotions is off, this will be the average value
-            item.point_value = self.flat_promotion_value
+            if self.options.flat_promotions:
+                value = get_flat_promotion_value(self.rank_thresholds, self.options.max_rank_check.value)
+            else:
+                value = get_average_promotion_value(self.rank_thresholds, self.options.max_rank_check.value)
         else:
-            item.point_value = data.point_value
+            value = data.point_value
+
+        item.point_value = value
+
+        # Buck-related
 
         if self.options.mailbox_checks:
             if data.buck_value > 0:
                 item.classification |= ItemClassification.progression_skip_balancing
-
         item.buck_value = data.buck_value
 
         return item

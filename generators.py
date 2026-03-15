@@ -1,6 +1,7 @@
 import itertools
 import re
 import string
+import functools
 from collections import defaultdict, Counter
 from math import ceil, sqrt, comb, pow
 
@@ -308,11 +309,13 @@ def scaled_rank_thresholds(last_level: int = 25, min_items: int = 12, max_items:
            [total_points_to_next_rank(rank, last_level, min_items, max_items, desired_max_rank) for rank in range(8)]
 
 # Average gap between ranks, halved to represent 'average' use
+@functools.cache
 def get_average_promotion_value(rank_thresholds: list[int], max_rank_check: int) -> int:
     return round(rank_thresholds[max_rank_check]/max_rank_check/2)
 
 # Determines a sensible point value for a flat promotion present
 # Calculation is roughly "average gap between consecutive ranks, rounded to nearest 10, slight downward bias"
+@functools.cache
 def get_flat_promotion_value(rank_thresholds: list[int], max_rank_check: int) -> int:
     return rescale_to_nearest_mult(get_average_promotion_value(rank_thresholds, max_rank_check), 10, 1, -5)
 
