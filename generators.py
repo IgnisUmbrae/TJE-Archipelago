@@ -16,6 +16,8 @@ class TJEGenerator():
         self.global_banned_food = set()
         self.global_banned_presents = set()
 
+        self.local_present_weights = PRESENT_WEIGHTS.copy()
+
         self.per_level_earthling_counts = Counter()
         self.unique_earthling_levels = defaultdict(list)
 
@@ -80,7 +82,10 @@ class TJEGenerator():
         self.global_banned_food |= BAD_FOOD_INDICES
 
     def fewer_upwarps(self):
-        PRESENT_WEIGHTS[12] = 2
+        self.local_present_weights[0xC] = 2
+    
+    def more_promotions(self):
+        self.local_present_weights[0xB] *= 2
 
     def get_present_distribution(self, level_one: bool=False, force_good: bool=False) -> tuple[list[int], list[float]]:
         forbiddens = set()
@@ -91,7 +96,7 @@ class TJEGenerator():
             forbiddens |= BAD_PRESENT_INDICES
 
         culled_present_list = [PRESENT_LIST[i] for i in range(len(PRESENT_LIST)) if i not in forbiddens]
-        culled_present_weights = [PRESENT_WEIGHTS[i] for i in range(len(PRESENT_WEIGHTS)) if i not in forbiddens]
+        culled_present_weights = [self.local_present_weights[i] for i in range(len(self.local_present_weights)) if i not in forbiddens]
 
         return culled_present_list, culled_present_weights
 
@@ -136,20 +141,12 @@ class TJEGenerator():
         
         return sum([item_value(i, promotion_value) for i in item_pool])
 
-    def add_extra_promotions(self, item_pool: list[int], rank_thresholds: list[int], promotion_value: int | None,
+    def add_extra_promotions(self, item_pool: list[int], rank_thresholds: list[int], promotion_value: int,
                              options: "TJEOptions") -> None:
-        if options.flat_promotions:
-            promotion_value = promotion_value
-            paranoia_level = 1
-        else: # estimate average worth
-            promotion_value = round(rank_thresholds[options.max_rank_check.value]/options.max_rank_check.value)
-            paranoia_level = 2
-
-        points_available = self.total_points_in_pool(item_pool, promotion_value) + \
-                            expected_map_points(options.last_level.value)
-
-        if points_available < paranoia_level*rank_thresholds[options.max_rank_check.value]:
-            extra_proms = round((paranoia_level*rank_thresholds[options.max_rank_check.value] - points_available)/promotion_value)
+        points_available = self.total_points_in_pool(item_pool, promotion_value) + expected_map_points(options.last_level.value)
+        points_goal = rank_thresholds[options.max_rank_check.value]
+        if points_available < points_goal:
+            extra_proms = ceil((points_goal - points_available)/promotion_value)
             if extra_proms > 0:
                 for n, item in enumerate(item_pool):
                     if item != 0x0B:
@@ -244,12 +241,12 @@ def get_key_levels(gap: int, last_level: int = 25) -> list[int] | None:
 def expected_map_points_on_level(level: int) -> int:
     match level:
         case 0: return 0
-        case 1: return 10
-        case 2: return 20
-        case 3: return 25
-        case 4: return 30
-        case 5: return 35
-        case _: return 40
+        case 1: return 5
+        case 2: return 10
+        case 3: return 15
+        case 4: return 20
+        case 5: return 25
+        case _: return 30
 
 def expected_map_points(last_level: int) -> int:
     return sum(expected_map_points_on_level(i) for i in range(last_level+1))
@@ -310,10 +307,14 @@ def scaled_rank_thresholds(last_level: int = 25, min_items: int = 12, max_items:
     return [0] + \
            [total_points_to_next_rank(rank, last_level, min_items, max_items, desired_max_rank) for rank in range(8)]
 
+# Average gap between ranks, halved to represent 'average' use
+def get_average_promotion_value(rank_thresholds: list[int], max_rank_check: int) -> int:
+    return round(rank_thresholds[max_rank_check]/max_rank_check/2)
+
 # Determines a sensible point value for a flat promotion present
-# Calculation is roughly "half the average gap between consecutive ranks, rounded to nearest 10, slight bias lower"
-def get_flat_promotion_value(scaled_ranks: list[int], max_rank_check: int) -> int:
-    return rescale_to_nearest_mult(scaled_ranks[max_rank_check]/max_rank_check/2, 10, 1, -5)
+# Calculation is roughly "average gap between consecutive ranks, rounded to nearest 10, slight downward bias"
+def get_flat_promotion_value(rank_thresholds: list[int], max_rank_check: int) -> int:
+    return rescale_to_nearest_mult(get_average_promotion_value(rank_thresholds, max_rank_check), 10, 1, -5)
 
 class TJEInternalRNG():
     def __init__(self):
