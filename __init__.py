@@ -12,7 +12,7 @@ from worlds.AutoWorld import World, WebWorld
 from .client import TJEClient # required to register with BizHawkClient
 from .constants import MAILBOX_ITEM_REFS, VANILLA_RANK_THRESHOLDS, BASE_EARTHLINGS, REV00_MD5, REV02_MD5
 from .generators import TJEGenerator, TJEInternalRNG, get_key_levels, item_totals, scaled_rank_thresholds, \
-                                                      get_flat_promotion_value
+                                                      get_flat_promotion_value, get_average_promotion_value
 from .items import Item, TJEItem, ITEM_GROUPS, ITEM_ID_TO_CODE, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, MASTER_ITEM_LIST, \
                    TJEItemType, create_items, create_starting_presents, create_starting_bucks
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, MAILBOX_LOC_TEMPLATE, LOCATION_GROUPS, LOCATION_NAME_TO_ID
@@ -54,12 +54,6 @@ class TJEWorld(World):
     item_name_groups = ITEM_GROUPS
     location_name_groups = LOCATION_GROUPS
 
-    def get_current_rank(self, state: "CollectionState", item: "TJEItem") -> int:
-        rank_progress = list(takewhile(lambda i: self.rank_thresholds[i] <= state.prog_items[item.player]["points"],
-                                        range(len(self.rank_thresholds))))
-        rank = rank_progress[-1] if rank_progress != [] else 0
-        return rank
-
     def collect(self, state: "CollectionState", item: "TJEItem") -> bool:
         change = super().collect(state, item)
         if change:
@@ -72,14 +66,7 @@ class TJEWorld(World):
 
             # Points, ranks
             if item.point_value > 0:
-                if self.options.flat_promotions:
-                    state.prog_items[item.player]["points"] += item.point_value
-                else:
-                    rank = self.get_current_rank(state, item)
-                    if item.name == "Promotion" and rank < 8:
-                        state.prog_items[item.player]["points"] = self.rank_thresholds[rank+1]
-                    else:
-                        state.prog_items[item.player]["points"] += item.point_value
+                state.prog_items[item.player]["points"] += item.point_value
         return change
     
     def remove(self, state: "CollectionState", item: "TJEItem") -> bool:
@@ -94,14 +81,7 @@ class TJEWorld(World):
 
             # Points, ranks
             if item.point_value > 0:
-                if self.options.flat_promotions:
-                    state.prog_items[item.player]["points"] -= item.point_value
-                else:
-                    rank = self.get_current_rank(state, item)
-                    if item.name == "Promotion" and rank > 0:
-                        state.prog_items[item.player]["points"] = self.rank_thresholds[rank-1]
-                    else:
-                        state.prog_items[item.player]["points"] -= item.point_value
+                state.prog_items[item.player]["points"] -= item.point_value
         return change
 
     def generate_early(self) -> None:
@@ -145,6 +125,9 @@ class TJEWorld(World):
 
         if self.options.flat_promotions:
             self.flat_promotion_value = get_flat_promotion_value(self.rank_thresholds, self.options.max_rank_check.value)
+            self.generator.more_promotions()
+        else:
+            self.flat_promotion_value = get_average_promotion_value(self.rank_thresholds, self.options.max_rank_check.value)
         
         if self.options.upwarp_present:
             self.generator.fewer_upwarps()
@@ -173,7 +156,8 @@ class TJEWorld(World):
             else:
                 item.classification |= ItemClassification.progression_skip_balancing
         
-        if self.options.flat_promotions and name == "Promotion":
+        if name == "Promotion":
+            # if flat_promotions is off, this will be the average value
             item.point_value = self.flat_promotion_value
         else:
             item.point_value = data.point_value
