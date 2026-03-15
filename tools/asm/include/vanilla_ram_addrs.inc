@@ -1,8 +1,10 @@
 VAN_MAPDATA_A           equ $00ff81aa
 VAN_MAPDATA_B           equ $00ff8586
+VAN_MAX_LEVEL_REACHED   equ $00ff9132
 VAN_MENU_ROW            equ $00ff9368
 VAN_MENU_COL            equ $00ff936a
 VAN_MENU_INV_POS        equ $00ff9366
+VAN_UNFALL_ACTIVE_FLAGS equ $00ff936c
 VAN_MAILBOX_ITEMS       equ $00ff937a
 VAN_MAILBOX_PRICES      equ $00ff9380
 VAN_PLAYER_LIVES        equ $00ffa248
