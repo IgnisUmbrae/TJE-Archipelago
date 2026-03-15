@@ -127,28 +127,31 @@ class TJEWorld(World):
         create_regions(self.multiworld, self.player, self.options)
 
     @functools.cached_property
+    def flat_promotion_value(self) -> int:
+        if self.options.max_rank_check.value == 0:
+            mrc = 8
+        else:
+            mrc = self.options.max_rank_check.value
+        if self.options.flat_promotions:
+            return get_flat_promotion_value(self.rank_thresholds, mrc)
+        else:
+            return get_average_promotion_value(self.rank_thresholds, mrc)
+
+    @functools.cached_property
     def rank_thresholds(self) -> list[int]:
         match self.options.rank_rescaling:
             case RankRescalingOption.NONE:
-                self.rank_thresholds = VANILLA_RANK_THRESHOLDS
+                return VANILLA_RANK_THRESHOLDS
             case _:
                 if self.options.rank_rescaling == RankRescalingOption.FUNK_LORD or self.options.max_rank_check == 0:
                     scale_threshold = 8
                 else:
-                    scale_threshold = self.options.max_rank_check
-                return scaled_rank_thresholds(
-                                              self.options.last_level.value,
+                    scale_threshold = self.options.max_rank_check.value
+                return scaled_rank_thresholds(self.options.last_level.value,
                                               self.options.min_items.value,
                                               self.options.max_items.value,
                                               scale_threshold
                                              )
-
-    @functools.cached_property
-    def flat_promotion_value(self) -> int:
-        if self.options.flat_promotions:
-            return get_flat_promotion_value(self.rank_thresholds, self.options.max_rank_check.value)
-        else:
-            return get_average_promotion_value(self.rank_thresholds, self.options.max_rank_check.value)
 
     def create_item(self, identifier: str | int, new_classification: Optional[ItemClassification] = None) -> TJEItem:
         name = identifier if isinstance(identifier, str) else self.item_id_to_name[identifier]
