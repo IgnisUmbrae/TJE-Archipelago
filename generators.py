@@ -244,10 +244,10 @@ def expected_map_points_on_level(level: int) -> int:
         case 0: return 0
         case 1: return 5
         case 2: return 10
-        case 3: return 15
-        case 4: return 20
-        case 5: return 25
-        case _: return 30
+        case 3: return 20
+        case 4: return 30
+        case 5: return 35
+        case _: return 35
 
 def expected_map_points(last_level: int) -> int:
     return sum(expected_map_points_on_level(i) for i in range(last_level+1))
