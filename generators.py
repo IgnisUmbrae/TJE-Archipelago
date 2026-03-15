@@ -285,6 +285,7 @@ def get_rank_rescale_factor(last_level: int = 25, min_items: int = 12, max_items
 def rescale_to_nearest_mult(num: int, mult: int, rescale_factor: float = 1, bump: float = 0) -> int:
     return round((rescale_factor*num + bump)/mult)*mult
 
+@functools.cache
 def total_points_to_next_rank(current_rank: int, last_level: int = 25, min_items: int = 12, max_items: int = 28,
                               desired_max_rank: int = 8) -> int:
     reqd = 0
@@ -303,19 +304,18 @@ def total_points_to_next_rank(current_rank: int, last_level: int = 25, min_items
     bump = (25 - last_level)/(25 - 11) * (28 - max_items)/(28 - 4) * (8 - current_rank)/(8 - 0) * 10
     return rescale_to_nearest_mult(reqd, 10, rescale_factor, bump)
 
+@functools.cache
 def scaled_rank_thresholds(last_level: int = 25, min_items: int = 12, max_items: int = 28,
                            desired_max_rank: int = 8) -> list[int]:
     return [0] + \
            [total_points_to_next_rank(rank, last_level, min_items, max_items, desired_max_rank) for rank in range(8)]
 
 # Average gap between ranks, halved to represent 'average' use
-@functools.cache
 def get_average_promotion_value(rank_thresholds: list[int], max_rank_check: int) -> int:
     return round(rank_thresholds[max_rank_check]/max_rank_check/2)
 
 # Determines a sensible point value for a flat promotion present
 # Calculation is roughly "average gap between consecutive ranks, rounded to nearest 10, slight downward bias"
-@functools.cache
 def get_flat_promotion_value(rank_thresholds: list[int], max_rank_check: int) -> int:
     return rescale_to_nearest_mult(get_average_promotion_value(rank_thresholds, max_rank_check), 10, 1, -5)
 

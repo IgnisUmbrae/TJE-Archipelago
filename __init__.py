@@ -109,25 +109,8 @@ class TJEWorld(World):
 
         self.earthling_list = [[0xFF]*(20 - len(l)) + l for l in self.earthling_list]
 
-        match self.options.rank_rescaling:
-            case RankRescalingOption.NONE:
-                self.rank_thresholds = VANILLA_RANK_THRESHOLDS
-            case _:
-                if self.options.rank_rescaling == RankRescalingOption.FUNK_LORD or self.options.max_rank_check == 0:
-                    scale_threshold = 8
-                else:
-                    scale_threshold = self.options.max_rank_check
-                self.rank_thresholds = scaled_rank_thresholds(self.options.last_level.value,
-                                                            self.options.min_items.value,
-                                                            self.options.max_items.value,
-                                                            scale_threshold
-                                                            )
-
         if self.options.flat_promotions:
-            self.flat_promotion_value = get_flat_promotion_value(self.rank_thresholds, self.options.max_rank_check.value)
             self.generator.more_promotions()
-        else:
-            self.flat_promotion_value = get_average_promotion_value(self.rank_thresholds, self.options.max_rank_check.value)
 
         if self.options.upwarp_present:
             self.generator.fewer_upwarps()
@@ -143,6 +126,30 @@ class TJEWorld(World):
     def create_regions(self) -> None:
         create_regions(self.multiworld, self.player, self.options)
 
+    @functools.cached_property
+    def rank_thresholds(self) -> list[int]:
+        match self.options.rank_rescaling:
+            case RankRescalingOption.NONE:
+                self.rank_thresholds = VANILLA_RANK_THRESHOLDS
+            case _:
+                if self.options.rank_rescaling == RankRescalingOption.FUNK_LORD or self.options.max_rank_check == 0:
+                    scale_threshold = 8
+                else:
+                    scale_threshold = self.options.max_rank_check
+                return scaled_rank_thresholds(
+                                              self.options.last_level.value,
+                                              self.options.min_items.value,
+                                              self.options.max_items.value,
+                                              scale_threshold
+                                             )
+
+    @functools.cached_property
+    def flat_promotion_value(self) -> int:
+        if self.options.flat_promotions:
+            return get_flat_promotion_value(self.rank_thresholds, self.options.max_rank_check.value)
+        else:
+            return get_average_promotion_value(self.rank_thresholds, self.options.max_rank_check.value)
+
     def create_item(self, identifier: str | int, new_classification: Optional[ItemClassification] = None) -> TJEItem:
         name = identifier if isinstance(identifier, str) else self.item_id_to_name[identifier]
 
@@ -155,18 +162,12 @@ class TJEWorld(World):
                 item.classification |= ItemClassification.progression
             else:
                 item.classification |= ItemClassification.progression_skip_balancing
-        
+
         if name == "Promotion":
-            if self.options.flat_promotions:
-                value = get_flat_promotion_value(self.rank_thresholds, self.options.max_rank_check.value)
-            else:
-                value = get_average_promotion_value(self.rank_thresholds, self.options.max_rank_check.value)
+            value = self.flat_promotion_value
         else:
             value = data.point_value
-
         item.point_value = value
-
-        # Buck-related
 
         if self.options.mailbox_checks:
             if data.buck_value > 0:
