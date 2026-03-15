@@ -312,12 +312,13 @@ def scaled_rank_thresholds(last_level: int = 25, min_items: int = 12, max_items:
 
 # Average gap between ranks, halved to represent 'average' use
 def get_average_promotion_value(rank_thresholds: list[int], max_rank_check: int) -> int:
-    return round(rank_thresholds[max_rank_check]/max_rank_check/2)
+    return max(round(rank_thresholds[max_rank_check]/max_rank_check/2), 10)
 
 # Determines a sensible point value for a flat promotion present
-# Calculation is roughly "average gap between consecutive ranks, rounded to nearest 10, slight downward bias"
+# Calculation is roughly "average gap between consecutive ranks, rounded to nearest 10, slight downward bias",
+# with minimum value of 10
 def get_flat_promotion_value(rank_thresholds: list[int], max_rank_check: int) -> int:
-    return rescale_to_nearest_mult(get_average_promotion_value(rank_thresholds, max_rank_check), 10, 1, -5)
+    return max(rescale_to_nearest_mult(get_average_promotion_value(rank_thresholds, max_rank_check), 10, 1, -5), 10)
 
 class TJEInternalRNG():
     def __init__(self):
