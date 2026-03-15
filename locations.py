@@ -85,6 +85,6 @@ LOCATION_GROUPS = dict(zip(
        | {"Level Reaches" : [REACH_LOC_TEMPLATE.format(level) for level in range(2, 26)]} \
        | {"Mailboxes" : [MAILBOX_LOC_TEMPLATE.format(level, pos)
                          for level in range(2, 26) for pos in MAILBOX_ITEM_REFS]}
-       
+
 REMOTE_SPAWN_ONLY_LOCS = (LOCATION_GROUPS["Ranks"] + LOCATION_GROUPS["Big Items"] +
                           LOCATION_GROUPS["Level Reaches"] + LOCATION_GROUPS["Mailboxes"])
