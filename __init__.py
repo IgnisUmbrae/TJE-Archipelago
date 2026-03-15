@@ -124,7 +124,11 @@ class TJEWorld(World):
                                                             )
 
         if self.options.flat_promotions:
-            self.generator.more_promotions()        
+            self.flat_promotion_value = get_flat_promotion_value(self.rank_thresholds, self.options.max_rank_check.value)
+            self.generator.more_promotions()
+        else:
+            self.flat_promotion_value = get_average_promotion_value(self.rank_thresholds, self.options.max_rank_check.value)
+
         if self.options.upwarp_present:
             self.generator.fewer_upwarps()
         
