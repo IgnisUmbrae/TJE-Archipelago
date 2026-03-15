@@ -83,7 +83,7 @@ class TJEWorld(World):
         return change
     
     def remove(self, state: "CollectionState", item: "TJEItem") -> bool:
-        change = super().collect(state, item)
+        change = super().remove(state, item)
         if change:
             # Bucks
             if item.buck_value > 0:
