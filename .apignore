@@ -1,0 +1,6 @@
+.vscode/
+.pytest_cache/
+tools/
+test/
+.pylintrc
+*.code-workspace
