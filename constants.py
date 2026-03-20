@@ -329,8 +329,6 @@ SHIP_PIECE_RANGES = (
 
 #region Elevator and rank checks
 
-IN_END_ELEVATOR = b"\x01"
-
 VANILLA_RANK_THRESHOLDS = (0, 40, 100, 180, 280, 400, 540, 700, 880)
 RANK_NAMES = ("Wiener", "Dufus", "Poindexter", "Peanut", "Dude", "Bro", "Homey", "Rapmaster", "Funk Lord")
 
