@@ -95,25 +95,24 @@ class ExpandedInventory(DefaultOnToggle):
 
     display_name = "Expanded Inventory"
 
-class FlatPromotions(Toggle):
+class PointPresents(Toggle):
     """
-    Changes the behaviour of Promotion presents so they give a fixed number of points instead of jumping the player
-    up to the next rank. The exact number of points awarded depends on rank scaling.
-
-    This option stops all generation failures arising from Promotion and rank logic.
+    Adds a new type of present that gives a flat number of points.
+    The exact point value varies based on your rank settings, but, very roughly,
+    opening two of these presents will, on average, get you to the next rank.
     """
 
-    display_name = "Flat Promotions"
+    display_name = "Point Presents"
 
-class AutoOpenFlatPromotions(Toggle):
+class AutoOpenPointPresents(Toggle):
     """
-    Sets whether flat Promotions should automatically open when received from other players.
+    Sets whether point presents should automatically open when received from other players.
     Locally-collected ones will not auto-open.
     
-    Has no effect unless flat_promotions is enabled.
+    Has no effect unless point presents are enabled.
     """
 
-    display_name = "Automatically Open Flat Promotions"
+    display_name = "Automatically Open Point Presents"
 
 class SoundRando(Choice):
     """
@@ -658,7 +657,7 @@ tje_option_groups = [
     OptionGroup("Auto/Bad/Trap Options", [
         AutoOpenBadPresents,
         AutoOpenBuckPresents,
-        AutoOpenFlatPromotions,
+        AutoOpenPointPresents,
         BadFood,
         BadPresents,
         TrapWeights,
@@ -670,6 +669,7 @@ tje_option_groups = [
         LocalMapReveals,
         ElevatorKeys,
         ElevatorKeyGap,
+        PointPresents,
         MaxRankCheck,
         RankRescalingMode,
         ReachLevelChecks,
@@ -686,7 +686,6 @@ tje_option_groups = [
         FreeEarthlingServices,
         FastLoads,
         ExpandedInventory,
-        FlatPromotions,
     ]),
     OptionGroup("Misc", [
         SoundRando,
@@ -708,7 +707,7 @@ class TJEOptions(PerGameCommonOptions):
     local_ship_pieces: LocalShipPieces
     auto_bad_presents: AutoOpenBadPresents
     auto_buck_presents: AutoOpenBuckPresents
-    auto_flat_promotions: AutoOpenFlatPromotions
+    auto_point_presents: AutoOpenPointPresents
     bad_food: BadFood
     bad_presents: BadPresents
     trap_weights: TrapWeights
@@ -732,7 +731,7 @@ class TJEOptions(PerGameCommonOptions):
     free_earthling_services: FreeEarthlingServices
     fast_loads: FastLoads
     expanded_inventory: ExpandedInventory
-    flat_promotions: FlatPromotions
+    point_presents: PointPresents
     sound_rando: SoundRando
     game_version: GameVersion
     unused_present_sprites: RestoreUnusedPresentSprites
