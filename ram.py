@@ -9,7 +9,7 @@ from worlds._bizhawk.client import BizHawkClient
 
 from .constants import DEAD_SPRITES, EMPTY_ITEM, COLLECTED_SHIP_ITEM, EMPTY_PRESENT, GLOBAL_DATA_STRUCTURES, \
                        PLAYER_DATA_STRUCTURES, RANK_NAMES, SAVE_DATA_POINTS_GLOBAL, SAVE_DATA_POINTS_PLAYER, \
-                       STATIC_DIALOGUE_LIST, IN_END_ELEVATOR, DEATHLINK_MESSAGES, MAILBOX_ITEM_REFS, \
+                       STATIC_DIALOGUE_LIST, DEATHLINK_MESSAGES, MAILBOX_ITEM_REFS, \
                        get_datastructure, get_max_health, get_slot_addr, get_ram_addr, expand_inv_constants
 from .items import ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, \
                    PRESENT_IDS, SHIP_PIECE_IDS,INSTATRAP_IDS, BAD_PRESENT_IDS, BUCK_PRESENT_IDS
@@ -458,6 +458,9 @@ class TJEGameController():
     async def is_warping(self, ctx: "BizHawkClientContext") -> bool:
         return (await self.peek_ram(ctx, get_ram_addr("END_ELEVATOR_STATE", self.char), 1)) == b"\x0C"
 
+    async def is_in_elevator(self, ctx: "BizHawkClientContext") -> bool:
+        return (await self.peek_ram(ctx, get_ram_addr("GLOBAL_ELEVATOR_STATE", self.char), 1)) != b"\x00"
+
     async def is_item_waiting(self, ctx: "BizHawkClientContext") -> bool:
         return (await self.peek_ram(ctx, get_ram_addr("AP_GIVE_ITEM", self.char), 1)) != b"\xFF"
 
@@ -472,7 +475,8 @@ class TJEGameController():
         return (self.auto_point_presents and item_id == ITEM_NAME_TO_ID["Big Points"])
 
     async def receive_item(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
-        if await self.is_warping(ctx):
+        # Potentially don't need to check both of these (maybe necessary in co-op?)
+        if await self.is_warping(ctx) or await self.is_in_elevator(ctx):
             return False
         if (await self.should_auto_open_bad_pres(item_id)
             or await self.should_auto_open_buck_pres(item_id)
@@ -557,9 +561,8 @@ class TJEGameController():
                 self.died_from_deathlink = False
 
     async def is_safe_to_kill_player(self, ctx: "BizHawkClientContext") -> bool:
-        in_end_elev = await self.peek_ram(ctx, get_ram_addr("GLOBAL_ELEVATOR_STATE", self.char), 1) == IN_END_ELEVATOR
         num_lives = int.from_bytes(await self.peek_ram(ctx, get_ram_addr("LIVES", self.char), 1))
-        return not (in_end_elev and num_lives == 0)
+        return not (await self.is_in_elevator(ctx) and num_lives == 0)
 
     async def kill_player(self, ctx: "BizHawkClientContext"):
         if not await self.is_player_dead(ctx) and await self.is_safe_to_kill_player(ctx):
