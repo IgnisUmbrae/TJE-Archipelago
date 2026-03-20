@@ -9,9 +9,16 @@ from .generators import item_totals, map_reveal_ranges, num_items_on_level
 from .locations import FLOOR_ITEM_LOC_TEMPLATE
 from .options import TJEOptions, GameOverOption, StartingPresentOption, LocalShipPiecesOption
 
-# TO DO: lots of redundancy here; needs a big clean-up
+# TODO: lots of redundancy here; needs a big clean-up
 
-# Extra codes: 1C = AP item; 1D = AP progression item; 1E = elevator key; 1F = map reveal; 20 = ground ship piece
+# Extra item codes
+
+class ExtraItemCode(IntEnum):
+    AP_ITEM = 0x54
+    AP_ITEM_PROG = 0x55
+    ELEV_KEY = 0x56
+    MAP_REVEAL = 0x57
+    GROUND_SHIP_PIECE = 0x58
 
 #region Item data
 
@@ -37,16 +44,18 @@ class TJEItemData(NamedTuple):
 
 # Trap presents have a point value of 0 to reflect the assumption that the player won't choose to open them
 BASE_ITEM_LIST: list[TJEItemData] = [
-    TJEItemData(0x20, "Ship Piece: Rocketship Windshield", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
-    TJEItemData(0x20, "Ship Piece: Left Megawatt Speaker", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
-    TJEItemData(0x20, "Ship Piece: Super Funkomatic Amplamator", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
-    TJEItemData(0x20, "Ship Piece: Amplamator Connector Fin", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
-    TJEItemData(0x20, "Ship Piece: Forward Stabilizing Unit", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
-    TJEItemData(0x20, "Ship Piece: Rear Leg", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
-    TJEItemData(0x20, "Ship Piece: Awesome Snowboard", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
-    TJEItemData(0x20, "Ship Piece: Righteous Rapmaster Capsule", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
-    TJEItemData(0x20, "Ship Piece: Right Megawatt Speaker", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
-    TJEItemData(0x20, "Ship Piece: Hyperfunk Thruster", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
+    TJEItemData(ExtraItemCode.GROUND_SHIP_PIECE, "Ship Piece: Rocketship Windshield", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
+    TJEItemData(ExtraItemCode.GROUND_SHIP_PIECE, "Ship Piece: Left Megawatt Speaker", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
+    TJEItemData(ExtraItemCode.GROUND_SHIP_PIECE, "Ship Piece: Super Funkomatic Amplamator", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
+    TJEItemData(ExtraItemCode.GROUND_SHIP_PIECE, "Ship Piece: Amplamator Connector Fin", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
+    TJEItemData(ExtraItemCode.GROUND_SHIP_PIECE, "Ship Piece: Forward Stabilizing Unit", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
+    TJEItemData(ExtraItemCode.GROUND_SHIP_PIECE, "Ship Piece: Rear Leg", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
+    TJEItemData(ExtraItemCode.GROUND_SHIP_PIECE, "Ship Piece: Awesome Snowboard", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
+    TJEItemData(ExtraItemCode.GROUND_SHIP_PIECE, "Ship Piece: Righteous Rapmaster Capsule", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
+    TJEItemData(ExtraItemCode.GROUND_SHIP_PIECE, "Ship Piece: Right Megawatt Speaker", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
+    TJEItemData(ExtraItemCode.GROUND_SHIP_PIECE, "Ship Piece: Hyperfunk Thruster", TJEItemType.SHIP_PIECE, ItemClassification.progression, 0, 0),
+
+    # Vanilla presents
 
     TJEItemData(0x00, "Icarus Wings", TJEItemType.PRESENT, ItemClassification.useful, 2, 0),
     TJEItemData(0x01, "Spring Shoes", TJEItemType.PRESENT, ItemClassification.useful, 2, 0),
@@ -77,6 +86,10 @@ BASE_ITEM_LIST: list[TJEItemData] = [
     TJEItemData(0x1A, "Mystery Present", TJEItemType.PRESENT, ItemClassification.filler, 2, 0),
     TJEItemData(0x1B, "Bonus Hitops", TJEItemType.PRESENT, ItemClassification.useful, 2, 0),
 
+    # Custom presents
+    TJEItemData(0x1C, "Big Points", TJEItemType.PRESENT, ItemClassification.useful, 2, 0),
+
+    # Vanilla ground items
     TJEItemData(0x40, "Burger", TJEItemType.EDIBLE, ItemClassification.filler, 0, 0),
     TJEItemData(0x41, "Fudge Sundae", TJEItemType.EDIBLE, ItemClassification.filler, 0, 0),
     TJEItemData(0x42, "Fudge Cake", TJEItemType.EDIBLE, ItemClassification.filler, 0, 0),
@@ -95,24 +108,27 @@ BASE_ITEM_LIST: list[TJEItemData] = [
     TJEItemData(0x4F, "Old Cabbage", TJEItemType.EDIBLE, ItemClassification.trap, 0, 0),
     TJEItemData(0x50, "A Buck", TJEItemType.EDIBLE, ItemClassification.filler, 0, 1),
 
+    # Custom ground items
+
+    # Filler
     TJEItemData(0xFF, "Nothing", TJEItemType.ETHEREAL, ItemClassification.filler, 0, 0)
 ]
 
 ELEVATOR_KEY_ITEMS: list[TJEItemData] = [
-    TJEItemData(0x1E, "Progressive Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0, 0)
+    TJEItemData(ExtraItemCode.ELEV_KEY, "Progressive Elevator Key", TJEItemType.ETHEREAL, ItemClassification.progression, 0, 0)
 ]
 
 INSTATRAP_ITEMS: list[TJEItemData] = [
-    TJEItemData(0x1C, "Cupid Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0, 0),
-    TJEItemData(0x1C, "Burp Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0, 0),
-    TJEItemData(0x1C, "Sleep Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0, 0),
-    TJEItemData(0x1C, "Earthling Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0, 0),
-    TJEItemData(0x1C, "Rocket Skates Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0, 0),
-    TJEItemData(0x1C, "Randomizer Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0, 0),
+    TJEItemData(ExtraItemCode.AP_ITEM, "Cupid Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0, 0),
+    TJEItemData(ExtraItemCode.AP_ITEM, "Burp Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0, 0),
+    TJEItemData(ExtraItemCode.AP_ITEM, "Sleep Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0, 0),
+    TJEItemData(ExtraItemCode.AP_ITEM, "Earthling Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0, 0),
+    TJEItemData(ExtraItemCode.AP_ITEM, "Rocket Skates Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0, 0),
+    TJEItemData(ExtraItemCode.AP_ITEM, "Randomizer Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0, 0),
 ]
 
 MISC_ITEMS: list[TJEItemData] = [
-    TJEItemData(0x1F, "Progressive Map Reveal", TJEItemType.ETHEREAL, ItemClassification.useful, 0, 0)
+    TJEItemData(ExtraItemCode.MAP_REVEAL, "Progressive Map Reveal", TJEItemType.ETHEREAL, ItemClassification.useful, 0, 0)
 ]
 
 MASTER_ITEM_LIST = BASE_ITEM_LIST + ELEVATOR_KEY_ITEMS + INSTATRAP_ITEMS + MISC_ITEMS
@@ -232,7 +248,8 @@ def create_map_reveals(multiworld, world, options: TJEOptions, player, item_list
 def create_main_items(world, item_list, total_locations, differential, options: TJEOptions) -> None:
     item_pool_raw = world.generator.generate_item_blob(total_locations - differential, world.options.presentsanity)
     if options.max_rank_check.value > 0 and not options.presentsanity:
-        world.generator.add_extra_promotions(item_pool_raw, world.rank_thresholds, world.flat_promotion_value, options)
+        world.generator.add_extra_promotions(item_pool_raw, world.rank_thresholds,
+                                             world.avg_promotion_value, world.point_present_value, options)
     bucks = 0
     for item in item_pool_raw:
         item_id = ITEM_CODE_TO_ID[item]
