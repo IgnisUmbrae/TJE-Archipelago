@@ -34,6 +34,6 @@ ClearMailboxBoughtItemsLoop:
     clr.b (A0,D5)
     addq.w #$1,D5
 DYNRP_num_mailbox_items:
-    cmpi.b #$48,D5 ; always overwritten at patch time to the actual number of mailbox items
+    cmpi.b #$48,D5 ; always overwritten at AP patch time to the actual number of mailbox items
     bne.b ClearMailboxBoughtItemsLoop
     rts
