@@ -12,9 +12,9 @@ from worlds.AutoWorld import World, WebWorld
 from .client import TJEClient # required to register with BizHawkClient
 from .constants import MAILBOX_ITEM_REFS, VANILLA_RANK_THRESHOLDS, BASE_EARTHLINGS, REV00_MD5, REV02_MD5
 from .generators import TJEGenerator, TJEInternalRNG, get_key_levels, item_totals, scaled_rank_thresholds, \
-                                                      get_flat_promotion_value, get_average_promotion_value
+                                                      get_point_present_value, get_average_promotion_value
 from .items import Item, TJEItem, ITEM_GROUPS, ITEM_ID_TO_CODE, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, MASTER_ITEM_LIST, \
-                   TJEItemType, create_items, create_starting_presents, create_starting_bucks
+                   ExtraItemCode, TJEItemType, create_items, create_starting_presents, create_starting_bucks
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, MAILBOX_LOC_TEMPLATE, LOCATION_GROUPS, LOCATION_NAME_TO_ID
 from .options import RankRescalingOption, EarthlingRandomizationOption, LocalShipPiecesOption, TJEOptions
 from .regions import create_regions
@@ -109,8 +109,8 @@ class TJEWorld(World):
 
         self.earthling_list = [[0xFF]*(20 - len(l)) + l for l in self.earthling_list]
 
-        if self.options.flat_promotions:
-            self.generator.more_promotions()
+        if self.options.point_presents:
+            self.generator.enable_point_presents()
 
         if self.options.upwarp_present:
             self.generator.fewer_upwarps()
@@ -127,15 +127,22 @@ class TJEWorld(World):
         create_regions(self.multiworld, self.player, self.options)
 
     @functools.cached_property
-    def flat_promotion_value(self) -> int:
+    def point_present_value(self) -> int:
+        if self.options.point_presents:
+            if self.options.max_rank_check.value == 0:
+                mrc = 8
+            else:
+                mrc = self.options.max_rank_check.value
+            return get_point_present_value(self.rank_thresholds, mrc)
+        return 2
+
+    @functools.cached_property
+    def avg_promotion_value(self) -> int:
         if self.options.max_rank_check.value == 0:
             mrc = 8
         else:
             mrc = self.options.max_rank_check.value
-        if self.options.flat_promotions:
-            return get_flat_promotion_value(self.rank_thresholds, mrc)
-        else:
-            return get_average_promotion_value(self.rank_thresholds, mrc)
+        return get_average_promotion_value(self.rank_thresholds, mrc)
 
     @functools.cached_property
     def rank_thresholds(self) -> list[int]:
@@ -161,15 +168,20 @@ class TJEWorld(World):
 
         item = TJEItem(name, classification, self.item_name_to_id[name], self.player)
         if self.options.max_rank_check.value > 0 and data.type == TJEItemType.PRESENT:
-            if name == "Promotion":
+            if name in ("Promotion", "Big Points"):
                 item.classification |= ItemClassification.progression
             else:
                 item.classification |= ItemClassification.progression_skip_balancing
 
-        if name == "Promotion":
-            value = self.flat_promotion_value
-        else:
-            value = data.point_value
+        match name:
+            case "Promotion":
+                value = self.avg_promotion_value
+                print("★ Promo value:", value)
+            case "Big Points":
+                value = self.point_present_value
+                print("★ Point present value:", value)
+            case _:
+                value = data.point_value
         item.point_value = value
 
         if self.options.mailbox_checks:
@@ -233,9 +245,9 @@ class TJEWorld(World):
         else:
             if item.classification in \
                 (ItemClassification.progression, ItemClassification.progression_skip_balancing):
-                return 0x1D # Progression AP item
+                return ExtraItemCode.AP_ITEM_PROG # Progression AP item
             else:
-                return 0x1C # Regular AP item
+                return ExtraItemCode.AP_ITEM # Regular AP item
 
     def create_patchable_item_list(self):
         items_per_level = item_totals(True, self.options.min_items.value, self.options.max_items.value)
