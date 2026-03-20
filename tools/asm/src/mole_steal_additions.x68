@@ -28,6 +28,9 @@ DYNRP_buck_present_steal: ; left intact unless mailbox checks are off
 DYNRP_jackpot_present_steal: ; left intact unless mailbox checks are off
     cmpi.b  #$15,D6 ; Jackpot
     beq     RetNoSteal
+DYNRP_point_present_steal: ; left intact unless rank checks / point presents are off
+    cmpi.b  #$1C,D6 ; Point present (custom)
+    beq     RetNoSteal
 
     ; add points for stolen present
     ; D3 contains player

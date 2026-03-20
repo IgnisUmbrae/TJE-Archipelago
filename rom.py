@@ -289,10 +289,15 @@ def patch_moles(world, patch, dro) -> None:
     patch.write_token(APTokenTypes.WRITE, 0x0002203e, read_bin("mole_steal_additions_jump"))
     patch.write_token(APTokenTypes.WRITE, 0x0010bb00, read_bin("mole_steal_additions"))
 
-    # By default, the mole code assumes rank checks and mailbox checks are both enabled
+    # By default, the mole code includes all failsafes, so we remove unnecessary ones here
     if world.options.max_rank_check.value == 0:
         patch.write_token(APTokenTypes.WRITE,
                           0x0010bb00 + dro["mole_steal_additions"]["promotion_present_steal"],
+                          read_bin("mole_steal_additions_remove_check"))
+
+    if world.options.max_rank_check.value == 0 or not world.options.point_presents:
+        patch.write_token(APTokenTypes.WRITE,
+                          0x0010bb00 + dro["mole_steal_additions"]["point_present_steal"],
                           read_bin("mole_steal_additions_remove_check"))
 
     if not world.options.mailbox_checks:
