@@ -87,9 +87,9 @@ class TJEGenerator():
         self.local_present_weights[0xC] = 2
     
     def enable_point_presents(self):
-        self.local_present_weights[0xB] = 1
+        self.local_present_weights[0xB] = 0.5
         self.local_present_list.append(0x1C)
-        self.local_present_weights.append(2)
+        self.local_present_weights.append(1)
 
     def get_present_distribution(self, level_one: bool=False, force_good: bool=False) -> tuple[list[int], list[float]]:
         forbiddens = set()
