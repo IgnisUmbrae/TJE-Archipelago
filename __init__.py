@@ -176,10 +176,8 @@ class TJEWorld(World):
         match name:
             case "Promotion":
                 value = self.avg_promotion_value
-                print("★ Promo value:", value)
             case "Big Points":
                 value = self.point_present_value
-                print("★ Point present value:", value)
             case _:
                 value = data.point_value
         item.point_value = value
