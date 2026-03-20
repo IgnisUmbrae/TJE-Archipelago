@@ -59,9 +59,8 @@ class TJEGenerator():
         i = -1
         for c in choices:
             i += 1
-            target = self.random.choices(range(2,last_level+1),
-                                         self.get_trimmed_level_weights(c, local_weights, last_level),
-                                         k=1)[0]
+            trimmed_weights = self.get_trimmed_level_weights(c, local_weights, last_level)
+            target = self.random.choices(range(2,last_level+1), trimmed_weights, k=1)[0]
             output[target].append(c)
             self.per_level_earthling_counts[target] += 1
             if c in EARTHLING_UNIQUE:
