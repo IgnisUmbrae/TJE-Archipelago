@@ -135,7 +135,7 @@ AutoAwardGroundItem:
     ext.w      D0
     ext.l      D0
     move.l     D0,-(SP)
-    jsr        AP_PICKUP_ITEM
+    jsr        Fn_PickupItem
 ReturnFromAutoAwardGroundItem:
     bra.w      BranchToCheckDropPres
 AutoDropPresent:

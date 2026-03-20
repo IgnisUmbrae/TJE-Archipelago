@@ -14,7 +14,7 @@ MainLoop:
     ;calculate address for item at index D1 inside AP item list
     ;D2 contains the level number
     movea.l #AP_ITEM_LIST,A0
-    moveq #$1c,D3
+    moveq #GROUND_ITEMS_PER_LEVEL,D3
     mulu.w D2,D3
     adda.w D3,A0
     move.b (A0,D1.l),D4
@@ -36,7 +36,7 @@ MainLoop:
 AlreadyCollected:
     ;loop until all 28 items set
     addq.w #$1,D1
-    cmpi.w #$1c,D1
+    cmpi.w #GROUND_ITEMS_PER_LEVEL,D1
     blt.b MainLoop
     ;set flag for client to read
     movea.l #AP_LEVEL_ITEMS_SET,A0

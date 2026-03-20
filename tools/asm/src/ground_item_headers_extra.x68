@@ -1,0 +1,70 @@
+;00107500
+
+; AP item
+    dc.b $01 ; sprite data count
+    dc.b $00 ; x offset
+    dc.b $00 ; y offset
+    dc.b $00 ; next-is-same flag
+    dc.b $03 ; width
+    dc.b $02 ; height
+    dc.b $f4 ; offset_x
+    dc.b $f1 ; offset_y
+    dc.b $f2 ; offset_z
+    dc.b $42 ; no compression ($40) + palette 2 ($02)
+    dc.l $00100000 ; pointer to sprite data
+
+; AP important item
+
+    dc.b $01
+    dc.b $00
+    dc.b $00
+    dc.b $00
+    dc.b $03
+    dc.b $02
+    dc.b $f4
+    dc.b $f1
+    dc.b $f2
+    dc.b $42
+    dc.l $00100f20
+
+; Elevator key
+
+    dc.b $01
+    dc.b $00
+    dc.b $00
+    dc.b $00
+    dc.b $03
+    dc.b $02
+    dc.b $f4
+    dc.b $f1
+    dc.b $f2
+    dc.b $42
+    dc.l $00101040
+
+; Map reveal
+
+    dc.b $01
+    dc.b $00
+    dc.b $00
+    dc.b $00
+    dc.b $03
+    dc.b $02
+    dc.b $f4
+    dc.b $f1
+    dc.b $f2
+    dc.b $42
+    dc.l $00101160
+
+; Ship item on ground
+
+    dc.b $01
+    dc.b $00
+    dc.b $00
+    dc.b $00
+    dc.b $03
+    dc.b $02
+    dc.b $f4
+    dc.b $f2
+    dc.b $f2
+    dc.b $43
+    dc.l $00101280

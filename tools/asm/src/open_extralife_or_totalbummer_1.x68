@@ -8,6 +8,6 @@ ReturnPoint equ $000165e4
     clr.b (A0,D0.l)
 ; -- end original function block --
 
-    move.b #$1d,AP_LAST_DMG_SOURCE
+    move.b #DMG_SRC_TOTAL_BUMMER,AP_LAST_DMG_SOURCE
 
     jmp ReturnPoint

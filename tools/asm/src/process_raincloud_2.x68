@@ -7,6 +7,6 @@ ReturnPoint equ $00016c14
     move.b #$2,(A0,D0.l)
 ; -- end original function block --
 
-    move.b #$1c,AP_LAST_DMG_SOURCE
+    move.b #DMG_SRC_RAINCLOUD,AP_LAST_DMG_SOURCE
 
     jmp ReturnPoint

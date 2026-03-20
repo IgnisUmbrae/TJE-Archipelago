@@ -27,13 +27,18 @@ DYNRP_inventory_size_2:
     cmpi.w #$10,D1
     blt.b CheckTJInv
 
-    ; add extra AP items and ground items into present wrapping table (for mailbox rendering)
-    movea.l #AP_PRES_WRAPPING_EXTRA,A1
-    moveq #$1c,D0
+    ; add all other items into present wrapping table for mailbox rendering purposes
+    movea.l #AP_PRES_WRAPPING,A1
+DYNRP_total_pres_types:
+    moveq #POINT_PRESENT,D0
+    addq #$1,D0
+    ; align just past end of used present wrapping area
+    adda.l D0,A1
+    adda.l D0,A1
 IdentifyAllExtraPresentsLoop:
     move.b D0,(A1)
     adda.l #$2,A1
     addq #$1,D0
-    cmpi.b #$51,D0 ; #$50 = A Buck, the last item in the game
-    blt IdentifyAllExtraPresentsLoop
+    cmpi.b #GROUND_SHIP_PIECE,D0
+    ble.b IdentifyAllExtraPresentsLoop
     rts

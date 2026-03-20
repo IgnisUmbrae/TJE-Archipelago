@@ -6,7 +6,7 @@ ReturnNoNumber equ $0000a73c
     include "common.inc"
 
     ; D2 contains player
-    ; D4 is loop var for containing loop
+    ; D4 is loop var for the containing loop
     movea.l #AP_MAILBOX_INFO_INDEX,A0
     move.b (A0,D2),D1
 

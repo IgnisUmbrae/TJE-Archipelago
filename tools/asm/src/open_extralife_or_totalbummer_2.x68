@@ -7,6 +7,6 @@ ReturnPoint equ $000164a2
     movea.l #$aefba,A0
 ; -- end original function block --
 
-    move.b #$1d,AP_LAST_DMG_SOURCE
+    move.b #DMG_SRC_TOTAL_BUMMER,AP_LAST_DMG_SOURCE
 
     jmp ReturnPoint

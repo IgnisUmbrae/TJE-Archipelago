@@ -8,7 +8,6 @@ ReturnPoint equ $00017030
     jsr $000152f6
     ; -- end original function block --
 
-    ; register 'opening bad food present' as last source of damage
-    move.b #$4a,AP_LAST_DMG_SOURCE
+    move.b #DMG_SRC_FOOD_PRESENT,AP_LAST_DMG_SOURCE
 
     jmp ReturnPoint

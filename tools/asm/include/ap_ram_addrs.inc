@@ -12,7 +12,6 @@ AP_MAILBOX_ITEMS_BOUGHT equ $00fff106 ; up to 72 bytes
 ; Expanded and relocated data
 AP_INVENTORIES          equ $00fff280
 AP_PRES_WRAPPING        equ $00fff300
-AP_PRES_WRAPPING_EXTRA  equ $00fff338
 
 ; AP-specific information
 

@@ -9,6 +9,7 @@ Fn_InitiateFall             equ $0000f8de
 Fn_PoofOneLevelUp           equ $00010968
 Fn_UnfallWarp               equ $00010ab6
 Fn_DropPresent              equ $00014e16
+Fn_PickupItem               equ $00015352
 Fn_OpenPresent              equ $00016ef4
 Fn_ProcessFallingTomatoes   equ $0001c52a
 Fn_InitiateCupidHearts      equ $0001cb86
@@ -23,4 +24,5 @@ Sfx_Eat                     equ $0004d75a
 Sfx_Money                   equ $0008233c
 
 VAN_FIXED_WORLD_SHIP_PIECES equ $00097738
+VAN_GROUND_ITEM_SPR_TABLE   equ $000ab686
 VAN_FOOD_TO_HP_TABLE        equ $000abe98

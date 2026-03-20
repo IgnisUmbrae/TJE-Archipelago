@@ -9,7 +9,7 @@ ReturnPoint equ $0001c706
     clr.w ($10,A2)
     ; -- end original function block --
 
-    ; register tomato as last damage source
-    move.b #$1b,AP_LAST_DMG_SOURCE
+
+    move.b #DMG_SRC_TOMATO,AP_LAST_DMG_SOURCE
 
     jmp ReturnPoint

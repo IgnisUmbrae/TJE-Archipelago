@@ -89,6 +89,26 @@
 			]
 		},
 
+		// Ground item sprite–related
+		{
+			filename: "ground_item_sprite_table",
+			addresses: [
+				0x00107000
+			]
+		},
+		{
+			filename: "ground_item_headers_extra",
+			addresses: [
+				0x00107500
+			]
+		},
+		{
+			filename: "ground_item_sprite_table_addr",
+			addresses: [
+				0x000150a4
+			]
+		},
+
 		// Present wrapping–related
 		{
 			filename: "present_wrapping_table_addr1",
@@ -113,6 +133,84 @@
 
 		// AP item–related
 		{
+			filename: "mailbox_present_name_table",
+			addresses: [
+				0x00108000
+			]
+		},
+		{
+			filename: "mailbox_present_name_table_addr",
+			addresses: [
+				0x0000a6fa
+			]
+		},
+		{
+			filename: "mailbox_present_name_headers_extra",
+			addresses: [
+				0x00108500
+			]
+		},
+		{
+			filename: "inv_chars_table",
+			addresses: [
+				0x00109000
+			]
+		},
+		{
+			filename: "inv_chars_table_addr",
+			addresses: [
+				0x0000a54c
+			]
+		},
+		{
+			filename: "inv_chars_headers_extra",
+			addresses: [
+				0x00109500
+			]
+		},
+		{
+			filename: "open_present",
+			addresses: [
+				0x0010d100
+			]
+		},
+		{
+			filename: "open_present_jump",
+			addresses: [
+				0x00017158
+			]
+		},
+		{
+			filename: "open_point_present",
+			addresses: [
+				0x0010d400
+			]
+		},
+		{
+			filename: "tree_check_1",
+			addresses : [
+				0x0010d000
+			]
+		},
+		{
+			filename: "tree_check_1_jump",
+			addresses : [
+				0x00015124
+			]
+		},
+		{
+			filename: "tree_check_2",
+			addresses : [
+				0x0010d050
+			]
+		},
+		{
+			filename: "tree_check_2_jump",
+			addresses : [
+				0x0001507c
+			]
+		},
+		{
 			filename: "item_override",
 			addresses: [
 				0x0010b700
@@ -125,15 +223,27 @@
 			]
 		},
 		{
-			filename: "pickup_item",
+			filename: "pickup_ground_item",
 			addresses: [
 				0x0010a000
 			]
 		},
 		{
-			filename: "pickup_item_jump",
+			filename: "pickup_ground_item_jump",
 			addresses: [
-				0x00015352
+				0x000154be
+			]
+		},
+		{
+			filename: "pickup_item_autoid",
+			addresses: [
+				0x0010a100
+			]
+		},
+		{
+			filename: "pickup_item_autoid_jump",
+			addresses: [
+				0x00015456
 			]
 		},
 		{
@@ -268,6 +378,18 @@
 		},
 
 		// Cause of death–related
+		{
+			filename: "bad_food_damage",
+			addresses: [
+				0x0010c300
+			]
+		},
+		{
+			filename: "bad_food_damage_jump",
+			addresses: [
+				0x00015574
+			]
+		},
 		{
 			filename: "player_youch",
 			addresses: [

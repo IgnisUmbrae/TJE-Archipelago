@@ -46,5 +46,5 @@
     dc.b "need 9 ship",0
     dc.b "pieces first",0
     dc.b "yeah!",0
-DYNRP_flat_promotion_text:
-    dc.b "50 points",0,0 ; extra buffer in case of three-digit point value
+DYNRP_point_present_text:
+    dc.b "100 points",0 ; extra buffer in case of three-digit point value

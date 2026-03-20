@@ -1,9 +1,15 @@
 {
+  "bad_food_damage": {
+    "PSG_SFX": 10
+  },
   "elev_key_logic": {
     "last_level_minus_one": 58
   },
   "expanded_dialogue_table_strings": {
-    "flat_promotion_text": 496
+    "point_present_text": 496
+  },
+  "initial_present_setup": {
+    "total_pres_types": 8
   },
   "init_extra": {
     "player_char": 0,
@@ -12,11 +18,18 @@
   "init_id_presents": {
     "inventory_addr": 2,
     "inventory_size_1": 34,
-    "inventory_size_2": 56
+    "inventory_size_2": 56,
+    "total_pres_types": 68
+  },
+  "inv_chars_headers_extra": {
+    "point_present_name": 0
   },
   "mailbox_order_item": {
     "PSG_SFX_1": 120,
     "PSG_SFX_2": 146
+  },
+  "mailbox_present_name_headers_extra": {
+    "point_present_name": 0
   },
   "mole_steal_additions": {
     "inventory_asl": 4,
@@ -27,21 +40,17 @@
   "on_death": {
     "dropdown_life_check": 10
   },
-  "open_promotion": {
-    "promotion_point_value_minus_two": 16
+  "open_point_present": {
+    "point_present_value_minus_two": 22
   },
-  "pickup_item": {
-    "inventory_asl_1": 228,
-    "inventory_addr_1": 230,
-    "inventory_asl_2": 252,
-    "inventory_addr_2": 254,
-    "inventory_size_1": 304,
-    "inventory_size_2": 310,
-    "PCM_SFX_1": 404,
-    "PCM_SFX_2": 506,
-    "PCM_SFX_3": 550,
-    "PSG_SFX_1": 570,
-    "PSG_SFX_2": 708
+  "pickup_ground_item": {
+    "PSG_SFX": 54
+  },
+  "pickup_item_autoid": {
+    "PSG_SFX": 20
+  },
+  "present_sprite_table": {
+    "custom_present_1": 112
   },
   "ship_piece_touch": {
     "last_level": 56

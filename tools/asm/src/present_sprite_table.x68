@@ -31,13 +31,13 @@
     dc.l $000aa8de ; Present sprite $1a (always mystery present)
     dc.l $000aae4a ; Present sprite $1b (always bonus hitops)
 
-    dc.l $00106500 ; $1c / AP item
-    dc.l $0010650e ; $1d / AP item (important)
-    dc.l $0010651c ; $1e / elevator key
-    dc.l $0010652a ; $1f / map reveal
-    dc.l $00106538 ; $20 / ship item on ground
-
-    dc.l $ffffffff ; $21 / beginning of blank entries
+DYNRP_custom_present_1:
+    dc.l $ffffffff ; $1c / beginning of blank entries
+    dc.l $ffffffff ; $1d
+    dc.l $ffffffff ; $1e
+    dc.l $ffffffff ; $1f
+    dc.l $ffffffff ; $20
+    dc.l $ffffffff ; $21 
     dc.l $ffffffff ; $22
     dc.l $ffffffff ; $23
     dc.l $ffffffff ; $24
@@ -86,4 +86,15 @@
     dc.l $000ab528 ; $4d / moldy bread
     dc.l $000ab592 ; $4e / slimy fungus
     dc.l $000ab602 ; $4f / cabbage
-    dc.l $000ab678 ; $50 / a buck (not allowed in mailboxes, just here for completeness)
+    dc.l $000ab678 ; $50 / a buck
+
+    dc.l $ffffffff ; $51 / beginning of blank entries for trees
+    dc.l $ffffffff ; $52
+    dc.l $ffffffff ; $53
+
+    ; extra ground items
+    dc.l $00107500 ; $54 / AP item
+    dc.l $0010750e ; $55 / AP item (important)
+    dc.l $0010751c ; $56 / elevator key
+    dc.l $0010752a ; $57 / map reveal
+    dc.l $00107538 ; $58 / ship item on ground
