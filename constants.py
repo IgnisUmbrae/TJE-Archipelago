@@ -102,13 +102,13 @@ PCM_SFX_ADDRS_MUSIC = [0x00089a42, 0x0008a4ac, 0x0008addc, 0x0008b104]
 # Excluding in Jam Out
 # Dynamically repatched: indices 3 and 34
 PCM_SFX_USAGE_ADDRS = [
-    (0x0002009c, 0x0002160c), (0x0000f8c0,), (0x0001b2e6,), (), (0x0001070c,),
+    (0x0002009c, 0x0002160c), (0x0000f8c0,), (0x0001b2e6,), (0x0001553e, 0x0001556a), (0x0001070c,),
     (0x0001663a, 0x000166f6), (0x0001015c, 0x0001059c, 0x0001089e, 0x00011cbe, 0x00023f8c), (0x0000fcda, 0x0001b3cc),
     (0x0000f3ca, 0x0002ad16, 0x0002ad42, 0x0002b1b2, 0x0002b200, 0x000378ea), (0x0001e600, 0x0003a658), (0x0001bdba,),
     (0x00019824,), (0x0001d420,), (0x0001b2f4,), (0x0002185e,), (0x00021b08,), (0x00022c92,), (0x0001a30e,),
     (0x000169c6, 0x00023daa), (0x0001c510,), (0x0000943c,), (0x0001b53c,), (), (0x00019d88, 0x00019e6c), (0x000200b6,),
     (0x0002135a,), (0x000120d2, 0x000120fa), (0x0001661e, 0x0001683c), (), (), (0x0000fa0c,), (0x0000fa1c,),
-    (0x0000fa7e,), (0x00012598,), (), (0x000125c6,), (0x00012580,)
+    (0x0000fa7e,), (0x00012598,), (0x000154d8,), (0x000125c6,), (0x00012580,)
 ]
 
 PCM_SFX_USAGE_ADDRS_MUSIC = [
@@ -143,19 +143,25 @@ SIMPLE_SFX_USAGE_ADDRS = (
 
 INV_REF_ADDRS_VANILLA = [0x0000934a+2, 0x000097aa+2, 0x000099a8+2, 0x000099ca+2, 0x00009b02+2, 
                          0x00009d76+2, 0x00009dcc+2, 0x0000a23a+2, 0x0000a460+2, 0x00014310+2,
-                         0x0001ac24+4, 0x00021fba+2, 0x0002227a+2]
+                         0x0001542a+2, 0x00015442+2, 0x0001ac24+4, 0x00021fba+2, 0x0002227a+2]
 
-INV_SIZE_ADDRS_VANILLA = [0x00009396+3, 0x00014320+5, 0x00014328+3, 0x00021fd8+3]
+INV_SIZE_ADDRS_VANILLA = [0x00009396+3, 0x00014320+5, 0x00014328+3, 0x00015474+3, 0x0001547a+3, 0x00021fd8+3]
 
 INV_SIZE_ADDRS_INITIAL = (0x000143c2+5, 0x000143c8+5, 0x000143d6+5, 0x000143dc+5)
 
 INV_SIZE_ADDRS_ASL_D0_VANILLA = [0x00009358, 0x0000936c, 0x00009380, 0x000097a8, 0x00009a0c, 0x00009a64, 0x00009a8e,
                                  0x00009a9c, 0x00009abc, 0x00009ad6, 0x00009b68, 0x00009b7c, 0x00009b8a, 0x00009baa,
-                                 0x00009bc4, 0x00009d74, 0x00009dca, 0x0000a238, 0x0000a45e,
+                                 0x00009bc4, 0x00009d74, 0x00009dca, 0x0000a238, 0x0000a45e, 0x00015428, 0x00015440,
                                  0x00021fc6, 0x0002205a, 0x0002207e, 0x00022278]
 
 INITIAL_PRESENT_ADDRS = (0x00014393, 0x00014397, 0x000143a5, 0x000143ab,
                          0x000143c5, 0x000143cb, 0x000143d9, 0x000143df)
+
+#endregion
+
+#region Custom present–related ROM addresses
+
+TOTAL_PRES_TYPES_PLUS_ONE_ADDRS = (0x00014298 + 3, 0x000142ba + 1, 0x000142d8 + 1)
 
 #endregion
 
@@ -256,7 +262,7 @@ MAP_REVEAL_DIALOGUE_ADDRS = (0x00105b73, 0x00105b7e, 0x00105b8a, 0x00105b97, 0x0
 MAP_REVEAL_DIALOGUE_TEMPLATE = "Lv{}-{} map!"
 MAP_REVEAL_DIALOGUE_TEMPLATE_DEGEN = "Lv{} map!"
 
-FLAT_PROMOTION_DIALOGUE_TEMPLATE = "{} points"
+POINT_PRESENT_DIALOGUE_TEMPLATE = "{} points"
 
 STATIC_DIALOGUE_LIST: dict[str, tuple[str,str]] = {
     "Ship Piece: Rocketship Windshield": ("Windshield!", "jammin'"),
@@ -284,9 +290,9 @@ STATIC_DIALOGUE_LIST: dict[str, tuple[str,str]] = {
 EMPTY_ITEM = b"\xFF"
 EMPTY_PRESENT = b"\xFF"
 
-PRESENT_LIST = (0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF, 0x10, 0x11,
-                0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A)
-PRESENT_WEIGHTS = [4, 5, 3, 4, 3, 4, 4, 3, 4, 4, 4, 1, 5, 4, 4, 4, 3, 1, 2, 2, 2, 1, 2, 2, 2, 2, 5]
+PRESENT_LIST_BASE = [0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF, 0x10, 0x11,
+                     0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A]
+PRESENT_WEIGHTS_BASE = [4, 5, 3, 4, 3, 4, 4, 3, 4, 4, 4, 1, 5, 4, 4, 4, 3, 1, 2, 2, 2, 1, 2, 2, 2, 2, 5]
 BAD_PRESENT_INDICES = set([13, 16, 18, 23, 24])
 LV1_FORBIDDEN_PRESENT_INDICES = set([0, 2, 5, 16, 18, 26])
 
@@ -332,7 +338,7 @@ RANK_NAMES = ("Wiener", "Dufus", "Poindexter", "Peanut", "Dude", "Bro", "Homey",
 
 #region Misc
 
-FLAT_PROMOTION_PRES_NAME = "{} points"
+POINT_PRESENT_NAME = "{} points"
 
 MAILBOX_ITEM_REFS = ("Top", "Middle", "Bottom")
 
