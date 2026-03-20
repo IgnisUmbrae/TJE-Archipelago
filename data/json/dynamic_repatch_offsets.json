@@ -13,7 +13,7 @@
   },
   "init_extra": {
     "player_char": 0,
-    "num_mailbox_items": 112
+    "num_mailbox_items": 128
   },
   "init_id_presents": {
     "inventory_addr": 2,

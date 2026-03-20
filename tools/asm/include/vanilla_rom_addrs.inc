@@ -6,7 +6,7 @@ Fn_MenuDrawString           equ $00009f8a
 Fn_MenuDrawNumber           equ $00009fbe
 Fn_GetMaxHP                 equ $0000ae90
 Fn_InitiateFall             equ $0000f8de
-Fn_PoofOneLevelUp           equ $00010968
+Fn_PoofWarp                 equ $00010968
 Fn_UnfallWarp               equ $00010ab6
 Fn_DropPresent              equ $00014e16
 Fn_PickupItem               equ $00015352

@@ -510,5 +510,30 @@
 				0x0000bd68
 			]
 		},
+		// Misc
+		{
+			filename: "poof_to_next_level",
+			addresses: [
+				0x0010d900
+			]
+		},
+		{
+			filename: "poof_to_next_level_jump",
+			addresses: [
+				0x00010a3e
+			]
+		},
+		{
+			filename: "poof_into_level",
+			addresses: [
+				0x0010d800
+			]
+		},
+		{
+			filename: "poof_into_level_jump",
+			addresses: [
+				0x00010aaa
+			]
+		},
 	]
 }

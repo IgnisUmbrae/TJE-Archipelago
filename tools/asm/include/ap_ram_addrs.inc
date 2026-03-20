@@ -50,5 +50,8 @@ AP_MAILBOX_ITEM_LEVEL   equ $00fff6b2
 ; Written to by game, used by client to determine cause of death
 AP_LAST_DMG_SOURCE      equ $00fff6c0
 
+; Used internally by game only
+AP_POOF_DEST_LEVEL      equ $00fff6d0
+
 ; Phantom item entry for remote item awarding
 AP_PHANTOM_ITEM         equ $00fff700
