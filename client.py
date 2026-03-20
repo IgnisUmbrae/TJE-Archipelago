@@ -120,11 +120,11 @@ class TJEClient(BizHawkClient):
 
             auto_bad_presents = int.from_bytes(await self.peek_rom(ctx, 0x001f0005, 1))
             auto_buck_presents = int.from_bytes(await self.peek_rom(ctx, 0x001f0006, 1))
-            auto_flat_promotions = int.from_bytes(await self.peek_rom(ctx, 0x001f0007, 1))
+            auto_point_presents = int.from_bytes(await self.peek_rom(ctx, 0x001f0007, 1))
             expanded_inv = int.from_bytes(await self.peek_rom(ctx, 0x0000979c+3, 1)) == 0x1D
 
             self.game_controller.initialize_slot_data(auto_bad_presents, auto_buck_presents,
-                                                      auto_flat_promotions, expanded_inv)
+                                                      auto_point_presents, expanded_inv)
             self.game_controller.add_monitors(ctx, char, death_link, mailboxes)
 
             # Save manager
