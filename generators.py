@@ -7,7 +7,7 @@ from math import ceil, sqrt, comb, pow
 
 from .constants import MAP_REVEAL_DIALOGUE_TEMPLATE, MAP_REVEAL_DIALOGUE_TEMPLATE_DEGEN, VANILLA_RANK_THRESHOLDS, \
                        EARTHLING_LIST, BASE_EARTHLINGS, EARTHLING_UNIQUE, EARTHLING_WEIGHTS, EARTHLING_MAX_PER_LEVEL, \
-                       EARTHLING_WEIGHTS_PER_LEVEL, SHIP_PIECE_RANGES, PRESENT_LIST, PRESENT_WEIGHTS, A_BUCK, \
+                       EARTHLING_WEIGHTS_PER_LEVEL, SHIP_PIECE_RANGES, PRESENT_LIST_BASE, PRESENT_WEIGHTS_BASE, A_BUCK, \
                        BAD_PRESENT_INDICES, LV1_FORBIDDEN_PRESENT_INDICES, FOOD_LIST, FOOD_WEIGHTS, BAD_FOOD_INDICES
 from .options import TJEOptions
 
@@ -17,7 +17,8 @@ class TJEGenerator():
         self.global_banned_food = set()
         self.global_banned_presents = set()
 
-        self.local_present_weights = PRESENT_WEIGHTS.copy()
+        self.local_present_weights = PRESENT_WEIGHTS_BASE.copy()
+        self.local_present_list = PRESENT_LIST_BASE.copy()
 
         self.per_level_earthling_counts = Counter()
         self.unique_earthling_levels = defaultdict(list)
@@ -71,8 +72,8 @@ class TJEGenerator():
         return output
 
     def forbid_item(self, item_code: int):
-        if item_code in PRESENT_LIST:
-            self.global_banned_presents.add(PRESENT_LIST.index(item_code))
+        if item_code in self.local_present_list:
+            self.global_banned_presents.add(self.local_present_list.index(item_code))
         elif item_code in FOOD_LIST:
             self.global_banned_food.add(FOOD_LIST.index(item_code))
 
@@ -85,8 +86,10 @@ class TJEGenerator():
     def fewer_upwarps(self):
         self.local_present_weights[0xC] = 2
     
-    def more_promotions(self):
-        self.local_present_weights[0xB] *= 2
+    def enable_point_presents(self):
+        self.local_present_weights[0xB] = 1
+        self.local_present_list.append(0x1C)
+        self.local_present_weights.append(2)
 
     def get_present_distribution(self, level_one: bool=False, force_good: bool=False) -> tuple[list[int], list[float]]:
         forbiddens = set()
@@ -96,7 +99,7 @@ class TJEGenerator():
         if force_good:
             forbiddens |= BAD_PRESENT_INDICES
 
-        culled_present_list = [PRESENT_LIST[i] for i in range(len(PRESENT_LIST)) if i not in forbiddens]
+        culled_present_list = [self.local_present_list[i] for i in range(len(self.local_present_list)) if i not in forbiddens]
         culled_present_weights = [self.local_present_weights[i] for i in range(len(self.local_present_weights)) if i not in forbiddens]
 
         return culled_present_list, culled_present_weights
@@ -132,19 +135,22 @@ class TJEGenerator():
     def generate_item_blob(self, number: int, presentsanity: bool = False) -> list[int]:
         return [self.get_random_item(False, presentsanity) for _ in range(number)]
 
-    def total_points_in_pool(self, item_pool: list[int], promotion_value: int) -> int:
-        def item_value(item_code: int, prom_val: int) -> int:
+    def total_points_in_pool(self, item_pool: list[int], promotion_value: int, point_present_value: int) -> int:
+        def item_value(item_code: int, prom_val: int, point_pres_val: int) -> int:
             if item_code == 0x0B:
                 return prom_val
-            if item_code in PRESENT_LIST:
+            if item_code == 0x1C:
+                return point_pres_val
+            if item_code in self.local_present_list:
                 return 2
             return 0
         
-        return sum([item_value(i, promotion_value) for i in item_pool])
+        return sum([item_value(i, promotion_value, point_present_value) for i in item_pool])
 
     def add_extra_promotions(self, item_pool: list[int], rank_thresholds: list[int], promotion_value: int,
-                             options: "TJEOptions") -> None:
-        points_available = self.total_points_in_pool(item_pool, promotion_value) + expected_map_points(options.last_level.value)
+                             point_present_value: int, options: "TJEOptions") -> None:
+        points_available = self.total_points_in_pool(item_pool, promotion_value, point_present_value) + \
+                           expected_map_points(options.last_level.value)
         points_goal = rank_thresholds[options.max_rank_check.value]
         if points_available < points_goal:
             extra_proms = ceil((points_goal - points_available)/promotion_value)
@@ -315,10 +321,13 @@ def get_average_promotion_value(rank_thresholds: list[int], max_rank_check: int)
     return max(round(rank_thresholds[max_rank_check]/max_rank_check/2), 10)
 
 # Determines a sensible point value for a flat promotion present
-# Calculation is roughly "average gap between consecutive ranks, rounded to nearest 10, slight downward bias",
-# with minimum value of 10
-def get_flat_promotion_value(rank_thresholds: list[int], max_rank_check: int) -> int:
-    return max(rescale_to_nearest_mult(get_average_promotion_value(rank_thresholds, max_rank_check), 10, 1, -5), 10)
+def get_point_present_value(rank_thresholds: list[int], max_rank_check: int) -> int:
+    breakpoints = (5, 10, 15, 25, 50, 75, 100, 150, 200)
+    apv = get_average_promotion_value(rank_thresholds, max_rank_check)/2
+    dists = [abs(b - apv) for b in breakpoints]
+    nearest_idx = min(range(len(breakpoints)), key=dists.__getitem__)
+    return breakpoints[nearest_idx]
+    #return max(rescale_to_nearest_mult(get_average_promotion_value(rank_thresholds, max_rank_check)/2, 25, 1, -5), 10)
 
 class TJEInternalRNG():
     def __init__(self):
