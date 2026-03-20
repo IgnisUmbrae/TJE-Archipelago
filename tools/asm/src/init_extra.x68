@@ -24,6 +24,10 @@ DYNRP_player_char:
     clr.b (AP_MAILBOX_ITEM_BOUGHT).l
     clr.b (AP_MAILBOX_ITEM_LEVEL).l
 
+    move.b #-1,(AP_LAST_DMG_SOURCE).l
+
+    move.b #-1,(AP_POOF_DEST_LEVEL).l
+
     clr.w D5
     movea.l #AP_MAILBOX_ITEMS_BOUGHT,A0
 ClearMailboxBoughtItemsLoop:
