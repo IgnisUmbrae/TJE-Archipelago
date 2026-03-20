@@ -411,7 +411,8 @@ PLAYER_RAM_ADDRS: dict[tuple[int, int]] = {
     "BURP_TIMER" : (0xDE64, 0x1),
     "CUPID_HEART_REF": (0xE1DC, 0x1),
     "CUPID_EFF_TIMER": (0xE1DF, 0x2),
-    "CUPID_EFF_TYPE": (0xE1E2, 0x1)
+    "CUPID_EFF_TYPE": (0xE1E2, 0x1),
+    "LEMONADE_STATE": (0xE396, 0x1)
 }
 
 GLOBAL_RAM_ADDRS: dict[int] = {
@@ -467,8 +468,8 @@ def get_slot_addr(name: str, slot: int, player: int = 0) -> int | None:
 
 class DataStructure(NamedTuple):
     max_slot: int
-    slot_size: int # in bytes
-    fixed_offset: int # in bytes
+    slot_size: int # bytes
+    fixed_offset: int # bytes
 
     def size(self) -> int:
         return (self.max_slot+1)*self.slot_size
@@ -500,6 +501,7 @@ GLOBAL_DATA_STRUCTURES: dict[str, DataStructure] = {
 
 PLAYER_DATA_STRUCTURES: dict[str, DataStructure] = {
     "HIGHEST_LEVEL_REACHED": DataStructure(0, 1, 0),
+    "LEMONADE_STATE": DataStructure(0, 1, 0),
     "POINTS": DataStructure(0, 2, 0),
     "RANK": DataStructure(0, 1, 0),
     "BUCKS": DataStructure(0, 1, 0),
@@ -530,6 +532,7 @@ SAVE_DATA_POINTS_GLOBAL: tuple[str] = (
 
 SAVE_DATA_POINTS_PLAYER: tuple[str] = (
     "HIGHEST_LEVEL_REACHED",
+    "LEMONADE_STATE",
     "RANK",
     "POINTS",
     "BUCKS",

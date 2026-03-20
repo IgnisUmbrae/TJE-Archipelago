@@ -106,12 +106,13 @@ class TJEClient(BizHawkClient):
         death_link = bool(int.from_bytes(await self.peek_rom(ctx, 0x001f0001, 1)))
         await ctx.update_death_link(death_link)
         mailboxes = int.from_bytes(await self.peek_rom(ctx, 0x001f0030, 1)) == 2
+        lemonade = int.from_bytes(await self.peek_rom(ctx, 0x001f0008, 1)) == 1
 
-        success = await self.setup_game_controller(ctx, death_link, mailboxes)
+        success = await self.setup_game_controller(ctx, death_link, mailboxes, lemonade)
 
         return success
 
-    async def setup_game_controller(self, ctx: "BizHawkClientContext", death_link: bool, mailboxes: bool) -> bool:
+    async def setup_game_controller(self, ctx: "BizHawkClientContext", death_link: bool, mailboxes: bool, lemonade: bool) -> bool:
         try:
             # Game controller
 
@@ -125,7 +126,7 @@ class TJEClient(BizHawkClient):
 
             self.game_controller.initialize_slot_data(auto_bad_presents, auto_buck_presents,
                                                       auto_point_presents, expanded_inv)
-            self.game_controller.add_monitors(ctx, char, death_link, mailboxes)
+            self.game_controller.add_monitors(ctx, char, death_link, mailboxes, lemonade)
 
             # Save manager
 

@@ -181,6 +181,9 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
     
     if options.mailbox_checks:
         differential -= 3*len(world.mailbox_levels)
+    
+    if options.lemonade_check:
+        differential -= 1
 
     create_main_items(world, item_list, total_locations, differential, options)
 

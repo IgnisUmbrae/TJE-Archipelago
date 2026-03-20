@@ -295,4 +295,5 @@ class TJEWorld(World):
             "reach_level_checks": bool(self.options.reach_level_checks.value),
             "mailbox_levels": self.mailbox_levels if self.options.mailbox_checks else [],
             "mailbox_item_prices": self.mailbox_item_prices if self.options.mailbox_checks else [],
+            "lemonade_check": bool(self.options.lemonade_check.value),
         }

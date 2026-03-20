@@ -2,6 +2,9 @@
   "bad_food_damage": {
     "PSG_SFX": 10
   },
+  "dropdown_on_death": {
+    "level_1_dropdown_check": 32
+  },
   "elev_key_logic": {
     "last_level_minus_one": 58
   },

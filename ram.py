@@ -15,7 +15,7 @@ from .items import ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, \
                    PRESENT_IDS, SHIP_PIECE_IDS,INSTATRAP_IDS, BAD_PRESENT_IDS, BUCK_PRESENT_IDS
 # from .hint import generate_hints_for_current_level
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, RANK_LOC_TEMPLATE, BIG_ITEM_LOC_TEMPLATE, REACH_LOC_TEMPLATE, \
-                       MAILBOX_LOC_TEMPLATE
+                       MAILBOX_LOC_TEMPLATE, LEMONADE_LOC_NAME
 
 if TYPE_CHECKING:
     from worlds._bizhawk.context import BizHawkClientContext
@@ -284,7 +284,7 @@ class TJEGameController():
 
     #region Initialization functions
 
-    def add_monitors(self, ctx: "BizHawkClientContext", char: int, death_link: bool, mailboxes: bool):
+    def add_monitors(self, ctx: "BizHawkClientContext", char: int, death_link: bool, mailboxes: bool, lemonade: bool):
         level = character_to_monitor_level(char)
 
         self.char = char
@@ -377,6 +377,20 @@ class TJEGameController():
                     level,
                     lambda: not self.is_awaiting_load(),
                     self.handle_mailbox_purchase,
+                    self,
+                    ctx
+                )
+            )
+
+        if lemonade:
+            self.other_monitors.append(
+                AddressMonitor(
+                    "Drink lemonade",
+                    "LEMONADE_STATE",
+                    1,
+                    level,
+                    lambda: not self.is_awaiting_load(),
+                    self.handle_lemonade_drink,
                     self,
                     ctx
                 )
@@ -579,6 +593,12 @@ class TJEGameController():
 
             await self.poke_ram(ctx, get_ram_addr("AP_MAILBOX_ITEM_LEVEL", self.char), b"\x00")
             await self.poke_ram(ctx, get_ram_addr("AP_MAILBOX_ITEM_BOUGHT", self.char), b"\x00")
+
+    async def handle_lemonade_drink(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
+                                  old_data: bytes, new_data: bytes):
+        prev_state, new_state = int.from_bytes(old_data), int.from_bytes(new_data)
+        if new_state == 1 and prev_state == 0:
+            await self.client.trigger_location(ctx, LEMONADE_LOC_NAME)
 
     async def handle_collected_item_change(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
                                        old_data: bytes, new_data: bytes):

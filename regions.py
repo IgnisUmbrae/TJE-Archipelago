@@ -9,7 +9,7 @@ from .items import EDIBLE_IDS, ITEM_ID_TO_NAME, TJEItem
 from .generators import expected_map_points_on_level, item_totals
 from .options import TJEOptions
 from .locations import TJELocation, FLOOR_ITEM_LOCATIONS, SHIP_PIECE_LOCATIONS, RANK_LOC_TEMPLATE, REACH_LOC_TEMPLATE, \
-                                    MAILBOX_LOC_TEMPLATE
+                                    MAILBOX_LOC_TEMPLATE, LEMONADE_LOC_NAME
 
 class TJERegion(NamedTuple):
     name: str
@@ -65,6 +65,7 @@ def create_regions(multiworld: MultiWorld, player: int, options: TJEOptions):
     handle_rank_options(multiworld, world, player, options, level_regions)
     handle_reach_options(player, world, options, level_regions)
     handle_mailbox_options(player, world, options, level_regions)
+    handle_lemonade_options(player, world, options, level_regions)
 
     multiworld.regions.extend(level_regions)
 
@@ -102,7 +103,7 @@ def handle_rank_options(multiworld, world, player,  options: TJEOptions, level_r
     if options.max_rank_check > 0:
         menu_region = multiworld.get_region("Menu", player)
         add_rank_checks(menu_region, world, player, options)
-        for i in range(1, options.last_level.value+1):
+        for i in range(0, options.last_level.value+1):
             add_exploration_points(level_regions[i], player, i)
 
 def handle_reach_options(player, world, options: TJEOptions, level_regions: list[Region]):
@@ -112,6 +113,12 @@ def handle_reach_options(player, world, options: TJEOptions, level_regions: list
 def handle_mailbox_options(player, world, options: TJEOptions, level_regions: list[Region]):
     if options.mailbox_checks:
         add_mailbox_checks(player, world, options, level_regions)
+
+def handle_lemonade_options(player, world, options: TJEOptions, level_regions: list[Region]):
+    if options.lemonade_check:
+        level_regions[0].locations.append(
+            TJELocation(player, LEMONADE_LOC_NAME, world.location_name_to_id[LEMONADE_LOC_NAME], level_regions[0])
+        )
 
 #endregion
 

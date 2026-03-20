@@ -247,7 +247,7 @@ def get_key_levels(gap: int, last_level: int = 25) -> list[int] | None:
 # Values are tentative (lower than what's technically possible, just so logic is a bit nicer)
 def expected_map_points_on_level(level: int) -> int:
     match level:
-        case 0: return 0
+        case 0: return 2 # for drinking the lemonade, since it opens a fake Extra Life present
         case 1: return 5
         case 2: return 10
         case 3: return 20

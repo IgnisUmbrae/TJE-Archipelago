@@ -61,6 +61,8 @@ def patch_slot_data(world, patch, dro) -> None:
         afp_val = 0
     patch.write_token(APTokenTypes.WRITE, 0x001f0007, struct.pack(">B", afp_val))
     
+    patch.write_token(APTokenTypes.WRITE, 0x001f0008, struct.pack(">B", world.options.lemonade_check.value))
+
     num_key_levels = len(world.key_levels)
     patch.write_token(APTokenTypes.WRITE, 0x001f0010, struct.pack(">B", num_key_levels))
     patch.write_token(APTokenTypes.WRITE, 0x001f0011, struct.pack(f">{num_key_levels}B", *world.key_levels))
@@ -279,6 +281,10 @@ def patch_game_overs(world, patch, dro) -> None:
     elif world.options.game_overs == GameOverOption.DROP_DOWN:
         patch.write_token(APTokenTypes.WRITE, 0x000111ac, read_bin("dropdown_on_death_jump"))
         patch.write_token(APTokenTypes.WRITE, 0x0010a300, read_bin("dropdown_on_death"))
+        if not world.options.lemonade_check:
+            patch.write_token(APTokenTypes.WRITE,
+                              0x0010a300 + dro["dropdown_on_death"]["level_1_dropdown_check"],
+                              read_bin("dropdown_on_death_remove_check"))
 
 def patch_ranks(world, patch, dro) -> None:
     if world.options.max_rank_check.value > 0:

@@ -382,6 +382,13 @@ class MailboxChecks(Toggle):
 
     display_name = "Mailbox Checks"
 
+class LemonadeCheck(Toggle):
+    """
+    Adds an extra check for drinking the lemonade on Level 0.
+    """
+
+    display_name = "Lemonade Check"
+
 class UpwarpPresent(Toggle):
     """
     Mutator that changes the Un-Fall present into an Up-Warp present that always sends you up one level,
@@ -673,7 +680,8 @@ tje_option_groups = [
         MaxRankCheck,
         RankRescalingMode,
         ReachLevelChecks,
-        MailboxChecks
+        MailboxChecks,
+        LemonadeCheck,
     ]),
     OptionGroup("Difficulty/QoL", [
         Character,
@@ -720,6 +728,7 @@ class TJEOptions(PerGameCommonOptions):
     rank_rescaling: RankRescalingMode
     reach_level_checks: ReachLevelChecks
     mailbox_checks: MailboxChecks
+    lemonade_check: LemonadeCheck
     upwarp_present: UpwarpPresent
     character: Character
     game_overs: GameOvers

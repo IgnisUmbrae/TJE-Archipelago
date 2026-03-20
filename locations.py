@@ -13,6 +13,7 @@ class TJELocationType(Enum):
     RANK = auto()
     REACH = auto()
     MAILBOX = auto()
+    MISC = auto()
 
 class TJELocation(Location):
     game: str = "ToeJam & Earl"
@@ -28,6 +29,7 @@ BIG_ITEM_LOC_TEMPLATE = "Level {} - Big Item"
 RANK_LOC_TEMPLATE = "Promoted to {}"
 REACH_LOC_TEMPLATE = "Reach Level {}"
 MAILBOX_LOC_TEMPLATE = "Level {} Mailbox - {} Item"
+LEMONADE_LOC_NAME = "Level 0 - Lemonade"
 
 FLOOR_ITEM_LOCATIONS : list[list[TJELocationData]] = [[]]
 
@@ -58,8 +60,13 @@ MAILBOX_LOCATIONS: list[TJELocationData] = [
     for level in range(2, 26) for pos in MAILBOX_ITEM_REFS
 ]
 
+MISC_LOCATIONS = [
+    TJELocationData("Level 0 - Lemonade", TJELocationType.MISC, 0, None)
+]
+
 MASTER_LOCATION_LIST = list(itertools.chain(*FLOOR_ITEM_LOCATIONS)) + SHIP_PIECE_LOCATIONS + RANK_LOCATIONS \
-                                                                    + REACH_LOCATIONS + MAILBOX_LOCATIONS
+                                                                    + REACH_LOCATIONS + MAILBOX_LOCATIONS \
+                                                                    + MISC_LOCATIONS
 
 LOCATION_NAME_TO_ID : dict[str, int] = {
     loc.name: id
@@ -80,6 +87,7 @@ LOCATION_GROUPS = dict(zip(
         for lvl in range(1,26)
     ]
     )) \
+       | {"Level 0" : [LEMONADE_LOC_NAME]} \
        | {"Ranks" : [RANK_LOC_TEMPLATE.format(rank) for rank in RANK_NAMES[1:]]} \
        | {"Big Items" : [BIG_ITEM_LOC_TEMPLATE.format(level) for level in range(2, 26)]} \
        | {"Level Reaches" : [REACH_LOC_TEMPLATE.format(level) for level in range(2, 26)]} \
@@ -87,4 +95,5 @@ LOCATION_GROUPS = dict(zip(
                          for level in range(2, 26) for pos in MAILBOX_ITEM_REFS]}
 
 REMOTE_SPAWN_ONLY_LOCS = (LOCATION_GROUPS["Ranks"] + LOCATION_GROUPS["Big Items"] +
-                          LOCATION_GROUPS["Level Reaches"] + LOCATION_GROUPS["Mailboxes"])
+                          LOCATION_GROUPS["Level Reaches"] + LOCATION_GROUPS["Mailboxes"] +
+                          LOCATION_GROUPS["Level 0"])

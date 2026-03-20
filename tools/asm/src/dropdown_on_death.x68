@@ -22,13 +22,20 @@
 
     ; poof to appropriate level
     move.b ($4c,A2),D0
-    ; if on level 1, don't poof down to level 0
+    ; if the player's on level 1, check lemonade state; nonzero ⇒ already completed
     ; this check is patched out if the lemonade check is disabled
+DYNRP_level_1_dropdown_check:
     cmpi.b #$1,D0
+    bne.b CheckLevel0
+    movea.l #VAN_LEMONADE_STATE,A2
+    tst.b (A2,D4)
     beq.b StartPoof
-    ; if on level 0, poof down to highest level reached
-    tst D0
+;DYNRP_level_0_dropdown_check:
+CheckLevel0:
+    ; if on level 0, poof "up" to highest level reached
+    tst.b D0
     beq.b PoofToHighestReached
+    ; otherwise poof to level - 1 as usual
     subq.b #$1,D0
     bra.b StartPoof
 PoofToHighestReached:
@@ -42,5 +49,4 @@ StartPoof:
     move.l D0,-(SP)
     jsr Fn_UnfallWarp
     addq.l #$4,SP
-
     rts
