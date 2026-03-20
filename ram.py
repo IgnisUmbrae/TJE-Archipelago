@@ -267,7 +267,7 @@ class TJEGameController():
 
         self.auto_bad_presents = 0
         self.auto_buck_presents = False
-        self.auto_flat_promotions = False
+        self.auto_point_presents = False
         self.expanded_inv = False
 
         self.died_from_deathlink = False
@@ -382,11 +382,11 @@ class TJEGameController():
                 )
             )
 
-    def initialize_slot_data(self, auto_bad_presents: int, auto_buck_presents: bool, auto_flat_promotions: bool,
+    def initialize_slot_data(self, auto_bad_presents: int, auto_buck_presents: bool, auto_point_presents: bool,
                              expanded_inv: bool):
         self.auto_bad_presents = auto_bad_presents
         self.auto_buck_presents = auto_buck_presents
-        self.auto_flat_promotions = auto_flat_promotions
+        self.auto_point_presents = auto_point_presents
         self.expanded_inv = expanded_inv
         if self.expanded_inv:
             expand_inv_constants()
@@ -469,7 +469,7 @@ class TJEGameController():
         return (self.auto_buck_presents and item_id in BUCK_PRESENT_IDS)
 
     async def should_auto_open_promotion_pres(self, item_id: int) -> bool:
-        return (self.auto_flat_promotions and item_id == ITEM_NAME_TO_ID["Promotion"])
+        return (self.auto_point_presents and item_id == ITEM_NAME_TO_ID["Big Points"])
 
     async def receive_item(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
         if await self.is_warping(ctx):
