@@ -11,7 +11,7 @@ from .constants import EMPTY_PRESENT, INITIAL_PRESENT_ADDRS, BASE_LEVEL_TYPES, I
                        INV_SIZE_ADDRS_VANILLA, INV_SIZE_ADDRS_ASL_D0_VANILLA, INV_SIZE_ADDRS_INITIAL, \
                        MAP_REVEAL_DIALOGUE_ADDRS, PCM_SFX_ADDRS, PCM_SFX_ADDRS_MUSIC, PCM_SFX_USAGE_ADDRS, \
                        PCM_SFX_USAGE_ADDRS_MUSIC, PSG_SFX, PSG_SFX_USAGE_ADDRS, SIMPLE_SFX, SIMPLE_SFX_USAGE_ADDRS, \
-                       FLAT_PROMOTION_PRES_NAME, FLAT_PROMOTION_DIALOGUE_TEMPLATE
+                       POINT_PRESENT_NAME, POINT_PRESENT_DIALOGUE_TEMPLATE, TOTAL_PRES_TYPES_PLUS_ONE_ADDRS
 from .generators import map_reveal_text, to_inventory_name, to_mailbox_name
 from .items import ITEM_ID_TO_CODE
 from .options import CharacterOption, SoundRandoOption, StartingPresentOption, GameOverOption, MapRandomizationOption, \
@@ -55,8 +55,8 @@ def patch_slot_data(world, patch, dro) -> None:
     patch.write_token(APTokenTypes.WRITE, 0x001f0005, struct.pack(">B", world.options.auto_bad_presents.value))
     patch.write_token(APTokenTypes.WRITE, 0x001f0006, struct.pack(">B", world.options.auto_buck_presents.value))
     
-    if world.options.flat_promotions:
-        afp_val = world.options.auto_flat_promotions.value
+    if world.options.point_presents:
+        afp_val = world.options.auto_point_presents.value
     else:
         afp_val = 0
     patch.write_token(APTokenTypes.WRITE, 0x001f0007, struct.pack(">B", afp_val))
@@ -130,13 +130,23 @@ def patch_starting_presents(world, patch, dro) -> None:
         patch.write_token(APTokenTypes.WRITE, INITIAL_PRESENT_ADDRS[i], presents[i])
 
 def patch_unused_present_sprites(world, patch, dro) -> None:
-    # replace two random present sprites with the unused ones
+    # if we have custom presents enabled, use as many of the unused present sprites as needed for those
+    unused = [0x000aaee4, 0x000aaf92]
+    world.random.shuffle(unused)
+    if world.options.point_presents:
+        patch.write_token(APTokenTypes.WRITE,
+                          0x00106000 + dro["present_sprite_table"]["custom_present_1"],
+                          struct.pack(">L", unused.pop()))
+        patch.write_token(APTokenTypes.WRITE,
+                          0x0010a900 + dro["init_id_presents"]["total_pres_types"] + 1,
+                          b"\x1C")
+
+    # randomly replace existing present sprites with the leftover ones
     if world.options.unused_present_sprites:
-        excl1, excl2 = world.random.sample(range(0, 30), k=2)
-        if excl1 < 26:
-            patch.write_token(APTokenTypes.WRITE, 0x00106000 + 4*excl1, struct.pack(">L", 0x000aaee4))
-        if excl2 < 26:
-            patch.write_token(APTokenTypes.WRITE, 0x00106000 + 4*excl2, struct.pack(">L", 0x000aaf92))
+        exclusions = world.random.sample(range(0, 30), k=len(unused))
+        for excl in exclusions:
+            if excl < 26: # do not overwrite Mystery Present or Bonus Hitops sprites
+                patch.write_token(APTokenTypes.WRITE, 0x00106000 + 4*excl, struct.pack(">L", unused.pop()))
 
 def patch_expanded_inv(world, patch, dro) -> None:
     if world.options.expanded_inventory:
@@ -156,21 +166,11 @@ def patch_expanded_inv(world, patch, dro) -> None:
         else:
             inv_size_addrs_asl_d0.append(0x00022042)
 
-        inv_ref_addrs.extend([
-            0x0010a000 + dro["pickup_item"]["inventory_addr_1"] + 2,
-            0x0010a000 + dro["pickup_item"]["inventory_addr_2"] + 2,
-            0x0010a900 + dro["init_id_presents"]["inventory_addr"] + 2,
-        ])
+        inv_ref_addrs.append(0x0010a900 + dro["init_id_presents"]["inventory_addr"] + 2)
 
         inv_size_addrs.extend([
-            0x0010a000 + dro["pickup_item"]["inventory_size_1"] + 3,
-            0x0010a000 + dro["pickup_item"]["inventory_size_2"] + 3,
             0x0010a900 + dro["init_id_presents"]["inventory_size_1"] + 3,
             0x0010a900 + dro["init_id_presents"]["inventory_size_2"] + 3,
-        ])
-        inv_size_addrs_asl_d0.extend([
-            0x0010a000 + dro["pickup_item"]["inventory_asl_1"],
-            0x0010a000 + dro["pickup_item"]["inventory_asl_2"],
         ])
 
         for addr in inv_ref_addrs:
@@ -226,20 +226,35 @@ def patch_misc_qol(world, patch, dro) -> None:
         patch.write_token(APTokenTypes.WRITE, 0x000f038, struct.pack(">H", orthog_road_speed))
         patch.write_token(APTokenTypes.WRITE, 0x000f03c, struct.pack(">H", diag_road_speed))
 
-def patch_flat_promotions(world, patch, dro) -> None:
-    if world.options.flat_promotions:
-        pres_name = FLAT_PROMOTION_PRES_NAME.format(world.flat_promotion_value)
-        dialogue = FLAT_PROMOTION_DIALOGUE_TEMPLATE.format(world.flat_promotion_value)
+def patch_point_presents(world, patch, dro) -> None:
+    if world.options.point_presents:
+        total_pres_types = 0x1C
 
-        patch.write_token(APTokenTypes.WRITE, 0x00016fb8, read_bin("open_promotion"))
+        pres_name = POINT_PRESENT_NAME.format(world.point_present_value)
+        dialogue = POINT_PRESENT_DIALOGUE_TEMPLATE.format(world.point_present_value)
+
+        patch.write_token(APTokenTypes.WRITE, 0x0010d700, read_bin("initial_present_setup"))
+        patch.write_token(APTokenTypes.WRITE, 0x00014302, read_bin("initial_present_setup_jump"))
         patch.write_token(APTokenTypes.WRITE,
-                          0x00016fb8 + dro["open_promotion"]["promotion_point_value_minus_two"] + 2,
-                          struct.pack(">H", world.flat_promotion_value-2))
-        patch.write_token(APTokenTypes.WRITE, 0x000abb46, struct.pack(">14B", *to_inventory_name(pres_name)))
-        patch.write_token(APTokenTypes.WRITE, 0x000abd4c, to_mailbox_name(pres_name).encode("ascii") + b"\x00")
+                          0x0010d700 + dro["initial_present_setup"]["total_pres_types"] + 3,
+                          struct.pack(">B", total_pres_types))
+        
+        for addr in TOTAL_PRES_TYPES_PLUS_ONE_ADDRS:
+            patch.write_token(APTokenTypes.WRITE, addr, struct.pack(">B", total_pres_types+1))
+
         patch.write_token(APTokenTypes.WRITE,
-                          0x00105a00 + dro["expanded_dialogue_table_strings"]["flat_promotion_text"],
+                          0x0010d400 + dro["open_point_present"]["point_present_value_minus_two"] + 2,
+                          struct.pack(">H", world.point_present_value-2))
+        patch.write_token(APTokenTypes.WRITE,
+                          0x00108500 + dro["mailbox_present_name_headers_extra"]["point_present_name"],
+                          to_mailbox_name(pres_name).encode("ascii") + b"\x00")
+        patch.write_token(APTokenTypes.WRITE,
+                          0x00109500 + dro["inv_chars_headers_extra"]["point_present_name"],
+                          struct.pack(">14B", *to_inventory_name(pres_name)))
+        patch.write_token(APTokenTypes.WRITE,
+                          0x00105a00 + dro["expanded_dialogue_table_strings"]["point_present_text"],
                           dialogue.encode("ascii") + b"\x00")
+        
 
 def patch_upwarp_present(world, patch, dro) -> None:
     if world.options.upwarp_present:
@@ -340,11 +355,9 @@ def patch_sound_rando(world, patch, dro) -> None:
             psg_sfx_usage_addrs[18].append(0x00009cd4)
 
         # Insert dynamic locations from DRO list
-        pcm_sfx_usage_addrs[34] = (0x0010a000 + dro["pickup_item"]["PCM_SFX_1"],)
-        pcm_sfx_usage_addrs[3] = (0x0010a000 + dro["pickup_item"]["PCM_SFX_2"],
-                                  0x0010a000 + dro["pickup_item"]["PCM_SFX_3"])
-        psg_sfx_usage_addrs[11].append(0x0010a000 + dro["pickup_item"]["PSG_SFX_1"])
-        psg_sfx_usage_addrs[0] = (0x0010a000 + dro["pickup_item"]["PSG_SFX_2"],)
+        psg_sfx_usage_addrs[11].append(0x0010c300 + dro["bad_food_damage"]["PSG_SFX"])
+        psg_sfx_usage_addrs[0] = (0x0010a100 + dro["pickup_item_autoid"]["PSG_SFX"],
+                                  0x0010a000 + dro["pickup_ground_item"]["PSG_SFX"])
 
         world.random.shuffle(pcm_sfx_addrs)
         for i, sfx_addr in enumerate(pcm_sfx_addrs):
@@ -425,10 +438,10 @@ def write_tokens(world: "TJEWorld", patch: TJEProcedurePatch) -> None:
     patch_mailboxes(world, patch, dro)
     patch_main_menu(world, patch, dro)
     patch_starting_presents(world, patch, dro)
-    patch_unused_present_sprites(world, patch, dro)
     patch_expanded_inv(world, patch, dro)
     patch_misc_qol(world, patch, dro)
-    patch_flat_promotions(world, patch, dro)
+    patch_point_presents(world, patch, dro)
+    patch_unused_present_sprites(world, patch, dro)
     patch_upwarp_present(world, patch, dro)
     patch_death_link(world, patch, dro)
     patch_game_overs(world, patch, dro)
