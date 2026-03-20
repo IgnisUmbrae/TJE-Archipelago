@@ -106,7 +106,7 @@ BASE_ITEM_LIST: list[TJEItemData] = [
     TJEItemData(0x4D, "Moldy Bread", TJEItemType.EDIBLE, ItemClassification.trap, 0, 0),
     TJEItemData(0x4E, "Slimy Fungus", TJEItemType.EDIBLE, ItemClassification.trap, 0, 0),
     TJEItemData(0x4F, "Old Cabbage", TJEItemType.EDIBLE, ItemClassification.trap, 0, 0),
-    TJEItemData(0x50, "A Buck", TJEItemType.EDIBLE, ItemClassification.filler, 0, 1),
+    TJEItemData(0x50, "Buck", TJEItemType.EDIBLE, ItemClassification.filler, 0, 1),
 
     # Custom ground items
 
@@ -181,7 +181,7 @@ def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions
     
     if options.mailbox_checks:
         differential -= 3*len(world.mailbox_levels)
-    
+
     if options.lemonade_check:
         differential -= 1
 
@@ -287,4 +287,4 @@ def create_starting_presents(world, multiworld: MultiWorld, options: TJEOptions)
 
 def create_starting_bucks(world, multiworld):
     for _ in range(3):
-        multiworld.push_precollected(world.create_item("A Buck"))
+        multiworld.push_precollected(world.create_item("Buck"))

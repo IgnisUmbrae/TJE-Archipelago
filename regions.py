@@ -151,7 +151,7 @@ def add_rank_checks(menu: Region, world, player, options: TJEOptions):
         loc = TJELocation(player, loc_name, world.location_name_to_id[loc_name], menu)
         loc.access_rule = lambda state, rank_num=number: state.has("points", player, world.rank_thresholds[rank_num])
         # loc.progress_type = LocationProgressType.PRIORITY
-        forbid_item(loc, "Promotion", player)
+        forbid_items_for_player(loc, {"Promotion", "Big Points"}, player)
         menu.locations.append(loc) 
 
 def add_reach_level_checks(player, world, options: TJEOptions, level_regions: list[Region]):
@@ -165,7 +165,7 @@ def add_mailbox_checks(player, world, options: TJEOptions, level_regions: list[R
     for (n, (i, pos)) in enumerate(product(world.mailbox_levels, MAILBOX_ITEM_REFS)):
         loc_name = MAILBOX_LOC_TEMPLATE.format(i, pos)
         loc = TJELocation(player, loc_name, world.location_name_to_id[loc_name], level_regions[i])
-        forbid_items_for_player(loc, {"A Buck", "Extra Buck Present", "Jackpot"}, player)
+        forbid_items_for_player(loc, {"Buck", "Extra Buck Present", "Jackpot"}, player)
         level_regions[i].locations.append(loc)
 
 #endregion
