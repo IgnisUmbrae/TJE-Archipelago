@@ -116,9 +116,9 @@ def handle_mailbox_options(player, world, options: TJEOptions, level_regions: li
 
 def handle_lemonade_options(player, world, options: TJEOptions, level_regions: list[Region]):
     if options.lemonade_check:
-        level_regions[0].locations.append(
-            TJELocation(player, LEMONADE_LOC_NAME, world.location_name_to_id[LEMONADE_LOC_NAME], level_regions[0])
-        )
+        loc = TJELocation(player, LEMONADE_LOC_NAME, world.location_name_to_id[LEMONADE_LOC_NAME], level_regions[0])
+        loc.progress_type = LocationProgressType.PRIORITY
+        level_regions[0].locations.append(loc)
 
 #endregion
 
@@ -142,7 +142,7 @@ def add_ship_pieces(world, player, level_regions):
         if loc_data.level in world.ship_item_levels:
             new_loc = TJELocation(player, loc_data.name, world.location_name_to_id[loc_data.name],
                                   level_regions[loc_data.level])
-            # new_loc.progress_type = LocationProgressType.PRIORITY
+            new_loc.progress_type = LocationProgressType.PRIORITY
             level_regions[loc_data.level].locations.append(new_loc)
 
 def add_rank_checks(menu: Region, world, player, options: TJEOptions):
@@ -150,7 +150,7 @@ def add_rank_checks(menu: Region, world, player, options: TJEOptions):
         loc_name = RANK_LOC_TEMPLATE.format(rank)
         loc = TJELocation(player, loc_name, world.location_name_to_id[loc_name], menu)
         loc.access_rule = lambda state, rank_num=number: state.has("points", player, world.rank_thresholds[rank_num])
-        # loc.progress_type = LocationProgressType.PRIORITY
+        loc.progress_type = LocationProgressType.PRIORITY
         forbid_items_for_player(loc, {"Promotion", "Big Points"}, player)
         menu.locations.append(loc) 
 
