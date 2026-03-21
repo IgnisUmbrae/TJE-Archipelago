@@ -23,6 +23,7 @@ Fn_PlayPSGSound             equ $0003f770
 Sfx_Eat                     equ $0004d75a
 Sfx_Money                   equ $0008233c
 
+VAN_FIXED_WORLD_SEEDS       equ $00097704
 VAN_FIXED_WORLD_SHIP_PIECES equ $00097738
 VAN_GROUND_ITEM_SPR_TABLE   equ $000ab686
 VAN_FOOD_TO_HP_TABLE        equ $000abe98
