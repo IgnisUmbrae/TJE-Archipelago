@@ -45,9 +45,9 @@ class TJEGenerator():
                 for level, earthlings in enumerate(LEVEL_TO_VANILLA_EARTHLINGS)
         ]
 
-        santa_base = round(6*last_level/25)
+        santa_base = 6*last_level/25
         santa_lims = (round(0.95*santa_base), round(1.3*santa_base))
-        other_base = round(7*last_level/25)
+        other_base = 7*last_level/25
         other_lims = (round(0.95*other_base), round(1.3*other_base))
 
         global_earthling_limits = {
