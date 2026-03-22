@@ -14,7 +14,7 @@ from .constants import MAILBOX_ITEM_REFS, VANILLA_RANK_THRESHOLDS, LEVEL_TO_VANI
 from .generators import TJEGenerator, TJEInternalRNG, get_key_levels, item_totals, scaled_rank_thresholds, \
                                                       get_point_present_value, get_average_promotion_value
 from .items import Item, TJEItem, ITEM_GROUPS, ITEM_ID_TO_CODE, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, MASTER_ITEM_LIST, \
-                   ExtraItemCode, TJEItemType, create_items, create_starting_presents, create_starting_bucks
+                   ExtraItemCode, TJEItemType, create_items, create_starting_presents, create_starting_bucks, NO_DEPRIORITIZE_ITEMS
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, MAILBOX_LOC_TEMPLATE, LOCATION_GROUPS, LOCATION_NAME_TO_ID
 from .options import RankRescalingOption, EarthlingRandomizationOption, LocalShipPiecesOption, TJEOptions
 from .regions import create_regions
@@ -171,6 +171,9 @@ class TJEWorld(World):
                 item.classification |= ItemClassification.progression
             else:
                 item.classification |= ItemClassification.progression_skip_balancing
+            
+            if name not in NO_DEPRIORITIZE_ITEMS:
+                item.classification |= ItemClassification.deprioritized
 
         match name:
             case "Promotion":
@@ -184,6 +187,8 @@ class TJEWorld(World):
         if self.options.mailbox_checks:
             if data.buck_value > 0:
                 item.classification |= ItemClassification.progression_skip_balancing
+                if name in ("Extra Buck Present", "Buck"):
+                    item.classification |= ItemClassification.deprioritized
         item.buck_value = data.buck_value
 
         return item

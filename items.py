@@ -157,6 +157,8 @@ ITEM_GROUPS = {
     "Ship Pieces" : { item.name for item in BASE_ITEM_LIST if item.type == TJEItemType.SHIP_PIECE }
 }
 
+NO_DEPRIORITIZE_ITEMS = ("Promotion", "Big Points", "Icarus Wings", "Jackpot")
+
 #endregion
 
 def create_items(world, multiworld: MultiWorld, player: int, options: TJEOptions) -> None:
