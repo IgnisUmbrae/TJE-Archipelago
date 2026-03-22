@@ -27,6 +27,26 @@ PALETTE_00 : Palette = {
     15: rgb("#000022FF")
 }
 
+# Entries 10–13 are cycled for a water effect so are not used for sprites
+PALETTE_01 : Palette = {
+    0: rgb("#FFFFFF00"),
+    1: rgb("#00AA00FF"),
+    2: rgb("#008800FF"),
+    3: rgb("#006600FF"),
+    4: rgb("#004400FF"),
+    5: rgb("#CC4400FF"),
+    6: rgb("#882200FF"),
+    7: rgb("#662200FF"),
+    8: rgb("#660000FF"),
+    9: rgb("#440000FF"),
+    10: rgb("#0000AAFF"),
+    11: rgb("#0000CCFF"),
+    12: rgb("#0000EEFF"),
+    13: rgb("#0000CCFF"),
+    14: rgb("#002200FF"),
+    15: rgb("#000000FF")
+}
+
 PALETTE_02 : Palette = {
     0: rgb("#FFFFFF00"),
     1: rgb("#E08080FF"),
