@@ -166,13 +166,30 @@ class TJEGenerator():
                            expected_map_points(options.last_level.value)
         points_goal = rank_thresholds[options.max_rank_check.value]
         if points_available < points_goal:
-            extra_proms = ceil((points_goal - points_available)/promotion_value)
+            deficit = points_goal - points_available
+            if not options.point_presents:
+                extra_proms = ceil(deficit/promotion_value)
+                extra_pp = 0
+            else: # add a balance between the two in roughly a 1:2 ratio
+                pivot = deficit/(promotion_value + 2*point_present_value)
+                extra_proms = round(pivot)
+                # Due to rounding, this may be slightly below what we need, so we make up the difference afterwards
+                extra_pp = round(2*pivot)
+                extra_pp += ceil((deficit - (extra_pp*point_present_value + extra_proms*promotion_value))/point_present_value)
+            do_not_overwrite = (0x0B, 0x1C) if options.point_presents else (0x0B,)
             if extra_proms > 0:
                 for n, item in enumerate(item_pool):
-                    if item != 0x0B:
+                    if item not in do_not_overwrite:
                         item_pool[n] = 0x0B
                         extra_proms -= 1
                     if extra_proms == 0:
+                        break
+            if extra_pp > 0:
+                for n, item in enumerate(item_pool):
+                    if item not in do_not_overwrite:
+                        item_pool[n] = 0x1C
+                        extra_pp -= 1
+                    if extra_pp == 0:
                         break
 
     def generate_initial_inventory(self, force_good: bool) -> list[int]:
