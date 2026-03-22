@@ -87,7 +87,7 @@ PALETTE_03 : Palette = {
 
 #endregion
 
-PALETTES : list[Palette] = [PALETTE_00, None, PALETTE_02, PALETTE_03]
+PALETTES : list[Palette] = [PALETTE_00, PALETTE_01, PALETTE_02, PALETTE_03]
 
 def colour_to_code(palette, colour : tuple[int]) -> int:
     if colour[3] == 0: return 0
