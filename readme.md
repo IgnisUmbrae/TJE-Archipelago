@@ -74,3 +74,7 @@ I owe a great debt of gratitude to:
 - **DrKelexo**, for being the first to brave the very first release, reams of early feedback, and some stellar spritework
 - **GrayGooGlitch**, for creating the most lovely tracker in apparently no time at all
 - **Everyone** in the ToeJam & Earl section of the Archipelago Discord for their frequent testing, feedback and suggestions
+
+## Support
+
+If you wish to support me and this product and its continued development, please [head over to my Ko-fi page](https://ko-fi.com/ignisumbrae).
