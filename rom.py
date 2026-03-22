@@ -188,8 +188,8 @@ def patch_expanded_inv(world, patch, dro) -> None:
         patch.write_token(APTokenTypes.WRITE, 0x00022068, b"\xED\x82") # using D2
 
         # Make presents scooch up properly on opening and dropping (expand range)
-        patch.write_token(APTokenTypes.WRITE, 0x00009ab2+3, struct.pack(">B", 39))
-        patch.write_token(APTokenTypes.WRITE, 0x00009ba0+3, struct.pack(">B", 39))
+        patch.write_token(APTokenTypes.WRITE, 0x00009ab2+3, b"\x3F")
+        patch.write_token(APTokenTypes.WRITE, 0x00009ba0+3, b"\x3F")
 
         # Patch menu handler to allow extra scrolling (size/2 - 3)
         patch.write_token(APTokenTypes.WRITE, 0x0000979c+3, b"\x1D")
