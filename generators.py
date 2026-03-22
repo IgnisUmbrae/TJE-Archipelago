@@ -60,7 +60,7 @@ class TJEGenerator():
         earthling_running_count = Counter()
         levels = list(range(2, last_level+1))
         self.random.shuffle(levels)
-        out = [[Earthling.NONE]*20]*24
+        out = [[]]*24
         for level in levels:
             earthlings = []
             level_weights_base = [weights[level] for weights in PER_LEVEL_EARTHLING_WEIGHTS]
@@ -81,7 +81,7 @@ class TJEGenerator():
 
             # Only returning 24 levels' worth of data, so first index is 0 but corresponds to level 2
             # Pad to 20 entries as expected by game
-            out[level-2] = earthlings + [Earthling.NONE]*(20 - len(earthlings))
+            out[level-2] = earthlings
         return out
 
     def forbid_item(self, item_code: int):

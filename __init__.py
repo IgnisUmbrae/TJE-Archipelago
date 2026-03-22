@@ -106,7 +106,7 @@ class TJEWorld(World):
                                                                                      self.options.last_level.value, self.mailbox_levels)
             case EarthlingRandomizationOption.EARTHLINGSANITY:
                 self.earthling_list = self.generator.generate_full_random_earthlings()
-        self.earthling_list = [[e.value for e in l] for l in self.earthling_list]
+        self.earthling_list = [[0xFF]*(20 - len(l)) + [e.value for e in l] for l in self.earthling_list]
 
         if self.options.point_presents:
             self.generator.enable_point_presents()
