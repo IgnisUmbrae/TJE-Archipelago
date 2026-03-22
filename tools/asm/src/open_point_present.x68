@@ -23,6 +23,6 @@ DYNRP_point_present_value_minus_two:
     jsr Fn_QueueDialogueSequence
     addq.l #$8,SP
 
-    movem.l (SP)+,A2/D4/D0/
+    movem.l (SP)+,A2/D4/D0
 
     rts
