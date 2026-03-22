@@ -252,7 +252,7 @@ def create_map_reveals(multiworld, world, options: TJEOptions, player, item_list
 
 def create_main_items(world, item_list, total_locations, differential, options: TJEOptions) -> None:
     item_pool_raw = world.generator.generate_item_blob(total_locations - differential, world.options.presentsanity)
-    if options.max_rank_check.value > 0 and not options.presentsanity:
+    if options.max_rank_check.value > 0:
         world.generator.add_extra_promotions(item_pool_raw, world.rank_thresholds,
                                              world.avg_promotion_value, world.point_present_value, options)
     bucks = 0
