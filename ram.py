@@ -475,6 +475,9 @@ class TJEGameController():
     async def is_in_elevator(self, ctx: "BizHawkClientContext") -> bool:
         return (await self.peek_ram(ctx, get_ram_addr("GLOBAL_ELEVATOR_STATE", self.char), 1)) != b"\x00"
 
+    async def is_falling(self, ctx: "BizHawkClientContext") -> bool:
+        return (await self.peek_ram(ctx, get_ram_addr("FALL_STATE", self.char), 1)) != b"\x00"
+
     async def is_item_waiting(self, ctx: "BizHawkClientContext") -> bool:
         return (await self.peek_ram(ctx, get_ram_addr("AP_GIVE_ITEM", self.char), 1)) != b"\xFF"
 
@@ -490,7 +493,7 @@ class TJEGameController():
 
     async def receive_item(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
         # Potentially don't need to check both of these (maybe necessary in co-op?)
-        if await self.is_warping(ctx) or await self.is_in_elevator(ctx):
+        if await self.is_warping(ctx) or await self.is_in_elevator(ctx) or await self.is_falling(ctx):
             return False
         if (await self.should_auto_open_bad_pres(item_id)
             or await self.should_auto_open_buck_pres(item_id)
