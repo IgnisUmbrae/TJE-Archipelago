@@ -45,11 +45,16 @@ class TJEGenerator():
                 for level, earthlings in enumerate(LEVEL_TO_VANILLA_EARTHLINGS)
         ]
 
-        GLOBAL_EARTHLING_LIMITS = {
-            Earthling.WIZARD: self.random.randint(6, 10),
-            Earthling.WISEMAN: self.random.randint(6, 10),
-            Earthling.OPERA: self.random.randint(6, 10),
-            Earthling.SANTA: self.random.randint(6, 9),
+        santa_base = round(6*last_level/25)
+        santa_lims = (round(0.95*santa_base), round(1.3*santa_base))
+        other_base = round(7*last_level/25)
+        other_lims = (round(0.95*other_base), round(1.3*other_base))
+
+        global_earthling_limits = {
+            Earthling.WIZARD: self.random.randint(*other_lims),
+            Earthling.WISEMAN: self.random.randint(*other_lims),
+            Earthling.OPERA: self.random.randint(*other_lims),
+            Earthling.SANTA: self.random.randint(*santa_lims),
         }
 
         earthling_running_count = Counter()
@@ -62,7 +67,7 @@ class TJEGenerator():
             while budgets[level] > 0 and len(earthlings) < EARTHLING_MAX_PER_LEVEL[level]:
                 # Remove weights for any earthling that's out of budget or already at max count, and normalize
                 level_weights = [w if earthling_value(e) <= budgets[level]
-                                 and earthling_running_count[e] < GLOBAL_EARTHLING_LIMITS.get(e, inf)
+                                 and earthling_running_count[e] < global_earthling_limits.get(e, inf)
                                  and not (e in earthlings and e in PER_LEVEL_UNIQUE_EARTHLINGS)
                                  else 0
                                 for e, w in zip(EARTHLING_LIST, level_weights_base)]    
@@ -71,7 +76,7 @@ class TJEGenerator():
                 earthling = self.random.choices(EARTHLING_LIST, level_weights, k=1)[0]
                 earthlings.append(earthling)
                 budgets[level] -= earthling_value(earthling)
-                if earthling in GLOBAL_EARTHLING_LIMITS:
+                if earthling in global_earthling_limits:
                     earthling_running_count[earthling] += 1
 
             # Only returning 24 levels' worth of data, so first index is 0 but corresponds to level 2
