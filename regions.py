@@ -132,7 +132,7 @@ def add_floor_items(world, player,  options: TJEOptions, level_regions):
             new_loc = TJELocation(player, loc_data.name, world.location_name_to_id[loc_data.name],
                                   level_regions[loc_data.level])
             # No progression items on the two potentially inaccessible islands on Level 1
-            if loc_data.level == 1 and loc_data.item_index > 4:
+            if not options.presentsanity and (loc_data.level == 1 and loc_data.item_index > 4):
                 new_loc.progress_type = LocationProgressType.EXCLUDED
             locs_to_add.append(new_loc)
         level_regions[i].locations.extend(locs_to_add)
