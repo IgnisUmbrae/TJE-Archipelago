@@ -10,7 +10,7 @@ import settings
 from worlds.AutoWorld import World, WebWorld
 
 from .client import TJEClient # required to register with BizHawkClient
-from .constants import MAILBOX_ITEM_REFS, VANILLA_RANK_THRESHOLDS, BASE_EARTHLINGS, REV00_MD5, REV02_MD5
+from .constants import MAILBOX_ITEM_REFS, VANILLA_RANK_THRESHOLDS, LEVEL_TO_VANILLA_EARTHLINGS, REV00_MD5, REV02_MD5
 from .generators import TJEGenerator, TJEInternalRNG, get_key_levels, item_totals, scaled_rank_thresholds, \
                                                       get_point_present_value, get_average_promotion_value
 from .items import Item, TJEItem, ITEM_GROUPS, ITEM_ID_TO_CODE, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, MASTER_ITEM_LIST, \
@@ -97,17 +97,16 @@ class TJEWorld(World):
 
         match self.options.earthling_rando:
             case EarthlingRandomizationOption.BASE:
-                self.earthling_list = BASE_EARTHLINGS
+                self.earthling_list = LEVEL_TO_VANILLA_EARTHLINGS[2:]
             case EarthlingRandomizationOption.BASE_SHUFFLE:
-                self.earthling_list = list(BASE_EARTHLINGS)
+                self.earthling_list = list(LEVEL_TO_VANILLA_EARTHLINGS)[2:]
                 self.random.shuffle(self.earthling_list)
             case EarthlingRandomizationOption.NICE_RANDOM:
                 self.earthling_list = self.generator.generate_nice_random_earthlings(self.options.earthling_rando_niceness.value,
-                                                                                     self.options.last_level.value)
+                                                                                     self.options.last_level.value, self.mailbox_levels)
             case EarthlingRandomizationOption.EARTHLINGSANITY:
                 self.earthling_list = self.generator.generate_full_random_earthlings()
-
-        self.earthling_list = [[0xFF]*(20 - len(l)) + l for l in self.earthling_list]
+        self.earthling_list = [[e.value for e in l] for l in self.earthling_list]
 
         if self.options.point_presents:
             self.generator.enable_point_presents()

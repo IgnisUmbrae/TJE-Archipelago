@@ -1,3 +1,4 @@
+from enum import IntEnum
 from typing import NamedTuple
 from base64 import b64encode, b64decode
 
@@ -167,69 +168,89 @@ TOTAL_PRES_TYPES_PLUS_ONE_ADDRS = (0x00014298 + 3, 0x000142ba + 1, 0x000142d8 + 
 
 #region Earthling-related
 
-# Standard Earthling arrangements for levels 2–25
-BASE_EARTHLINGS = (
-    [0x1, 0x1, 0x1, 0x1, 0x1, 0x1],
-    [0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x5, 0x5, 0x5, 0xA],
-    [0x6, 0x6, 0x2, 0x2, 0x2, 0x2, 0x2, 0x5, 0x5, 0x5, 0x5, 0x5, 0x7, 0x7, 0xE, 0xE, 0xB, 0x14],
-    [0x6, 0x6, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x2, 0x3, 0x3, 0x3, 0x3, 0x4, 0x4, 0x4, 0x4, 0xB],
-    [0x10, 0x10, 0x12, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x5, 0x5, 0x7, 0x7, 0x6, 0x6, 0xA],
-    [0x7, 0x7, 0x7, 0x7, 0x5, 0x5, 0x5, 0x5, 0x6, 0x6, 0x8, 0x10, 0x10, 0x4, 0x4, 0xB, 0x14],
-    [0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x3, 0x3, 0x4, 0x4, 0x4, 0xC, 0xF, 0xF, 0xB, 0x12],
-    [0x6, 0x6, 0x6, 0x6, 0x6, 0x6, 0x6, 0x6, 0x6, 0x6, 0x3, 0x3, 0xD, 0xD, 0x11, 0x12],
-    [0x16, 0x16, 0xE, 0xE, 0xE, 0xE, 0xE, 0xE, 0xE, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0xA, 0x14],
-    [0x5, 0x5, 0x5, 0x5, 0x5, 0x5, 0x5, 0x12, 0x12, 0x12, 0x12, 0x12, 0x12, 0xA, 0xB, 0x11, 0x14],
-    [0xC, 0xC, 0xC, 0xC, 0x12, 0x12, 0x12, 0x12, 0x12, 0x5, 0x5, 0x7, 0x7, 0xF, 0xF, 0xF],
-    [0xF, 0xF, 0xF, 0xF, 0xF, 0xF, 0xF, 0xF, 0xF, 0xF, 0xF, 0xF, 0xF, 0x12, 0x12, 0x11],
-    [0xE, 0xE, 0xE, 0xE, 0xE, 0x6, 0x6, 0x6, 0x6, 0x10, 0x10, 0x10, 0x10, 0x10, 0xA, 0x14],
-    [0x10, 0x10, 0x10, 0x5, 0x5, 0x5, 0x7, 0x7, 0x7, 0xF, 0xF, 0xF, 0xC, 0xC, 0xD, 0xD, 0xD, 0xD, 0xB, 0x11],
-    [0x10, 0x10, 0x10, 0x10, 0x12, 0x12, 0x12, 0x12, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0xC, 0x10, 0x10, 0x10, 0x10, 0x10],
-    [0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x13, 0xA, 0x11],
-    [0x10, 0x10, 0x10, 0x10, 0x7, 0x7, 0x5, 0x5, 0x6, 0x6, 0xD, 0xD, 0xD, 0xD, 0xD, 0xD, 0xD, 0x13, 0x13, 0xB],
-    [0x14, 0x10, 0x10, 0x10, 0x10, 0x8, 0x8, 0x8, 0x8, 0xF, 0xF, 0xF, 0xF, 0x10, 0x10, 0x10, 0x13, 0x13, 0x12, 0x12],
-    [0x11, 0x10, 0x10, 0x10, 0x10, 0xD, 0xD, 0xD, 0xC, 0xC, 0x10, 0x10, 0x10, 0x13, 0x13, 0x13, 0x13, 0x13, 0x13, 0x13],
-    [0x13, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x6, 0x6, 0x6, 0x6, 0x8],
-    [0x7, 0x10, 0x10, 0x10, 0x10, 0x13, 0x13, 0x13, 0x13, 0x13, 0x13, 0x13, 0x13, 0x13, 0x10, 0x10, 0x8, 0x8, 0x8, 0x8],
-    [0xA, 0x10, 0x10, 0x10, 0x10, 0x15, 0x15, 0x15, 0x15, 0x15, 0x15, 0x15, 0x15, 0x15, 0xE, 0xE, 0xE, 0xE, 0xF, 0x16],
-    [0x16, 0x10, 0x10, 0x10, 0x10, 0x5, 0x5, 0x5, 0x5, 0x5, 0x5, 0x5, 0xD, 0xD, 0xD, 0xD, 0xD, 0xD, 0xD, 0xD],
-    [0x12, 0x10, 0x10, 0x10, 0x10, 0x15, 0x15, 0x8, 0x8, 0x16, 0x16, 0x16, 0x16, 0x16, 0x16, 0x16, 0x16, 0x16, 0x16, 0x11]
-)
-EARTHLING_LIST = (0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF, 0x10, 0x11, 0x12,
-                  0x13, 0x14, 0x15, 0x16)
-# Earthlings that are limited to one per level
-EARTHLING_UNIQUE = (0x0A, 0x0B, 0x11, 0x14)
-# Relative frequency of each Earthling in the base game
-EARTHLING_WEIGHTS = (23, 9, 8, 9, 35, 28, 22, 31, 7, 7, 10, 24, 18, 26, 88, 7, 23, 22, 6, 11, 14)
-# Actual number of Earthlings per level in the base game
-EARTHLING_MAX_PER_LEVEL = (0, 0, 6, 16, 18, 18, 18, 17, 16, 16, 18, 17, 16, 16, 16, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20)
-# All levels on which each Earthling appears in the base game
-EARTHLING_LEVEL_APPS = (
-    (2, 3, 6),
-    (3, 4, 5),
-    (5, 8, 9),
-    (5, 7, 8),
-    (3, 4, 6, 7, 11, 12, 15, 18, 24),
-    (4, 5, 6, 7, 9, 14, 18, 21),
-    (4, 5, 6, 7, 12, 15, 18, 22),
-    (7, 8, 10, 16, 19, 21, 22, 25),
-    (3, 6, 10, 11, 14, 17, 23),
-    (4, 5, 7, 8, 11, 15, 18),
-    (8, 12, 15, 16, 20),
-    (9, 15, 18, 20, 24),
-    (4, 10, 14, 23),
-    (8, 12, 13, 15, 19, 23),
-    (6, 7, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25),
-    (9, 11, 13, 15, 17, 20, 25),
-    (6, 8, 9, 11, 12, 13, 16, 19, 25),
-    (17, 18, 19, 20, 21, 22),
-    (4, 7, 10, 11, 14, 19),
-    (23, 25),
-    (10, 23, 24, 25)
+class Earthling(IntEnum):
+    SHIPPIECE = 0x00
+    DEVIL = 0x01
+    HAMSTER = 0x02
+    SHOPPER = 0x03
+    DENTIST = 0x04
+    WAHINI = 0x05
+    BEES = 0x06
+    CUPID = 0x07
+    TORNADO = 0x08
+    MAILBOX = 0x09
+    WIZARD = 0x0A
+    WISEMAN = 0x0B
+    NERDS = 0x0C
+    LAWNMOWER = 0x0D
+    SHARK = 0x0E
+    CHICKENS = 0x0F
+    BOOGIE = 0x10
+    OPERA = 0x11
+    MOLE = 0x12
+    ICECREAM = 0x13
+    SANTA = 0x14
+    DENTIST_ANGRY = 0x15
+    BEES_ANGRY = 0x16
+    LEMONADE = 0x17
+    HOTTUB = 0x18
+
+    NONE = 0xFF
+
+def earthling_value(e: int) -> int:
+    match e:
+        case Earthling.SANTA:
+            return -2
+        case e if e in (Earthling.WISEMAN, Earthling.WIZARD, Earthling.OPERA):
+            return -1
+        case e if e in (Earthling.DEVIL, Earthling.HAMSTER, Earthling.CUPID, Earthling.SHARK):
+            return 1
+        case e if e in (Earthling.SHOPPER, Earthling.DENTIST, Earthling.BEES, Earthling.WAHINI, Earthling.BOOGIE, Earthling.MOLE):
+            return 2
+        case e if e in (Earthling.LAWNMOWER, Earthling.CHICKENS, Earthling.BEES_ANGRY, Earthling.DENTIST_ANGRY):
+            return 3
+        case e if e in (Earthling.NERDS, Earthling.TORNADO):
+            return 4
+        case e if e in (Earthling.ICECREAM, Earthling.MAILBOX):
+            return 5
+        case _:
+            return 0
+
+LEVEL_TO_VANILLA_EARTHLINGS = (
+    [Earthling.LEMONADE, Earthling.HOTTUB, Earthling.WAHINI],
+    [],
+    [Earthling.DEVIL, Earthling.DEVIL, Earthling.DEVIL, Earthling.DEVIL, Earthling.DEVIL, Earthling.DEVIL],
+    [Earthling.DEVIL, Earthling.DEVIL, Earthling.DEVIL, Earthling.DEVIL, Earthling.DEVIL, Earthling.DEVIL, Earthling.DEVIL, Earthling.DEVIL, Earthling.DEVIL, Earthling.HAMSTER, Earthling.HAMSTER, Earthling.HAMSTER, Earthling.WAHINI, Earthling.WAHINI, Earthling.WAHINI, Earthling.WIZARD],
+    [Earthling.BEES, Earthling.BEES, Earthling.HAMSTER, Earthling.HAMSTER, Earthling.HAMSTER, Earthling.HAMSTER, Earthling.HAMSTER, Earthling.WAHINI, Earthling.WAHINI, Earthling.WAHINI, Earthling.WAHINI, Earthling.WAHINI, Earthling.CUPID, Earthling.CUPID, Earthling.SHARK, Earthling.SHARK, Earthling.WISEMAN, Earthling.SANTA],
+    [Earthling.BEES, Earthling.BEES, Earthling.CUPID, Earthling.CUPID, Earthling.CUPID, Earthling.CUPID, Earthling.CUPID, Earthling.CUPID, Earthling.HAMSTER, Earthling.SHOPPER, Earthling.SHOPPER, Earthling.SHOPPER, Earthling.SHOPPER, Earthling.DENTIST, Earthling.DENTIST, Earthling.DENTIST, Earthling.DENTIST, Earthling.WISEMAN],
+    [Earthling.BOOGIE, Earthling.BOOGIE, Earthling.MOLE, Earthling.DEVIL, Earthling.DEVIL, Earthling.DEVIL, Earthling.DEVIL, Earthling.DEVIL, Earthling.DEVIL, Earthling.DEVIL, Earthling.DEVIL, Earthling.WAHINI, Earthling.WAHINI, Earthling.CUPID, Earthling.CUPID, Earthling.BEES, Earthling.BEES, Earthling.WIZARD],
+    [Earthling.CUPID, Earthling.CUPID, Earthling.CUPID, Earthling.CUPID, Earthling.WAHINI, Earthling.WAHINI, Earthling.WAHINI, Earthling.WAHINI, Earthling.BEES, Earthling.BEES, Earthling.TORNADO, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.DENTIST, Earthling.DENTIST, Earthling.WISEMAN, Earthling.SANTA],
+    [Earthling.TORNADO, Earthling.TORNADO, Earthling.TORNADO, Earthling.TORNADO, Earthling.TORNADO, Earthling.TORNADO, Earthling.SHOPPER, Earthling.SHOPPER, Earthling.DENTIST, Earthling.DENTIST, Earthling.DENTIST, Earthling.NERDS, Earthling.CHICKENS, Earthling.CHICKENS, Earthling.WISEMAN, Earthling.MOLE],
+    [Earthling.BEES, Earthling.BEES, Earthling.BEES, Earthling.BEES, Earthling.BEES, Earthling.BEES, Earthling.BEES, Earthling.BEES, Earthling.BEES, Earthling.BEES, Earthling.SHOPPER, Earthling.SHOPPER, Earthling.LAWNMOWER, Earthling.LAWNMOWER, Earthling.OPERA, Earthling.MOLE],
+    [Earthling.BEES_ANGRY, Earthling.BEES_ANGRY, Earthling.SHARK, Earthling.SHARK, Earthling.SHARK, Earthling.SHARK, Earthling.SHARK, Earthling.SHARK, Earthling.SHARK, Earthling.TORNADO, Earthling.TORNADO, Earthling.TORNADO, Earthling.TORNADO, Earthling.TORNADO, Earthling.TORNADO, Earthling.TORNADO, Earthling.WIZARD, Earthling.SANTA],
+    [Earthling.WAHINI, Earthling.WAHINI, Earthling.WAHINI, Earthling.WAHINI, Earthling.WAHINI, Earthling.WAHINI, Earthling.WAHINI, Earthling.MOLE, Earthling.MOLE, Earthling.MOLE, Earthling.MOLE, Earthling.MOLE, Earthling.MOLE, Earthling.WIZARD, Earthling.WISEMAN, Earthling.OPERA, Earthling.SANTA],
+    [Earthling.NERDS, Earthling.NERDS, Earthling.NERDS, Earthling.NERDS, Earthling.MOLE, Earthling.MOLE, Earthling.MOLE, Earthling.MOLE, Earthling.MOLE, Earthling.WAHINI, Earthling.WAHINI, Earthling.CUPID, Earthling.CUPID, Earthling.CHICKENS, Earthling.CHICKENS, Earthling.CHICKENS],
+    [Earthling.CHICKENS, Earthling.CHICKENS, Earthling.CHICKENS, Earthling.CHICKENS, Earthling.CHICKENS, Earthling.CHICKENS, Earthling.CHICKENS, Earthling.CHICKENS, Earthling.CHICKENS, Earthling.CHICKENS, Earthling.CHICKENS, Earthling.CHICKENS, Earthling.CHICKENS, Earthling.MOLE, Earthling.MOLE, Earthling.OPERA],
+    [Earthling.SHARK, Earthling.SHARK, Earthling.SHARK, Earthling.SHARK, Earthling.SHARK, Earthling.BEES, Earthling.BEES, Earthling.BEES, Earthling.BEES, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.WIZARD, Earthling.SANTA],
+    [Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.WAHINI, Earthling.WAHINI, Earthling.WAHINI, Earthling.CUPID, Earthling.CUPID, Earthling.CUPID, Earthling.CHICKENS, Earthling.CHICKENS, Earthling.CHICKENS, Earthling.NERDS, Earthling.NERDS, Earthling.LAWNMOWER, Earthling.LAWNMOWER, Earthling.LAWNMOWER, Earthling.LAWNMOWER, Earthling.WISEMAN, Earthling.OPERA],
+    [Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.MOLE, Earthling.MOLE, Earthling.MOLE, Earthling.MOLE, Earthling.TORNADO, Earthling.TORNADO, Earthling.TORNADO, Earthling.TORNADO, Earthling.TORNADO, Earthling.TORNADO, Earthling.NERDS, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE],
+    [Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.ICECREAM, Earthling.WIZARD, Earthling.OPERA],
+    [Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.CUPID, Earthling.CUPID, Earthling.WAHINI, Earthling.WAHINI, Earthling.BEES, Earthling.BEES, Earthling.LAWNMOWER, Earthling.LAWNMOWER, Earthling.LAWNMOWER, Earthling.LAWNMOWER, Earthling.LAWNMOWER, Earthling.LAWNMOWER, Earthling.LAWNMOWER, Earthling.ICECREAM, Earthling.ICECREAM, Earthling.WISEMAN],
+    [Earthling.SANTA, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.TORNADO, Earthling.TORNADO, Earthling.TORNADO, Earthling.TORNADO, Earthling.CHICKENS, Earthling.CHICKENS, Earthling.CHICKENS, Earthling.CHICKENS, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.ICECREAM, Earthling.ICECREAM, Earthling.MOLE, Earthling.MOLE],
+    [Earthling.OPERA, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.LAWNMOWER, Earthling.LAWNMOWER, Earthling.LAWNMOWER, Earthling.NERDS, Earthling.NERDS, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.ICECREAM, Earthling.ICECREAM, Earthling.ICECREAM, Earthling.ICECREAM, Earthling.ICECREAM, Earthling.ICECREAM, Earthling.ICECREAM],
+    [Earthling.ICECREAM, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BEES, Earthling.BEES, Earthling.BEES, Earthling.BEES, Earthling.TORNADO],
+    [Earthling.CUPID, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.ICECREAM, Earthling.ICECREAM, Earthling.ICECREAM, Earthling.ICECREAM, Earthling.ICECREAM, Earthling.ICECREAM, Earthling.ICECREAM, Earthling.ICECREAM, Earthling.ICECREAM, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.TORNADO, Earthling.TORNADO, Earthling.TORNADO, Earthling.TORNADO],
+    [Earthling.WIZARD, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.DENTIST_ANGRY, Earthling.DENTIST_ANGRY, Earthling.DENTIST_ANGRY, Earthling.DENTIST_ANGRY, Earthling.DENTIST_ANGRY, Earthling.DENTIST_ANGRY, Earthling.DENTIST_ANGRY, Earthling.DENTIST_ANGRY, Earthling.DENTIST_ANGRY, Earthling.SHARK, Earthling.SHARK, Earthling.SHARK, Earthling.SHARK, Earthling.CHICKENS, Earthling.BEES_ANGRY],
+    [Earthling.BEES_ANGRY, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.WAHINI, Earthling.WAHINI, Earthling.WAHINI, Earthling.WAHINI, Earthling.WAHINI, Earthling.WAHINI, Earthling.WAHINI, Earthling.LAWNMOWER, Earthling.LAWNMOWER, Earthling.LAWNMOWER, Earthling.LAWNMOWER, Earthling.LAWNMOWER, Earthling.LAWNMOWER, Earthling.LAWNMOWER, Earthling.LAWNMOWER],
+    [Earthling.MOLE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.BOOGIE, Earthling.DENTIST_ANGRY, Earthling.DENTIST_ANGRY, Earthling.TORNADO, Earthling.TORNADO, Earthling.BEES_ANGRY, Earthling.BEES_ANGRY, Earthling.BEES_ANGRY, Earthling.BEES_ANGRY, Earthling.BEES_ANGRY, Earthling.BEES_ANGRY, Earthling.BEES_ANGRY, Earthling.BEES_ANGRY, Earthling.BEES_ANGRY, Earthling.BEES_ANGRY, Earthling.OPERA]
 )
 
-# Calculation: dists = abs distances of level i from median (using base game samples above)
-#              weights = (max dist + 1)/(dist + 1) rounded to nearest 0.25
-EARTHLING_WEIGHTS_PER_LEVEL = [
+EARTHLING_LIST = [e for e in Earthling if e != Earthling.MAILBOX and e.value in range(1, 0x17)]
+PER_LEVEL_UNIQUE_EARTHLINGS = (Earthling.WIZARD, Earthling.WISEMAN, Earthling.OPERA, Earthling.SANTA)
+# Actual number of Earthlings per level in the vanilla game
+EARTHLING_MAX_PER_LEVEL = (0, 0, 6, 16, 18, 18, 18, 17, 16, 16, 18, 17, 16, 16, 16, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20)
+
+PER_LEVEL_EARTHLING_WEIGHTS = [
     [0, 0, 11.5, 23.0, 11.5, 7.75, 5.75, 4.5, 3.75, 3.25, 3.0, 2.5, 2.25, 2.0, 2.0, 1.75, 1.75, 1.5, 1.5, 1.25, 1.25, 1.25, 1.25, 1.0, 1.0, 1.0],
     [0, 0, 7.25, 11.0, 22.0, 11.0, 7.25, 5.5, 4.5, 3.75, 3.25, 2.75, 2.5, 2.25, 2.0, 1.75, 1.75, 1.5, 1.5, 1.5, 1.25, 1.25, 1.25, 1.0, 1.0, 1.0],
     [0, 0, 2.5, 3.0, 3.5, 4.5, 6.0, 9.0, 18.0, 9.0, 6.0, 4.5, 3.5, 3.0, 2.5, 2.25, 2.0, 1.75, 1.75, 1.5, 1.5, 1.25, 1.25, 1.0, 1.0, 1.0],
@@ -252,7 +273,7 @@ EARTHLING_WEIGHTS_PER_LEVEL = [
     [0, 0, 1.0, 1.0, 1.0, 1.25, 1.25, 1.25, 1.25, 1.5, 1.5, 1.75, 1.75, 2.0, 2.0, 2.25, 2.5, 3.0, 3.25, 3.75, 4.5, 5.75, 7.75, 11.5, 23.0, 11.5],
     [0, 0, 1.0, 1.0, 1.0, 1.25, 1.25, 1.25, 1.25, 1.5, 1.5, 1.75, 1.75, 2.0, 2.25, 2.25, 2.75, 3.0, 3.5, 4.0, 5.0, 6.5, 9.0, 15.0, 15.0, 9.0]
 ]
-
+    
 #endregion
 
 #region Dialogue-related

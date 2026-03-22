@@ -2,13 +2,14 @@ import itertools
 import re
 import string
 import functools
-from collections import defaultdict, Counter
-from math import ceil, sqrt, comb, pow
+from collections import Counter
+from math import ceil, sqrt, comb, pow, inf
 
 from .constants import MAP_REVEAL_DIALOGUE_TEMPLATE, MAP_REVEAL_DIALOGUE_TEMPLATE_DEGEN, VANILLA_RANK_THRESHOLDS, \
-                       EARTHLING_LIST, BASE_EARTHLINGS, EARTHLING_UNIQUE, EARTHLING_WEIGHTS, EARTHLING_MAX_PER_LEVEL, \
-                       EARTHLING_WEIGHTS_PER_LEVEL, SHIP_PIECE_RANGES, PRESENT_LIST_BASE, PRESENT_WEIGHTS_BASE, A_BUCK, \
-                       BAD_PRESENT_INDICES, LV1_FORBIDDEN_PRESENT_INDICES, FOOD_LIST, FOOD_WEIGHTS, BAD_FOOD_INDICES
+                       EARTHLING_LIST, Earthling, LEVEL_TO_VANILLA_EARTHLINGS, PER_LEVEL_UNIQUE_EARTHLINGS, EARTHLING_MAX_PER_LEVEL, \
+                       PER_LEVEL_EARTHLING_WEIGHTS, earthling_value, SHIP_PIECE_RANGES, \
+                       PRESENT_LIST_BASE, PRESENT_WEIGHTS_BASE, A_BUCK, BAD_PRESENT_INDICES, LV1_FORBIDDEN_PRESENT_INDICES, \
+                       FOOD_LIST, FOOD_WEIGHTS, BAD_FOOD_INDICES
 from .options import TJEOptions
 
 class TJEGenerator():
@@ -20,55 +21,63 @@ class TJEGenerator():
         self.local_present_weights = PRESENT_WEIGHTS_BASE.copy()
         self.local_present_list = PRESENT_LIST_BASE.copy()
 
-        self.per_level_earthling_counts = Counter()
-        self.unique_earthling_levels = defaultdict(list)
-
-    # Zeroes out weights for an earthling whose count is already at maximum
-    def get_trimmed_level_weights(self, earthling, level_weights, last_level):
-        candidates = level_weights[EARTHLING_LIST.index(earthling)]
-        return [candidates[i]
-                if self.per_level_earthling_counts[i] < EARTHLING_MAX_PER_LEVEL[i] \
-                and i not in self.unique_earthling_levels[earthling]
-                else 0
-                for i in range(2,last_level+1)]
-
     def generate_full_random_earthlings(self):
         earthlings = []
         for _ in range(2,26):
             earthlings.append(self.random.choices(EARTHLING_LIST, (1,)*21, k=20))
         return earthlings
 
-    def generate_nice_random_earthlings(self, niceness: int = 1, last_level: int = 25):
-        # Apply niceness to weights in local copy
+    def generate_nice_random_earthlings(self, niceness, last_level, mailbox_levels: list[int]):
+        # Apply niceness to weights (in local copy)
         if niceness > 1:
-            local_weights = [[w**sqrt(niceness) for w in weights] for weights in EARTHLING_WEIGHTS_PER_LEVEL]
+            niced_weights = [[w**sqrt(niceness) for w in weights] for weights in PER_LEVEL_EARTHLING_WEIGHTS]
         else:
-            local_weights = EARTHLING_WEIGHTS_PER_LEVEL
+            niced_weights = PER_LEVEL_EARTHLING_WEIGHTS
+
         # Linearly rescale and trim the per-level Earthling weights if last_level < 25
         if last_level < 25:
             rescaled_levels = [round(((25-2)/(last_level-2))*(x-last_level)) + 25 for x in range(2, last_level+1)]
-            local_weights = [[0, 0] + [weights[i] for i in rescaled_levels] for weights in local_weights]
-        earthling_total = sum(len(l) for l in BASE_EARTHLINGS[:last_level-1])
-        output = defaultdict(list)
-        # Start with a base of 8 friendly Earthlings, generate others at random based on vanilla counts
-        choices = list(EARTHLING_UNIQUE*2)
-        choices += self.random.choices(EARTHLING_LIST, EARTHLING_WEIGHTS, k=earthling_total-8)
-        # Assign level-limited Earthlings first
-        choices = sorted(choices, key=lambda c: c in EARTHLING_UNIQUE, reverse=True)
-        # Assign Earthlings levels in order from rarest to most common to maximize chances of sensible placement
-        i = -1
-        for c in choices:
-            i += 1
-            trimmed_weights = self.get_trimmed_level_weights(c, local_weights, last_level)
-            target = self.random.choices(range(2,last_level+1), trimmed_weights, k=1)[0]
-            output[target].append(c)
-            self.per_level_earthling_counts[target] += 1
-            if c in EARTHLING_UNIQUE:
-                self.unique_earthling_levels[c].append(target)
-        output = [sorted(output[lv]) for lv in sorted(output.keys())]
-        # Pad Earthling list out if needed to include all levels
-        output += [[0xFF]]*(24 - len(output))
-        return output
+            niced_weights = [[0, 0] + [weights[i] for i in rescaled_levels] for weights in niced_weights]
+
+        # Calculate budgets, factoring in mailbox monstrosity; min budget is 6 for at least some variety on level 1
+        budgets = [
+            max(sum(earthling_value(e) for e in earthlings) - (0 if level in mailbox_levels else earthling_value(Earthling.MAILBOX)), 6)
+                for level, earthlings in enumerate(LEVEL_TO_VANILLA_EARTHLINGS)
+        ]
+
+        GLOBAL_EARTHLING_LIMITS = {
+            Earthling.WIZARD: self.random.randint(6, 10),
+            Earthling.WISEMAN: self.random.randint(6, 10),
+            Earthling.OPERA: self.random.randint(6, 10),
+            Earthling.SANTA: self.random.randint(6, 9),
+        }
+
+        earthling_running_count = Counter()
+        levels = list(range(2, last_level+1))
+        self.random.shuffle(levels)
+        out = [[Earthling.NONE]*20]*24
+        for level in levels:
+            earthlings = []
+            level_weights_base = [weights[level] for weights in PER_LEVEL_EARTHLING_WEIGHTS]
+            while budgets[level] > 0 and len(earthlings) < EARTHLING_MAX_PER_LEVEL[level]:
+                # Remove weights for any earthling that's out of budget or already at max count, and normalize
+                level_weights = [w if earthling_value(e) <= budgets[level]
+                                 and earthling_running_count[e] < GLOBAL_EARTHLING_LIMITS.get(e, inf)
+                                 and not (e in earthlings and e in PER_LEVEL_UNIQUE_EARTHLINGS)
+                                 else 0
+                                for e, w in zip(EARTHLING_LIST, level_weights_base)]    
+                level_weights = [w/sum(level_weights) for w in level_weights]
+
+                earthling = self.random.choices(EARTHLING_LIST, level_weights, k=1)[0]
+                earthlings.append(earthling)
+                budgets[level] -= earthling_value(earthling)
+                if earthling in GLOBAL_EARTHLING_LIMITS:
+                    earthling_running_count[earthling] += 1
+
+            # Only returning 24 levels' worth of data, so first index is 0 but corresponds to level 2
+            # Pad to 20 entries as expected by game
+            out[level-2] = earthlings + [Earthling.NONE]*(20 - len(earthlings))
+        return out
 
     def forbid_item(self, item_code: int):
         if item_code in self.local_present_list:
