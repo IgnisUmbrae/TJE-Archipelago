@@ -122,8 +122,8 @@ INSTATRAP_ITEMS: list[TJEItemData] = [
     TJEItemData(ExtraItemCode.AP_ITEM, "Cupid Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0, 0),
     TJEItemData(ExtraItemCode.AP_ITEM, "Burp Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0, 0),
     TJEItemData(ExtraItemCode.AP_ITEM, "Sleep Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0, 0),
-    TJEItemData(ExtraItemCode.AP_ITEM, "Earthling Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0, 0),
     TJEItemData(ExtraItemCode.AP_ITEM, "Rocket Skates Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0, 0),
+    TJEItemData(ExtraItemCode.AP_ITEM, "Earthling Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0, 0),
     TJEItemData(ExtraItemCode.AP_ITEM, "Randomizer Trap", TJEItemType.ETHEREAL, ItemClassification.trap, 0, 0),
 ]
 
