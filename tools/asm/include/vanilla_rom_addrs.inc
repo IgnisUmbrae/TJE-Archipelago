@@ -1,3 +1,4 @@
+Fn_GetRandomNumber          equ $00004e7e
 Fn_SetRandomSeed            equ $00004ee8
 Fn_OpenPresentSelectionMenu equ $00008f3a
 Fn_OpenOrCloseMenu          equ $00009104
