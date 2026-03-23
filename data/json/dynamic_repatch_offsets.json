@@ -11,12 +11,15 @@
   "expanded_dialogue_table_strings": {
     "point_present_text": 496
   },
+  "initial_player_setup_seed": {
+    "inventory_addr": 12
+  },
   "initial_present_setup": {
     "total_pres_types": 8
   },
   "init_extra": {
     "player_char": 0,
-    "num_mailbox_items": 128
+    "num_mailbox_items": 130
   },
   "init_id_presents": {
     "inventory_addr": 2,
