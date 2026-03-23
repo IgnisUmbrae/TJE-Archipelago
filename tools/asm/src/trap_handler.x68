@@ -50,7 +50,7 @@ GiveEarthlingTrap:
 
 CheckRandomizerTrap:
     cmpi.b #AP_TRAP_RANDOMIZER,D3
-    bne.b ReturnNoDialogue
+    bne.b CheckPoofDownTrap
 GiveRandomizerTrap:
     ; force-open inventory
     pea ($1).l
@@ -70,23 +70,27 @@ GiveRandomizerTrap:
     addq.l #$4,SP
     bra ReturnNoDialogue ; dialogue exists for this, but cannot be seen due to the menu
 
-OpenPresentAsTrap:
-    ; present type arg
-    ext.w D0
-    ext.l D0
-    move.l D0,-(SP)
-    ; player arg
+CheckPoofDownTrap:
+    cmpi.b #AP_TRAP_POOFDOWN,D3
+    bne.b ReturnNoDialogue
+
+    ; push player arg
     move.b D2,D0
     ext.w D0
     ext.l D0
     move.l D0,-(SP)
-    
-    jsr Fn_OpenPresent
-    addq.l #$8,SP
 
-    ; immediately subtract the 2 points given by the open present function
-    movea.l #VAN_PLAYER_POINTS,A1
-    sub.w #$2,(A1,D2)
+    ; calculate entity info table addr for player
+    movea.l #VAN_ENTITY_INFO_TABLE,A1
+    move.w D2,D0
+    asl.w #$7,D0
+    adda.w D0,A1
+    ; push addr as arg
+    move.l A1,-(SP)
+    jsr AP_POOF_DOWN_SAFE
+    addq.l #$8,SP
+    bra ReturnNoDialogue
+
 
 OutputDialogueAndReturn:
     ; player arg
@@ -106,3 +110,22 @@ OutputDialogueAndReturn:
 ReturnNoDialogue:
     movem.l (SP)+,A1/D3/D2/D1/D0
     rts
+
+OpenPresentAsTrap:
+    ; present type arg
+    ext.w D0
+    ext.l D0
+    move.l D0,-(SP)
+    ; player arg
+    move.b D2,D0
+    ext.w D0
+    ext.l D0
+    move.l D0,-(SP)
+    
+    jsr Fn_OpenPresent
+    addq.l #$8,SP
+
+    ; immediately subtract the 2 points given by the open present function
+    movea.l #VAN_PLAYER_POINTS,A1
+    sub.w #$2,(A1,D2)
+    bra OutputDialogueAndReturn

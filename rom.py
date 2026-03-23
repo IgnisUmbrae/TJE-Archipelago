@@ -284,7 +284,7 @@ def patch_game_overs(world, patch, dro) -> None:
         patch.write_token(APTokenTypes.WRITE, 0x0010a300, read_bin("dropdown_on_death"))
         if not world.options.lemonade_check:
             patch.write_token(APTokenTypes.WRITE,
-                              0x0010a300 + dro["dropdown_on_death"]["level_1_dropdown_check"],
+                              0x00111000 + dro["poof_down_with_safety_checks"]["level_1_dropdown_check"],
                               read_bin("dropdown_on_death_remove_check"))
 
 def patch_ranks(world, patch, dro) -> None:

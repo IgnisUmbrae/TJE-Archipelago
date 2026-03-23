@@ -541,5 +541,11 @@
 				0x00010aaa
 			]
 		},
+		{
+			filename: "poof_down_with_safety_checks",
+			addresses: [
+				0x00111000
+			]
+		}
 	]
 }
