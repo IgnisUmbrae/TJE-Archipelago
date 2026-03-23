@@ -28,7 +28,6 @@ AP_DROP_PRES            equ $00fff553
 AP_GIVE_ITEM            equ $00fff554
 AP_OPEN_PRES            equ $00fff555
 ;; Client writes 1, game resets to 0 after use
-AP_NO_PRES_POINTS_FLAG  equ $00fff556
 AP_DIALOGUE_TRIGGER     equ $00fff558
 
 ; Dialogue lines, for use with dialogue trigger above

@@ -354,18 +354,6 @@
 				0x0010f000
 			]
 		},
-		{
-			filename: "pres_open_point_flag_check",
-			addresses: [
-				0x0010b500
-			]
-		},
-		{
-			filename: "pres_open_point_flag_check_jump",
-			addresses: [
-				0x00017302
-			]
-		},
 
 		// Dialogue-related
 		{
