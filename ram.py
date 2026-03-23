@@ -426,44 +426,13 @@ class TJEGameController():
 
     #region Trap activation functions
 
-    async def receive_trap(self, ctx: "BizHawkClientContext", trap_id: int) -> tuple[bool, tuple[str, str]]:
-        trap_name = ITEM_ID_TO_NAME[trap_id]
-        match trap_name:
-            case "Burp Trap":
-                success = await self.trap_burp(ctx)
-            case "Cupid Trap":
-                success = await self.trap_cupid(ctx)
-            case "Sleep Trap":
-                success = await self.trap_present(ctx, b"\x18")
-            case "Rocket Skates Trap":
-                success = await self.trap_present(ctx, b"\x05")
-            case "Earthling Trap":
-                success = await self.trap_present(ctx, b"\x17")
-            case "Randomizer Trap":
-                success = await self.trap_present(ctx, b"\x12")
-            case _:
-                success = True
-        return success, STATIC_DIALOGUE_LIST[trap_name]
-
-    async def is_present_trap_waiting(self, ctx: "BizHawkClientContext") -> bool:
-        return (await self.peek_ram(ctx, get_ram_addr("AP_AUTO_PRESENT", self.char), 1)) != b"\xFF"
-
-    async def trap_cupid(self, ctx: "BizHawkClientContext") -> bool:
-        return (await self.poke_ram(ctx, get_ram_addr("AP_CUPID_TRAP", self.char), b"\x01"))
-
-    async def trap_burp(self, ctx: "BizHawkClientContext") -> bool:
-        num = random.randint(15,25) # In game seems to be between 12 and 16
-        return (await self.poke_ram(ctx, get_ram_addr("BURP_TIMER", self.char), b"\x10") and
-                await self.poke_ram(ctx, get_ram_addr("BURPS_LEFT", self.char), num.to_bytes(1)))
-
-    async def trap_present(self, ctx: "BizHawkClientContext", present_code: bytes) -> bool:
-        if await self.is_present_trap_waiting(ctx):
+    async def receive_trap(self, ctx: "BizHawkClientContext", trap_id: int) -> bool:
+        if await self.is_trap_waiting(ctx):
             return False
-        await bizhawk.lock(ctx.bizhawk_ctx)
-        success = (await self.poke_ram(ctx, get_ram_addr("AP_AUTO_NO_POINTS", self.char), b"\x01") and
-                   await self.poke_ram(ctx, get_ram_addr("AP_AUTO_PRESENT", self.char), present_code))
-        await bizhawk.unlock(ctx.bizhawk_ctx)
-        return success
+        return (await self.poke_ram(ctx, get_ram_addr("AP_GIVE_TRAP", self.char), INSTATRAP_IDS.index(trap_id).to_bytes(1)))
+
+    async def is_trap_waiting(self, ctx: "BizHawkClientContext") -> bool:
+        return (await self.peek_ram(ctx, get_ram_addr("AP_GIVE_TRAP", self.char), 1)) != b"\xFF"
 
     #endregion
 
@@ -515,7 +484,7 @@ class TJEGameController():
         if item_id in SHIP_PIECE_IDS:
             success, dialogue = await self.award_ship_piece(ctx, item_id)
         elif item_id in INSTATRAP_IDS:
-            success, dialogue = await self.receive_trap(ctx, item_id)
+            success = await self.receive_trap(ctx, item_id)
         else:
             success = await self.give_item_directly(ctx, item_id)
         if success and dialogue:
