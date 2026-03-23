@@ -125,15 +125,21 @@
 			]
 		},
 		{
-			filename: "initial_present_setup_seed",
+			filename: "present_wrapping_table_addr2",
+			addresses: [
+				0x0001427c
+			]
+		},
+		{
+			filename: "initial_player_setup_seed",
 			addresses: [
 				0x0010e000
 			]
 		},
 		{
-			filename: "initial_present_setup_seed_jump",
+			filename: "initial_player_setup_seed_jump",
 			addresses: [
-				0x0001427c
+				0x00014310
 			]
 		},
 
@@ -340,6 +346,12 @@
 			filename: "auto_handler_jump",
 			addresses: [
 				0x00001512
+			]
+		},
+		{
+			filename: "trap_handler",
+			addresses: [
+				0x0010f000
 			]
 		},
 		{
