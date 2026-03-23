@@ -296,12 +296,6 @@ STATIC_DIALOGUE_LIST: dict[str, tuple[str,str]] = {
     "Ship Piece: Righteous Rapmaster Capsule": ("Capsule!", "jammin'"),
     "Ship Piece: Right Megawatt Speaker": ("R. speaker!", "jammin'"),
     "Ship Piece: Hyperfunk Thruster": ("Thruster!", "jammin'"),
-    "Cupid Trap": ("Uh-oh...", "cupid trap!"),
-    "Burp Trap": ("Uh-oh...", "burp trap!"),
-    "Sleep Trap": ("Uh-oh...", "study time!"),
-    "Earthling Trap": ("Uh-oh...", "earthling!!"),
-    "Rocket Skates Trap": ("Uh-oh...", "skates trap!"),
-    "Randomizer Trap": ("Uh-oh...", "randomizer!!"),
 }
 
 #endregion
@@ -428,11 +422,6 @@ PLAYER_RAM_ADDRS: dict[tuple[int, int]] = {
     "SLEEP_TIMER": (0xDA44, 0x2),
     "GLOBAL_ELEVATOR_STATE": (0xDA6A, 0x1),
     "INVENTORY": (0xDAC2, 0x10),
-    "BURPS_LEFT": (0xDE62, 0x1),
-    "BURP_TIMER" : (0xDE64, 0x1),
-    "CUPID_HEART_REF": (0xE1DC, 0x1),
-    "CUPID_EFF_TIMER": (0xE1DF, 0x2),
-    "CUPID_EFF_TYPE": (0xE1E2, 0x1),
     "LEMONADE_STATE": (0xE396, 0x1)
 }
 
@@ -459,11 +448,11 @@ GLOBAL_RAM_ADDRS: dict[int] = {
     "AP_NUM_KEYS": 0xF455,
     "AP_NUM_MAP_REVEALS": 0xF456,
     "AP_LAST_REVEALED_MAP": 0xF457,
+    "AP_GIVE_TRAP": 0xF552,
     "AP_DROP_PRESENT" : 0xF553,
     "AP_GIVE_ITEM": 0xF554,
     "AP_AUTO_PRESENT": 0xF555,
     "AP_AUTO_NO_POINTS": 0xF556,
-    "AP_CUPID_TRAP": 0xF557,
     "AP_DIALOGUE_TRIGGER": 0xF558,
     "AP_DIALOGUE_LINE1": 0xF600,
     "AP_DIALOGUE_LINE2": 0xF60C,
