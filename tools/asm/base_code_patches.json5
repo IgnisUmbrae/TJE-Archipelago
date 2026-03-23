@@ -357,19 +357,19 @@
 
 		// Dialogue-related
 		{
-			filename: "expanded_dialogue_table",
+			filename: "dialogue_table_expanded",
 			addresses: [
-				0x00105500
+				0x00105000
 			]
 		},
 		{
-			filename: "expanded_dialogue_table_addr",
+			filename: "dialogue_table_expanded_addr",
 			addresses: [
 				0x0001e3c0
 			]
 		},
 		{
-			filename: "expanded_dialogue_table_strings",
+			filename: "dialogue_table_expanded_strings",
 			addresses: [
 				0x00105a00
 			]

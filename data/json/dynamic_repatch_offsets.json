@@ -2,11 +2,11 @@
   "bad_food_damage": {
     "PSG_SFX": 10
   },
+  "dialogue_table_expanded_strings": {
+    "point_present_text": 496
+  },
   "elev_key_logic": {
     "last_level_minus_one": 58
-  },
-  "expanded_dialogue_table_strings": {
-    "point_present_text": 496
   },
   "initial_player_setup_seed": {
     "inventory_addr": 12

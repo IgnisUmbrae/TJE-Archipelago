@@ -55,3 +55,5 @@ DYNRP_point_present_text:
     dc.b "skates trap!",0
     dc.b "earthling!!",0
     dc.b "randomizer!!",0
+    dc.b "downfall!",0
+    dc.b "bummer",0

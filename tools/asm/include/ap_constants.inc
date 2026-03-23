@@ -32,4 +32,4 @@ AP_TRAP_SLEEP           equ $02
 AP_TRAP_SKATES          equ $03
 AP_TRAP_EARTHLING       equ $04
 AP_TRAP_RANDOMIZER      equ $05
-AP_TRAP_POOFDOWN        equ $06
+AP_TRAP_DOWNFALL        equ $06

@@ -16,6 +16,7 @@
     movea.l #VAN_LOCK_IN_ELEV_FLAG,A1
     clr.b (A1,D4.l)
 
+    ; commence poof down
     move.l D4,-(SP)
     move.l A2,-(SP)
     jsr AP_POOF_DOWN_SAFE

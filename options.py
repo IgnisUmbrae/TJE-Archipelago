@@ -150,8 +150,6 @@ class AutoOpenBadPresents(Choice):
     Locally-collected ones will not auto-open.
 
     Recommended to reduce the burden of inventory management.
-
-    Auto-opening randomizers may cause the game to softlock in certain circumstances so be prepared to rewind.
     """
 
     display_name = "Automatically Open Bad Presents"
@@ -448,6 +446,8 @@ class TrapWeights(OptionCounter):
     - Skates: gives you rocket skates
     - Earthling: spawns an earthling
     - Randomizer: randomizes all of your presents
+    - Downfall: immediately fall down to the level below
+                (except if this would break logic)
 
     """
     display_name = "Trap Weights"

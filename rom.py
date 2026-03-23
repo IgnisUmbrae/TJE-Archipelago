@@ -255,7 +255,7 @@ def patch_point_presents(world, patch, dro) -> None:
                           0x00109500 + dro["inv_chars_headers_extra"]["point_present_name"],
                           struct.pack(">14B", *to_inventory_name(pres_name)))
         patch.write_token(APTokenTypes.WRITE,
-                          0x00105a00 + dro["expanded_dialogue_table_strings"]["point_present_text"],
+                          0x00105a00 + dro["dialogue_table_expanded_strings"]["point_present_text"],
                           dialogue.encode("ascii") + b"\x00")
         
 

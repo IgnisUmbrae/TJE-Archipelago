@@ -1,4 +1,4 @@
-;00105500
+;00105000
 
 ;relocated and modified from vanilla table @ 00026650
 
@@ -673,3 +673,11 @@
     dc.l $00105bfb
     dc.w $0018
     dc.l $00105c40
+
+    ; "downfall!" / "bummer"
+    ; id 0x6A
+    dc.b $03
+    dc.b $02
+    dc.l $00105c4d
+    dc.w $0018
+    dc.l $00105c57

@@ -50,7 +50,7 @@ GiveEarthlingTrap:
 
 CheckRandomizerTrap:
     cmpi.b #AP_TRAP_RANDOMIZER,D3
-    bne.b CheckPoofDownTrap
+    bne.b CheckDownfallTrap
 GiveRandomizerTrap:
     ; force-open inventory
     pea ($1).l
@@ -70,8 +70,8 @@ GiveRandomizerTrap:
     addq.l #$4,SP
     bra ReturnNoDialogue ; dialogue exists for this, but cannot be seen due to the menu
 
-CheckPoofDownTrap:
-    cmpi.b #AP_TRAP_POOFDOWN,D3
+CheckDownfallTrap:
+    cmpi.b #AP_TRAP_DOWNFALL,D3
     bne.b ReturnNoDialogue
 
     ; push player arg
@@ -89,8 +89,7 @@ CheckPoofDownTrap:
     move.l A1,-(SP)
     jsr AP_POOF_DOWN_SAFE
     addq.l #$8,SP
-    bra ReturnNoDialogue
-
+    bra OutputDialogueAndReturn
 
 OutputDialogueAndReturn:
     ; player arg

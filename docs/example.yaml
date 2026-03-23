@@ -21,7 +21,8 @@ ToeJam and Earl:
     earthling: 3
     skates: 1
     randomizer: 0
-  trap_percentage: 3
+    downfall: 2
+  trap_percentage: 4
 
   # Extra items/locations
   upwarp_present: yes

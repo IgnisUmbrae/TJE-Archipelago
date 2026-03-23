@@ -357,7 +357,7 @@ MAILBOX_ITEM_REFS = ("Top", "Middle", "Bottom")
 
 DEAD_SPRITES = (0x5, 0x6)
 
-TRAP_NAMES = ("cupid", "burp", "sleep", "earthling", "skates", "randomizer")
+TRAP_NAMES = ("cupid", "burp", "sleep", "earthling", "skates", "randomizer", "downfall")
 
 BASE_LEVEL_TYPES = [0, 1, 5, 2, 7, 3, 4, 2, 6, 7, 2, 3, 6, 2, 4, 7, 2, 4, 2, 7, 4, 5, 1, 7]
 
