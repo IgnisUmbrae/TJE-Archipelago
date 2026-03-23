@@ -84,6 +84,10 @@ OpenPresentAsTrap:
     jsr Fn_OpenPresent
     addq.l #$8,SP
 
+    ; immediately subtract the 2 points given by the open present function
+    movea.l #VAN_PLAYER_POINTS,A1
+    sub.w #$2,(A1,D2)
+
 OutputDialogueAndReturn:
     ; player arg
     move.b D2,D0
