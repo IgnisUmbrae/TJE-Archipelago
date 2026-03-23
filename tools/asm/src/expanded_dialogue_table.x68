@@ -623,3 +623,53 @@
     dc.l $00105bea
     dc.w $0018
     dc.l $00105bf0
+
+    ; beginning of trap dialogue sections
+
+    ; "uh-oh..." / "cupid trap!"
+    ; id 0x64
+    dc.b $03
+    dc.b $02
+    dc.l $00105bfb
+    dc.w $0018
+    dc.l $00105c04
+
+    ; "uh-oh..." / "burp trap!"
+    ; id 0x65
+    dc.b $03
+    dc.b $02
+    dc.l $00105bfb
+    dc.w $0018
+    dc.l $00105c10
+
+    ; "uh-oh..." / "study time!"
+    ; id 0x66
+    dc.b $03
+    dc.b $02
+    dc.l $00105bfb
+    dc.w $0018
+    dc.l $00105c1b
+
+    ; "uh-oh..." / "skates trap!"
+    ; id 0x67
+    dc.b $03
+    dc.b $02
+    dc.l $00105bfb
+    dc.w $0018
+    dc.l $00105c27
+
+    ; "uh-oh..." / "earthling!!"
+    ; id 0x68
+    dc.b $03
+    dc.b $02
+    dc.l $00105bfb
+    dc.w $0018
+    dc.l $00105c34
+
+    ; "uh-oh..." / "randomizer!!"
+    ; id 0x69
+    dc.b $03
+    dc.b $02
+    dc.l $00105bfb
+    dc.w $0018
+    dc.l $00105c40

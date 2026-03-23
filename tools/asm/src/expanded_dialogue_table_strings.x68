@@ -48,3 +48,10 @@
     dc.b "yeah!",0
 DYNRP_point_present_text:
     dc.b "100 points",0 ; extra buffer in case of three-digit point value
+    dc.b "uh-oh...",0
+    dc.b "cupid trap!",0
+    dc.b "burp trap!",0
+    dc.b "study time!",0
+    dc.b "skates trap!",0
+    dc.b "earthling!!",0
+    dc.b "randomizer!!",0
