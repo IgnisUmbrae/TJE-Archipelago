@@ -169,6 +169,7 @@ def patch_expanded_inv(world, patch, dro) -> None:
             inv_size_addrs_asl_d0.append(0x00022042)
 
         inv_ref_addrs.append(0x0010a900 + dro["init_id_presents"]["inventory_addr"] + 2)
+        inv_ref_addrs.append(0x0010e000 + dro["initial_player_setup_seed"]["inventory_addr"] + 2)
 
         inv_size_addrs.extend([
             0x0010a900 + dro["init_id_presents"]["inventory_size_1"] + 3,
