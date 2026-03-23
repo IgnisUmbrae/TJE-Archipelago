@@ -23,3 +23,12 @@ AP_ITEM_PROG            equ $55
 ELEV_KEY                equ $56
 MAP_REVEAL              equ $57
 GROUND_SHIP_PIECE       equ $58
+
+; trap identifiers
+
+AP_TRAP_CUPID           equ $00
+AP_TRAP_BURP            equ $01
+AP_TRAP_SLEEP           equ $02
+AP_TRAP_SKATES          equ $03
+AP_TRAP_EARTHLING       equ $04
+AP_TRAP_RANDOMIZER      equ $05

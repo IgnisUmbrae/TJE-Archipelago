@@ -17,9 +17,12 @@ VAN_FALLING_STATE       equ $00ffda22
 VAN_LOCK_IN_ELEV_FLAG   equ $00ffda6a
 VAN_ELEV_SPEED          equ $00ffda76
 VAN_ELEV_ACCEL          equ $00ffda78
+VAN_PRES_WRAPPING       equ $00ffda8a
 VAN_INVENTORIES         equ $00ffdac2
 VAN_MAP_OBJECT_TABLE    equ $00ffdae2
 VAN_LEVEL_LOADED        equ $00ffdce4
 VAN_COLLECTED_OBJ_TABLE equ $00ffdde8
+VAN_BURPS_REMAINING     equ $00ffde62
+VAN_BURP_TIMER          equ $00ffde64
 VAN_SHIP_PIECE_LEVELS   equ $00ffe212
 VAN_LEMONADE_STATE      equ $00ffe396

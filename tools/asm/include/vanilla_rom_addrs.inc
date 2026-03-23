@@ -1,5 +1,6 @@
 Fn_SetRandomSeed            equ $00004ee8
 Fn_OpenPresentSelectionMenu equ $00008f3a
+Fn_OpenOrCloseMenu          equ $00009104
 Fn_OpenRandomizerPresent    equ $000093aa
 Fn_MenuLoop                 equ $00009888
 Fn_MenuDrawString           equ $00009f8a
@@ -8,6 +9,7 @@ Fn_GetMaxHP                 equ $0000ae90
 Fn_InitiateFall             equ $0000f8de
 Fn_PoofWarp                 equ $00010968
 Fn_UnfallWarp               equ $00010ab6
+Fn_InitialPresentSetup      equ $00014278
 Fn_DropPresent              equ $00014e16
 Fn_PickupItem               equ $00015352
 Fn_OpenPresent              equ $00016ef4

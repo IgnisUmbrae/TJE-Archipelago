@@ -23,12 +23,12 @@ AP_LAST_MAP_REV_LV      equ $00fff457
 
 ; Flags written to by the AP client to trigger events in-game
 ;; Client writes ID, game resets to FF after use
+AP_GIVE_TRAP            equ $00fff552
 AP_DROP_PRES            equ $00fff553
 AP_GIVE_ITEM            equ $00fff554
 AP_OPEN_PRES            equ $00fff555
 ;; Client writes 1, game resets to 0 after use
 AP_NO_PRES_POINTS_FLAG  equ $00fff556
-AP_CUPID_TRAP           equ $00fff557
 AP_DIALOGUE_TRIGGER     equ $00fff558
 
 ; Dialogue lines, for use with dialogue trigger above

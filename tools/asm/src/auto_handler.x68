@@ -8,8 +8,8 @@ ReturnPoint equ $00001518
     jsr        $0000219C
     ;-- end original function block --
     bra.w      AutoOpenPresents
-BranchToCheckCupidTrap:
-    bra.w      AutoCupidTrap
+BranchToCheckTrap:
+    bra.w      AutoTrap
 BranchToCheckDialogue:  
     bra.w      AutoDialogueOutput
 BranchToCheckGroundItem:  
@@ -47,7 +47,7 @@ OpenRandomizerPresent:
     ext.w      D1
     ext.l      D1
     move.l     D1,-(SP)
-    jsr        Fn_OpenPresentSelectionMenu
+    jsr        Fn_OpenOrCloseMenu
     addq.l     #$8,SP
     movea.l    #AP_ACTIVE_CHAR,A1
     move.b     (A1),D1
@@ -74,21 +74,31 @@ ResetFlags:
     movea.l    #AP_NO_PRES_POINTS_FLAG,A1
     clr.b      (A1)
 ReturnFromAutoPresentOpening:
-    bra.w      BranchToCheckCupidTrap
-AutoCupidTrap:
-    ; check for activation (nonzero), get active char & give cupid effect
-    movea.l    #AP_CUPID_TRAP,A1
-    cmpi.b     #$0,(A1)
-    beq.b      ReturnFromAutoCupidTrap
-    move.b     #$0,(A1)
+    bra.w      BranchToCheckTrap
+AutoTrap:
+    ; check for activation (nonzero), get active char & call trap handler with trap ID & player args
+    movea.l    #AP_GIVE_TRAP,A1
+    cmpi.b     #-1,(A1)
+    beq.b      ReturnFromAutoTrap
+    
+    ; trap type arg
+    move.b     (A1),D1
+    ext.w      D1
+    ext.l      D1
+    move.l     D1,-(SP)
+
+    ; player arg
     movea.l    #AP_ACTIVE_CHAR,A1
     move.b     (A1),D1
     ext.w      D1
     ext.l      D1
     move.l     D1,-(SP)
-    jsr        Fn_InitiateCupidHearts
-    addq.l     #$4,SP
-ReturnFromAutoCupidTrap:
+
+    jsr        AP_TRAP_HANDLER
+    addq.l     #$8,SP
+    ; reset activation flag
+    move.b     #-1,(AP_GIVE_TRAP)
+ReturnFromAutoTrap:
     bra.w      BranchToCheckDialogue
 AutoDialogueOutput:
     ; check for activation (non-$FF), get active char & output requested dialogue (via entry $3a, which points to RAM)
