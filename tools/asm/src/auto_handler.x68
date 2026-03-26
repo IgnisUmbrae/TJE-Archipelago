@@ -51,6 +51,8 @@ OpenRandomizerPresent:
     addq.l     #$4,SP
 ResetFlagAndContinue:
     move.b     #-1,(AP_OPEN_PRES)
+    ; always assume present opened correctly (no logic issues if not)
+    addi.w     #$1,(AP_ITEM_RECEIVED)
 
 CheckAutoTrap:
     ; check for activation (non-$FF), get active char & call trap handler with trap ID & player args
@@ -75,6 +77,8 @@ CheckAutoTrap:
     addq.l     #$8,SP
     ; reset activation flag
     move.b     #-1,(AP_GIVE_TRAP)
+    ; always assume trap is successfully received
+    addi.w     #$1,(AP_ITEM_RECEIVED)
 
 CheckAutoDialogue:
     ; check for activation (non-zero), get active char & output requested dialogue (via entry $3a, which points to RAM)
@@ -119,6 +123,10 @@ CheckAutoGroundItem:
     ext.l      D0
     move.l     D0,-(SP)
     jsr        Fn_PickupItem
+    ; nonzero return value indicates success
+    tst.b      D0
+    beq.b      CheckAutoDropPres
+    addi.w     #$1,(AP_ITEM_RECEIVED)
 
 CheckAutoDropPres:
     ; check for activation (non-$FF)
@@ -146,6 +154,10 @@ CheckAutoDropPres:
     addq.l     #$8,SP
     ; reset flag
     move.b     #-1,(AP_DROP_PRES)
+    ; nonzero return value indicates success
+    tst.b      D0
+    beq.b      CheckAutoShipPiece
+    addi.w     #$1,(AP_ITEM_RECEIVED)
 
 CheckAutoShipPiece:
     movea.l    #AP_GIVE_SHIPPIECE,A1
@@ -172,6 +184,8 @@ CheckAutoShipPiece:
     addq.l     #$8,SP
     ; reset flag
     move.b     #-1,(AP_GIVE_SHIPPIECE)
+    ; this item is always successfully received
+    addi.w     #$1,(AP_ITEM_RECEIVED)
 
 Return:  
     jmp        ReturnPoint

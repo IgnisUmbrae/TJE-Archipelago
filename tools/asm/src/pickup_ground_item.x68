@@ -12,9 +12,11 @@ ReturnPointMarkCollected  equ $0001559c
     bne.b      RetPickupFood
 
 RetPickupBuck:
-    jmp ReturnPointPickupBuck
+    moveq     #$1,D0
+    jmp       ReturnPointPickupBuck
 RetPickupFood:
-    jmp ReturnPointPickupFood
+    moveq     #$1,D0
+    jmp       ReturnPointPickupFood
 
 PickupAPItem:
 CheckIfElevKey:
@@ -31,4 +33,5 @@ DYNRP_PSG_SFX:
     pea        ($1).w ; item pickup sound
     jsr        Fn_PlayPSGSound.l
     addq       #$4,SP ; must manually realign stack here due to the expectations of the external function
+    moveq      #$1,D0 ; retval to indicate success
     jmp        ReturnPointMarkCollected

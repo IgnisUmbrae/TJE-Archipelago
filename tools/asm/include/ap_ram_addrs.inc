@@ -16,7 +16,7 @@ AP_PRES_WRAPPING        equ $00fff300
 ; AP-specific information
 
 AP_SHIP_PIECES_GOT      equ $00fff444 ; not the same as ship items triggered, which is at e212
-
+                                      ; $FF = not collected, $0 = collected
 AP_NUM_KEYS             equ $00fff455
 AP_NUM_MAP_REVS         equ $00fff456
 AP_LAST_MAP_REV_LV      equ $00fff457
@@ -27,6 +27,7 @@ AP_GIVE_TRAP            equ $00fff552
 AP_DROP_PRES            equ $00fff553
 AP_GIVE_ITEM            equ $00fff554
 AP_OPEN_PRES            equ $00fff555
+AP_GIVE_SHIPPIECE       equ $00fff556
 ;; Client writes 1, game resets to 0 after use
 AP_DIALOGUE_TRIGGER     equ $00fff558
 
@@ -45,6 +46,7 @@ AP_DEATH_TRIGGERED      equ $00fff6a2
 AP_BIG_ITEM_LV          equ $00fff6b0
 AP_MAILBOX_ITEM_BOUGHT  equ $00fff6b1
 AP_MAILBOX_ITEM_LEVEL   equ $00fff6b2
+AP_ITEM_RECEIVED        equ $00fff6b4 ; 2 bytes
 
 ; Written to by game, used by client to determine cause of death
 AP_LAST_DMG_SOURCE      equ $00fff6c0

@@ -57,7 +57,7 @@ ReturnNoSound:
 ReturnPlaySound:
     jmp ReturnPointEAE
 CheckNumShipPieces:
-    ; loop through ship pieces, ensure first 9 are collected ($FF)
+    ; loop through ship pieces, ensure first 9 are collected (non-$FF)
     movea.l #AP_SHIP_PIECES_GOT,A0
     clr.w D0
 LoopThroughShipPieces:

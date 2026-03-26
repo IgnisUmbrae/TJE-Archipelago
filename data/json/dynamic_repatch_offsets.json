@@ -16,7 +16,7 @@
   },
   "init_extra": {
     "player_char": 0,
-    "num_mailbox_items": 124
+    "num_mailbox_items": 138
   },
   "init_id_presents": {
     "inventory_addr": 2,
@@ -48,7 +48,7 @@
     "point_present_value_minus_two": 22
   },
   "pickup_ground_item": {
-    "PSG_SFX": 54
+    "PSG_SFX": 58
   },
   "pickup_item_autoid": {
     "PSG_SFX": 20

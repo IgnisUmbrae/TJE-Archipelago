@@ -282,6 +282,19 @@
 				0x0010bf50
 			]
 		},
+		{
+			filename: "drop_present_add_retval",
+			addresses: [
+				0x00111200
+			]
+		},
+		{
+			filename: "drop_present_add_retval_jump",
+			addresses: [
+				0x00014ffa
+			]
+		},
+
 
 		// Ship piece collection–related
 		{

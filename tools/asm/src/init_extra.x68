@@ -9,6 +9,7 @@ DYNRP_player_char:
     move.b #-1,(AP_DROP_PRES).l
     move.b #-1,(AP_GIVE_ITEM).l
     move.b #-1,(AP_OPEN_PRES).l
+    move.b #-1,(AP_GIVE_SHIPPIECE).l
 
     clr.b (AP_DIALOGUE_TRIGGER).l
 
@@ -22,6 +23,7 @@ DYNRP_player_char:
     clr.b (AP_BIG_ITEM_LV).l
     clr.b (AP_MAILBOX_ITEM_BOUGHT).l
     clr.b (AP_MAILBOX_ITEM_LEVEL).l
+    clr.b (AP_ITEM_RECEIVED).l
 
     move.b #-1,(AP_LAST_DMG_SOURCE).l
 

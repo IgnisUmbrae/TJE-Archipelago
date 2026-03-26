@@ -21,6 +21,7 @@ VAN_PRES_WRAPPING       equ $00ffda8a
 VAN_INVENTORIES         equ $00ffdac2
 VAN_MAP_OBJECT_TABLE    equ $00ffdae2
 VAN_LEVEL_LOADED        equ $00ffdce4
+VAN_DROP_PRES_TBL_IDX   equ $00ffdde6
 VAN_COLLECTED_OBJ_TABLE equ $00ffdde8
 VAN_BURPS_REMAINING     equ $00ffde62
 VAN_BURP_TIMER          equ $00ffde64

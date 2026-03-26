@@ -13,4 +13,5 @@ PlayPickupSound:
 DYNRP_PSG_SFX:
     pea        ($1).w ; item pickup sound
     jsr        Fn_PlayPSGSound.l
+    moveq      #$1,D0 ; retval to indicate success
     jmp        ReturnPoint
