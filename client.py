@@ -40,6 +40,14 @@ class SpawnQueue():
     def add(self, nwi: NetworkItem | None) -> None:
         self.queue.append(nwi)
 
+    async def mark_awarded_multiple(self, number: int) -> None:
+        for _ in range(number):
+            try:
+                oldest = self.oldest()
+            except IndexError:
+                break # to catch rewinds throwing the count of sync
+            await self.mark_awarded(oldest)
+
     async def mark_awarded(self, nwi: NetworkItem | None) -> None:
         self.awarded_count += 1
         if self.save_manager:
@@ -226,11 +234,12 @@ class TJEClient(BizHawkClient):
             if self.queue.can_spawn():
                 oldest = self.queue.oldest()
                 if oldest is not None: # actual item
-                    success = await self.game_controller.receive_item(ctx, oldest.item)
+                    await self.game_controller.receive_item(ctx, oldest.item)
                 else: # phantom entry for local item (to keep everything in sync)
-                    success = True
-                if success:
-                    await self.queue.mark_awarded(oldest)
+                    await self.report_item_success(1, ctx)
+
+    async def report_item_success(self, number: int, ctx: "BizHawkClientContext") -> None:
+        await self.queue.mark_awarded_multiple(number)
 
     async def handle_deathlink(self, ctx: "BizHawkClientContext") -> None:
         if self.pending_deathlink:
