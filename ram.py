@@ -7,11 +7,11 @@ import worlds._bizhawk as bizhawk
 from worlds._bizhawk import ConnectionStatus
 from worlds._bizhawk.client import BizHawkClient
 
-from .constants import DEAD_SPRITES, EMPTY_ITEM, COLLECTED_SHIP_ITEM, EMPTY_PRESENT, GLOBAL_DATA_STRUCTURES, \
+from .constants import DEAD_SPRITES, EMPTY_ITEM, EMPTY_PRESENT, GLOBAL_DATA_STRUCTURES, \
                        PLAYER_DATA_STRUCTURES, RANK_NAMES, SAVE_DATA_POINTS_GLOBAL, SAVE_DATA_POINTS_PLAYER, \
-                       STATIC_DIALOGUE_LIST, DEATHLINK_MESSAGES, MAILBOX_ITEM_REFS, \
+                       DEATHLINK_MESSAGES, MAILBOX_ITEM_REFS, \
                        get_datastructure, get_max_health, get_slot_addr, get_ram_addr, expand_inv_constants
-from .items import ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, \
+from .items import ITEM_NAME_TO_ID, ITEM_ID_TO_CODE, \
                    PRESENT_IDS, SHIP_PIECE_IDS,INSTATRAP_IDS, BAD_PRESENT_IDS, BUCK_PRESENT_IDS
 # from .hint import generate_hints_for_current_level
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, RANK_LOC_TEMPLATE, BIG_ITEM_LOC_TEMPLATE, REACH_LOC_TEMPLATE, \
@@ -183,7 +183,7 @@ class AddressMonitor():
 
     def __init__(self, name: str, addr_name: str, size: int, level: MonitorLevel, enable_test_fn: Callable,
                  on_trigger_fn: Callable, parent: "TJEGameController", ctx: "BizHawkClientContext",
-                 enabled: bool = False):
+                 enabled: bool = False, always_report: bool = False):
         self.name = name
         self.parent = parent
         self.on_trigger = on_trigger_fn
@@ -200,6 +200,8 @@ class AddressMonitor():
 
         self.addr_name = addr_name
         self.size = size
+
+        self.always_report = always_report
 
         self.set_monitor_level(level)
 
@@ -237,7 +239,7 @@ class AddressMonitor():
                 self.old_data[i] = self.new_data[i]
                 self.new_data[i] = await self.parent.peek_ram(self.ctx, addr, self.size)
 
-                if (self.old_data[i] is not None and self.new_data[i] is not None
+                if self.always_report or (self.old_data[i] is not None and self.new_data[i] is not None
                     and self.old_data[i] != self.new_data[i]):
                     await self.trigger(i)
 
@@ -289,18 +291,6 @@ class TJEGameController():
 
         self.char = char
 
-        # self.level_monitor = AddressMonitor(
-        #                         "Level",
-        #                         "LEVEL",
-        #                         1,
-        #                         level,
-        #                         lambda: True,
-        #                         self.handle_level_change,
-        #                         self,
-        #                         ctx,
-        #                         enabled=True
-        #                     )
-
         self.other_monitors = [
             AddressMonitor(
                 "Collected items",
@@ -339,6 +329,16 @@ class TJEGameController():
                 level,
                 lambda: not self.is_awaiting_load(),
                 self.handle_highest_level_change,
+                self,
+                ctx
+            ),
+            AddressMonitor(
+                "Item received",
+                "AP_ITEM_RECEIVED",
+                2,
+                level,
+                lambda: not self.is_awaiting_load(),
+                self.handle_item_received,
                 self,
                 ctx
             ),
@@ -438,17 +438,18 @@ class TJEGameController():
 
     #region Spawning functions (also receipt of ethereal items)
 
+    async def is_item_waiting(self, ctx: "BizHawkClientContext") -> bool:
+        return (await self.peek_ram(ctx, get_ram_addr("AP_GIVE_ITEM", self.char), 1)) != b"\xFF"
+
     async def is_warping(self, ctx: "BizHawkClientContext") -> bool:
         return (await self.peek_ram(ctx, get_ram_addr("END_ELEVATOR_STATE", self.char), 1)) == b"\x0C"
 
+    # Safer than the game's checks; does not also check the unknown extra flag at DA6C in RAM
     async def is_in_elevator(self, ctx: "BizHawkClientContext") -> bool:
         return (await self.peek_ram(ctx, get_ram_addr("GLOBAL_ELEVATOR_STATE", self.char), 1)) != b"\x00"
 
-    async def is_falling(self, ctx: "BizHawkClientContext") -> bool:
-        return (await self.peek_ram(ctx, get_ram_addr("FALL_STATE", self.char), 1)) != b"\x00"
-
-    async def is_item_waiting(self, ctx: "BizHawkClientContext") -> bool:
-        return (await self.peek_ram(ctx, get_ram_addr("AP_GIVE_ITEM", self.char), 1)) != b"\xFF"
+    async def is_safe_to_auto_open(self, ctx: "BizHawkClientContext") -> bool:
+        return not (await self.is_in_elevator(ctx) or await self.is_player_dead(ctx))
 
     async def should_auto_open_bad_pres(self, item_id: int) -> bool:
         return (self.auto_bad_presents > 0 and item_id in BAD_PRESENT_IDS and
@@ -460,45 +461,36 @@ class TJEGameController():
     async def should_auto_open_promotion_pres(self, item_id: int) -> bool:
         return (self.auto_point_presents and item_id == ITEM_NAME_TO_ID["Big Points"])
 
-    async def receive_item(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
-        # Potentially don't need to check both of these (maybe necessary in co-op?)
-        if await self.is_warping(ctx) or await self.is_in_elevator(ctx) or await self.is_falling(ctx):
-            return False
+    async def receive_item(self, ctx: "BizHawkClientContext", item_id: int) -> None:
         if (await self.should_auto_open_bad_pres(item_id)
             or await self.should_auto_open_buck_pres(item_id)
             or await self.should_auto_open_promotion_pres(item_id)):
-            return await self.auto_open_present(ctx, item_id)
-        return await self.spawn_item(ctx, item_id)
-
-    async def auto_open_present(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
-        item_code = ITEM_ID_TO_CODE[item_id]
-        # Locking possibly not required here
-        await bizhawk.lock(ctx.bizhawk_ctx)
-        success = (await self.poke_ram(ctx, get_ram_addr("AP_AUTO_NO_POINTS", self.char), b"\x00") and
-                   await self.poke_ram(ctx, get_ram_addr("AP_AUTO_PRESENT", self.char),item_code.to_bytes(1)))
-        await bizhawk.unlock(ctx.bizhawk_ctx)
-        return success
-
-    async def spawn_item(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
-        dialogue = (None, None)
-        if item_id in SHIP_PIECE_IDS:
-            success, dialogue = await self.award_ship_piece(ctx, item_id)
-        elif item_id in INSTATRAP_IDS:
-            success = await self.receive_trap(ctx, item_id)
+            await self.auto_open_present(ctx, item_id)
         else:
-            success = await self.give_item_directly(ctx, item_id)
-        if success and dialogue:
-            await self.emit_dialogue(ctx, dialogue)
-        return success
+            await self.spawn_item(ctx, item_id)
 
-    async def give_item_directly(self, ctx: "BizHawkClientContext", item_id: int) -> bool:
+    async def auto_open_present(self, ctx: "BizHawkClientContext", item_id: int) -> None:
+        if await self.is_safe_to_auto_open(ctx):
+            await self.poke_ram(ctx,
+                                get_ram_addr("AP_GIVE_PRESENT", self.char),
+                                ITEM_ID_TO_CODE[item_id].to_bytes(1))
+
+    async def spawn_item(self, ctx: "BizHawkClientContext", item_id: int) -> None:
+        if item_id in SHIP_PIECE_IDS:
+            await self.award_ship_piece(ctx, item_id)
+        elif item_id in INSTATRAP_IDS:
+            await self.receive_trap(ctx, item_id)
+        else:
+            await self.give_item_directly(ctx, item_id)
+
+    async def give_item_directly(self, ctx: "BizHawkClientContext", item_id: int) -> None:
         if await self.is_item_waiting(ctx):
-            return False
+            return
         item_code = ITEM_ID_TO_CODE[item_id]
         if item_id in PRESENT_IDS and await self.is_inventory_full(ctx):
             await self.poke_ram(ctx, get_ram_addr("AP_DROP_PRESENT"), item_code.to_bytes(1))
-            return True
-        return await self.poke_ram(ctx, get_ram_addr("AP_GIVE_ITEM"), item_code.to_bytes(1))
+        else:
+            await self.poke_ram(ctx, get_ram_addr("AP_GIVE_ITEM"), item_code.to_bytes(1))
 
     async def is_inventory_full(self, ctx: "BizHawkClientContext") -> bool:
         return await self.peek_ram(ctx,
@@ -513,10 +505,9 @@ class TJEGameController():
             await self.poke_ram(ctx, get_ram_addr("AP_DIALOGUE_LINE2"), line2)
             await self.poke_ram(ctx, get_ram_addr("AP_DIALOGUE_TRIGGER"), b"\x01")
 
-    async def award_ship_piece(self, ctx: "BizHawkClientContext", ship_piece_id: int) -> tuple[bool, tuple[str, str]]:
+    async def award_ship_piece(self, ctx: "BizHawkClientContext", ship_piece_id: int) -> bool:
         piece = SHIP_PIECE_IDS.index(ship_piece_id)
-        await self.poke_ram(ctx, get_slot_addr("COLLECTED_SHIP_PIECES", piece, self.char), COLLECTED_SHIP_ITEM)
-        return True, STATIC_DIALOGUE_LIST[ITEM_ID_TO_NAME[ship_piece_id]]
+        return (await self.poke_ram(ctx, get_ram_addr("AP_GIVE_SHIPPIECE", self.char), piece.to_bytes(1)))
 
     #endregion
 
@@ -601,6 +592,14 @@ class TJEGameController():
         if level > old and level in range(2,26):
             loc = REACH_LOC_TEMPLATE.format(level)
             await self.client.trigger_location(ctx, loc)
+
+    async def handle_item_received(self, from_monitor: AddressMonitor, ctx: "BizHawkClientContext",
+                                 old_data: bytes, new_data: bytes):
+        diff = int.from_bytes(new_data) - int.from_bytes(old_data)
+        if diff > 0:
+            #await self.poke_ram(ctx, get_ram_addr("AP_ITEM_RECEIVED", self.char), b"\x00")
+            await self.client.report_item_success(diff, ctx)
+
 
     async def check_if_on_menu(self, ctx: "BizHawkClientContext") -> bool:
         return (await self.peek_ram(ctx, get_ram_addr("STATE", self.char), 1)) == b"\x00"
