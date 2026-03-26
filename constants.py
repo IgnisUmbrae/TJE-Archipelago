@@ -279,24 +279,9 @@ PER_LEVEL_EARTHLING_WEIGHTS = [
 #region Dialogue-related
 
 MAP_REVEAL_DIALOGUE_ADDRS = (0x00105b73, 0x00105b7e, 0x00105b8a, 0x00105b97, 0x00105ba4)
-
 MAP_REVEAL_DIALOGUE_TEMPLATE = "Lv{}-{} map!"
 MAP_REVEAL_DIALOGUE_TEMPLATE_DEGEN = "Lv{} map!"
-
 POINT_PRESENT_DIALOGUE_TEMPLATE = "{} points"
-
-STATIC_DIALOGUE_LIST: dict[str, tuple[str,str]] = {
-    "Ship Piece: Rocketship Windshield": ("Windshield!", "jammin'"),
-    "Ship Piece: Left Megawatt Speaker": ("L. speaker!", "jammin'"),
-    "Ship Piece: Super Funkomatic Amplamator": ("Amp!", "jammin'"),
-    "Ship Piece: Amplamator Connector Fin": ("Amp fin!", "jammin'"),
-    "Ship Piece: Forward Stabilizing Unit": ("Front leg!", "jammin'"),
-    "Ship Piece: Rear Leg": ("Rear leg!", "jammin'"),
-    "Ship Piece: Awesome Snowboard": ("Snowboard!", "jammin'"),
-    "Ship Piece: Righteous Rapmaster Capsule": ("Capsule!", "jammin'"),
-    "Ship Piece: Right Megawatt Speaker": ("R. speaker!", "jammin'"),
-    "Ship Piece: Hyperfunk Thruster": ("Thruster!", "jammin'"),
-}
 
 #endregion
 
@@ -319,9 +304,6 @@ A_BUCK = 0x50
 #endregion
 
 #region Ship piece–related
-
-COLLECTED_SHIP_ITEM = b"\x00"
-EMPTY_SHIP_PIECE = b"\xFF"
 
 SHIP_PIECE_RANGES = (
     [(2, 3), (4, 5), (6, 7), (8, 9), (10, 11)], # max level 12
@@ -399,7 +381,7 @@ def get_datastructure(name: str) -> "DataStructure":
 
 PLAYER_RAM_ADDRS: dict[tuple[int, int]] = {
     # Main data store (P2 = P1 + 0x80)
-    "POSITION": (0xA25A, 0x80),
+    "ZPOS" : (0xA25E, 0x80),
     "STATE": (0xA289, 0x80),
     "SPRITE": (0xA2A5, 0x80),
     "LEVEL": (0xA2A6, 0x80),
@@ -431,9 +413,9 @@ GLOBAL_RAM_ADDRS: dict[int] = {
     #UNFALL_FLAG_2 = 0x936D
     "FLOOR_ITEMS": 0xDAE2,
     "END_ELEVATOR_STATE": 0xDA4F,
-    "PRESENTS_ALL_DATA": 0xF300, # vanilla: 0xDA8A
-    "PRESENTS_WRAPPING": 0xF300, # vanilla: 0xDA8A
-    "PRESENTS_IDENTIFIED": 0xF300, # vanilla: 0xDA8A
+    "PRESENTS_ALL_DATA": 0xF300,
+    "PRESENTS_WRAPPING": 0xF300,
+    "PRESENTS_IDENTIFIED": 0xF300,
     "DROPPED_PRESENTS": 0xDCE6,
     "COLLECTED_ITEMS": 0xDDE8,
     "EARTHLINGS": 0xDE72,
@@ -451,7 +433,8 @@ GLOBAL_RAM_ADDRS: dict[int] = {
     "AP_GIVE_TRAP": 0xF552,
     "AP_DROP_PRESENT" : 0xF553,
     "AP_GIVE_ITEM": 0xF554,
-    "AP_AUTO_PRESENT": 0xF555,
+    "AP_GIVE_PRESENT": 0xF555,
+    "AP_GIVE_SHIPPIECE": 0xF556,
     "AP_DIALOGUE_TRIGGER": 0xF558,
     "AP_DIALOGUE_LINE1": 0xF600,
     "AP_DIALOGUE_LINE2": 0xF60C,
