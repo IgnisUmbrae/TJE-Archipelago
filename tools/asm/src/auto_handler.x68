@@ -1,4 +1,6 @@
 ;0010b100
+;handles: (1) present opening (2) trap activating (3) dialogue emitting
+;         (4) ground item collecting (5) present dropping (6) ship piece collecting
 
 ReturnPoint equ $00001518
 
@@ -75,10 +77,9 @@ CheckAutoTrap:
     move.b     #-1,(AP_GIVE_TRAP)
 
 CheckAutoDialogue:
-    ; check for activation (non-$FF), get active char & output requested dialogue (via entry $3a, which points to RAM)
+    ; check for activation (non-zero), get active char & output requested dialogue (via entry $3a, which points to RAM)
     ; the AP client is expected to write the dialogue into RAM before triggering this
-    movea.l    #AP_DIALOGUE_TRIGGER,A1
-    cmpi.b     #$0,(A1)
+    tst.b      (AP_DIALOGUE_TRIGGER)
     beq.b      CheckAutoGroundItem
     movea.l    #AP_ACTIVE_CHAR,A1
     move.b     (A1),D1
@@ -88,8 +89,7 @@ CheckAutoDialogue:
     pea        ($3a).w
     jsr        Fn_QueueDialogueSequence
     addq.l     #$8,SP
-    movea.l    #AP_DIALOGUE_TRIGGER,A1
-    clr.b      (A1)
+    clr.b      (AP_DIALOGUE_TRIGGER)
 
 CheckAutoGroundItem:
     ; check for activation (non-$FF)
@@ -107,7 +107,7 @@ CheckAutoGroundItem:
     move.b     (AP_ACTIVE_CHAR).l,D1
     mulu.w     #$80,D1
     adda.w     D1,A3
-    move.l     (A3),($4,A2) ; (x,y) position → player (x,y) position
+    move.l     (A3),($4,A2) ; item (x,y) position → player (x,y) position
     ; reset flag
     move.b     #-1,(A1)
     ; force pickup
@@ -124,7 +124,7 @@ CheckAutoDropPres:
     ; check for activation (non-$FF)
     movea.l    #AP_DROP_PRES,A1
     cmpi.b     #-1,(A1)
-    beq.b      Return
+    beq.b      CheckAutoShipPiece
     ; get active character, output "oops..."" / "too many" dialogue & drop specified present for character
     move.b     (AP_ACTIVE_CHAR).l,D1
     ext.w      D1
@@ -144,8 +144,34 @@ CheckAutoDropPres:
     move.l     D1,-(SP)
     jsr        Fn_DropPresent
     addq.l     #$8,SP
-    movea.l    #AP_DROP_PRES,A1
-    move.b     #-1,(A1)
+    ; reset flag
+    move.b     #-1,(AP_DROP_PRES)
+
+CheckAutoShipPiece:
+    movea.l    #AP_GIVE_SHIPPIECE,A1
+    cmpi.b     #-1,(A1)
+    beq.b      Return
+    ; Zero out relevant ship piece
+    move.b     (A1),D1
+    ext.w      D1
+    ext.l      D1
+    movea.l    #AP_SHIP_PIECES_GOT,A1
+    clr.b      (A1,D1)
+    ; output dialogue (entries begin at 0x3b)
+    movea.l    #AP_ACTIVE_CHAR,A1
+    move.b     (A1),D1
+    ext.w      D1
+    ext.l      D1
+    move.l     D1,-(SP)
+    move.b     #$3b,D1
+    add.b      (AP_GIVE_SHIPPIECE),D1
+    ext.w      D1
+    ext.l      D1
+    move.l     D1,-(SP)
+    jsr        Fn_QueueDialogueSequence
+    addq.l     #$8,SP
+    ; reset flag
+    move.b     #-1,(AP_GIVE_SHIPPIECE)
 
 Return:  
     jmp        ReturnPoint
