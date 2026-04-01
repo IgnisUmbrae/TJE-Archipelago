@@ -45,7 +45,7 @@ class SpawnQueue():
             try:
                 oldest = self.oldest()
             except IndexError:
-                break # to catch rewinds throwing the count of sync
+                break # to catch rewinds throwing the count off sync
             await self.mark_awarded(oldest)
 
     async def mark_awarded(self, nwi: NetworkItem | None) -> None:

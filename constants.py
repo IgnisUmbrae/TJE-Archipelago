@@ -409,9 +409,9 @@ PLAYER_RAM_ADDRS: dict[tuple[int, int]] = {
 }
 
 GLOBAL_RAM_ADDRS: dict[int] = {
+    # Vanilla addresses
     "REDRAW_FLAG": 0x8022,
     "UNFALL_FLAG": 0x936C,
-    #UNFALL_FLAG_2 = 0x936D
     "FLOOR_ITEMS": 0xDAE2,
     "END_ELEVATOR_STATE": 0xDA4F,
     "PRESENTS_ALL_DATA": 0xF300,

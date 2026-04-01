@@ -196,7 +196,6 @@ class AddressMonitor():
 
         self.enable_test = enable_test_fn
         self.enabled = enabled
-        self.log_state()
 
         self.addr_name = addr_name
         self.size = size
@@ -204,10 +203,6 @@ class AddressMonitor():
         self.always_report = always_report
 
         self.set_monitor_level(level)
-
-    def log_state(self, state=None):
-        if state is None:
-            state = self.enabled
 
     def set_monitor_level(self, level: MonitorLevel):
         self.monitor_level = level
@@ -226,8 +221,6 @@ class AddressMonitor():
 
     def check_enabledness(self):
         new_state = self.monitor_addrs and self.enable_test()
-        if self.enabled != new_state:
-            self.log_state(new_state)
         self.enabled = new_state
         if not self.enabled:
             self.reset_data()
@@ -252,7 +245,6 @@ class TJEGameController():
 
         # Game state–related
 
-        # self.is_playing: bool = False
         self.game_complete: bool = False
 
         # Saving and loading–related
@@ -279,7 +271,6 @@ class TJEGameController():
     async def tick(self, ctx: "BizHawkClientContext"):
         self.connected = (ctx.bizhawk_ctx.connection_status == ConnectionStatus.CONNECTED)
         if self.connected:
-            # await self.update_game_state(ctx)
             for monitor in self.other_monitors: await monitor.tick()
 
     #endregion
@@ -497,14 +488,6 @@ class TJEGameController():
                                    get_slot_addr("INVENTORY", PLAYER_DATA_STRUCTURES["INVENTORY"].max_slot, self.char),
                                    1) != EMPTY_PRESENT
 
-    async def emit_dialogue(self, ctx: "BizHawkClientContext", lines: tuple[str, str]) -> None:
-        if lines[0] is not None and lines[1] is not None:
-            line1 = lines[0].encode("ascii") + b"\x00"*(12 - len(lines[0]))
-            line2 = lines[1].encode("ascii") + b"\x00"*(12 - len(lines[1]))
-            await self.poke_ram(ctx, get_ram_addr("AP_DIALOGUE_LINE1"), line1)
-            await self.poke_ram(ctx, get_ram_addr("AP_DIALOGUE_LINE2"), line2)
-            await self.poke_ram(ctx, get_ram_addr("AP_DIALOGUE_TRIGGER"), b"\x01")
-
     async def award_ship_piece(self, ctx: "BizHawkClientContext", ship_piece_id: int) -> bool:
         piece = SHIP_PIECE_IDS.index(ship_piece_id)
         return (await self.poke_ram(ctx, get_ram_addr("AP_GIVE_SHIPPIECE", self.char), piece.to_bytes(1)))
@@ -599,7 +582,6 @@ class TJEGameController():
         if diff > 0:
             #await self.poke_ram(ctx, get_ram_addr("AP_ITEM_RECEIVED", self.char), b"\x00")
             await self.client.report_item_success(diff, ctx)
-
 
     async def check_if_on_menu(self, ctx: "BizHawkClientContext") -> bool:
         return (await self.peek_ram(ctx, get_ram_addr("STATE", self.char), 1)) == b"\x00"
