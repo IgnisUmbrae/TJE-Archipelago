@@ -453,7 +453,7 @@ class TrapWeights(OptionCounter):
     display_name = "Trap Weights"
     valid_keys = TRAP_NAMES
     min = 0
-    default = dict(zip(TRAP_NAMES, range(5,-1,-1)))
+    default = dict(zip(TRAP_NAMES, range(5,-1,-1))) | { "downfall" : 3}
 
 class TrapPercentage(Range):
     """
