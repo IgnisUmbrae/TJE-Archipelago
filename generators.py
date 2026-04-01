@@ -6,8 +6,8 @@ from collections import Counter
 from math import ceil, sqrt, comb, pow, inf
 
 from .constants import MAP_REVEAL_DIALOGUE_TEMPLATE, MAP_REVEAL_DIALOGUE_TEMPLATE_DEGEN, VANILLA_RANK_THRESHOLDS, \
-                       EARTHLING_LIST, Earthling, LEVEL_TO_VANILLA_EARTHLINGS, PER_LEVEL_UNIQUE_EARTHLINGS, EARTHLING_MAX_PER_LEVEL, \
-                       PER_LEVEL_EARTHLING_WEIGHTS, earthling_value, SHIP_PIECE_RANGES, \
+                       EARTHLING_LIST, Earthling, LEVEL_TO_VANILLA_EARTHLINGS, PER_LEVEL_UNIQUE_EARTHLINGS, \
+                       EARTHLING_MAX_PER_LEVEL, PER_LEVEL_EARTHLING_WEIGHTS, earthling_value, SHIP_PIECE_RANGES, \
                        PRESENT_LIST_BASE, PRESENT_WEIGHTS_BASE, A_BUCK, BAD_PRESENT_INDICES, LV1_FORBIDDEN_PRESENT_INDICES, \
                        FOOD_LIST, FOOD_WEIGHTS, BAD_FOOD_INDICES
 from .options import TJEOptions
@@ -39,12 +39,13 @@ class TJEGenerator():
             rescaled_levels = [round(((25-2)/(last_level-2))*(x-last_level)) + 25 for x in range(2, last_level+1)]
             niced_weights = [[0, 0] + [weights[i] for i in rescaled_levels] for weights in niced_weights]
 
-        # Calculate budgets, factoring in mailbox monstrosity; min budget is 6 for at least some variety on level 1
+        # Calculate budgets, factoring in mailbox monstrosity; min budget is 6 for at least some variety on level 2
         budgets = [
             max(sum(earthling_value(e) for e in earthlings) - (0 if level in mailbox_levels else earthling_value(Earthling.MAILBOX)), 6)
                 for level, earthlings in enumerate(LEVEL_TO_VANILLA_EARTHLINGS)
         ]
 
+        # Get new maximum numbers of Santas and other friendly Earthlings based on the world size
         santa_base = 6*last_level/25
         santa_lims = (round(0.95*santa_base), round(1.3*santa_base))
         other_base = 7*last_level/25
@@ -80,7 +81,6 @@ class TJEGenerator():
                     earthling_running_count[earthling] += 1
 
             # Only returning 24 levels' worth of data, so first index is 0 but corresponds to level 2
-            # Pad to 20 entries as expected by game
             out[level-2] = earthlings
         return out
 
@@ -210,6 +210,7 @@ class TJEGenerator():
         if last_level < 1:
             return None
 
+        # Distribute as evenly as possible to begin with, then randomly 'bump' some of them
         quot, rem = divmod(last_level, 5)
         amounts = [quot]*5
         if rem > 0:
@@ -357,7 +358,6 @@ def get_point_present_value(rank_thresholds: list[int], max_rank_check: int) -> 
     dists = [abs(b - apv) for b in breakpoints]
     nearest_idx = min(range(len(breakpoints)), key=dists.__getitem__)
     return breakpoints[nearest_idx]
-    #return max(rescale_to_nearest_mult(get_average_promotion_value(rank_thresholds, max_rank_check)/2, 25, 1, -5), 10)
 
 class TJEInternalRNG():
     def __init__(self):

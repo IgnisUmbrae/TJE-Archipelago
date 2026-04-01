@@ -82,7 +82,7 @@ class Islandless(DefaultOnToggle):
     Prevents the game from creating tiny islands out in space, guaranteeing that every item will be accessible.
     Does not affect islands in water.
     Disabling this is *not recommended* as it will more often than not result in frustrating, incompletable worlds
-    where crucial progression items spawn in the middle of nowhere.    
+    where crucial progression items spawn in the middle of nowhere.
     """
 
     display_name = "Islandless"
@@ -116,10 +116,10 @@ class AutoOpenPointPresents(Toggle):
 
 class SoundRando(Choice):
     """
-    Randomizes all PCM and PSG sound effects in the game. For sanity's sake, two sounds will never be randomized:
+    Randomizes all PCM, PSG and other sound effects in the game. For sanity's sake, two sounds will never be randomized:
     the menu blip and the Rocket Skates "blast-off" sound.
 
-    None: No randomization.
+    None/off: No randomization.
     Most: Randomizes all PCM and PSG sound effects except the four that affect the music.
     All: Also randomizes the four sounds used in the music (clap, kick, record scratch and snare).
     """
@@ -174,6 +174,7 @@ class AutoOpenBuckPresents(Toggle):
 class Character(Choice):
     """
     Which character you want to play as.
+    NB: Local co-op is currently not supported.
     """
     display_name = "Character"
 
@@ -182,6 +183,7 @@ class Character(Choice):
     option_both = CharacterOption.BOTH.value
     
     alias_tj = option_toejam
+    alias_e = option_earl
 
     default = option_toejam
 
@@ -347,7 +349,6 @@ class RankRescalingMode(Choice):
     Only functions if max_rank_check > 0 *and* at least one of last_level, min_items and max_items has been changed.
 
     - None: No rescaling. Rank thresholds are vanilla.
-            ⚠ Likely to result in fill errors if last_level is low and max_rank_check is high.
     - Max check: Rescales point thresholds so that you reach your chosen max_rank_check towards the end of the game.
     - Funk Lord (default): Rescales point thresholds so that you reach Funk Lord towards the end of the game.
 
@@ -389,7 +390,7 @@ class LemonadeCheck(Toggle):
 
 class UpwarpPresent(Toggle):
     """
-    Mutator that changes the Un-Fall present into an Up-Warp present that always sends you up one level,
+    Changes the Un-Fall present into an Up-Warp present that always sends you up one level,
     even if you haven't yet made it that far by elevator. Poof!
     NB: Not currently accounted for in logic.
     """
@@ -402,7 +403,7 @@ class GameOvers(Choice):
 
     - Disable: Forces infinite lives so game overs never happen. Also removes Extra Life presents.
     - Drop Down: Forces TJ/E to fall down one level, after which they respawn normally.
-    - Reset: Return to the title screen, as in the base game. Some progress will be lost.
+    - Reset: Return to the title screen, as in the base game.
     """
 
     display_name = "Game Over Handling"
@@ -638,15 +639,17 @@ class LocalShipPieces(Choice):
 
 class RestoreUnusedPresentSprites(DefaultOnToggle):
     """
-    Two unused present sprites remain in the ROM but aren't used.
-    This option adds them back into the game.
+    Adds back into the game two present sprites that remain in the ROM but go unused in the final release.
     """
 
     display_name = "Restore Unused Present Sprites"
 
 class Presentsanity(Toggle):
     """
-    Turns every present into a Mystery Present. Good luck!
+    Turns every* present into a Mystery Present. Good luck!
+    
+    * In worlds with rank checks enabled but few levels and/or few items, a small number of Promotions or point
+      presents (if enabled) may be added to ensure logical accessibility.
     """
 
     display_name = "Presentsanity"
