@@ -18,7 +18,14 @@ ReturnPointEAE equ $00013eae
     cmpi.b #$0,(A0)
     beq.b OpenDoorsNormally
 
+    ; do nothing if key override setting is ≥ current level
+    movea.l #AP_KEY_OVERRIDE_LV,A0
+    move.b ($4,A2),D1
+    cmp.b (A0),D1
+    ble.b OpenDoorsNormally
+
     ; calculate (elevator level % key interval)
+    movea.l #AP_KEY_INTERVAL,A0
     move.b (A0),D0 ; key interval
     move.b ($4,A2),D1 ; level of elevator interacted with
     ext.w D1

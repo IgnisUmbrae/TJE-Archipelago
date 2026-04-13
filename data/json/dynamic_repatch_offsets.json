@@ -6,7 +6,7 @@
     "point_present_text": 496
   },
   "elev_key_logic": {
-    "last_level_minus_one": 58
+    "last_level_minus_one": 78
   },
   "initial_player_setup_seed": {
     "inventory_addr": 12
@@ -16,7 +16,7 @@
   },
   "init_extra": {
     "player_char": 0,
-    "num_mailbox_items": 138
+    "num_mailbox_items": 146
   },
   "init_id_presents": {
     "inventory_addr": 2,

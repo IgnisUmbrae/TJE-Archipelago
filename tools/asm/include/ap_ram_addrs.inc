@@ -14,12 +14,12 @@ AP_INVENTORIES          equ $00fff280
 AP_PRES_WRAPPING        equ $00fff300
 
 ; AP-specific information
-
 AP_SHIP_PIECES_GOT      equ $00fff444 ; not the same as ship items triggered, which is at e212
                                       ; $FF = not collected, $0 = collected
 AP_NUM_KEYS             equ $00fff455
 AP_NUM_MAP_REVS         equ $00fff456
 AP_LAST_MAP_REV_LV      equ $00fff457
+AP_KEY_OVERRIDE_LV      equ $00fff458
 
 ; Flags written to by the AP client to trigger events in-game
 ;; Client writes ID, game resets to FF after use

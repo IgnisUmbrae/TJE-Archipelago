@@ -1,11 +1,11 @@
 from calendar import c
 from typing import TYPE_CHECKING
-import time
 import logging
 
 import worlds._bizhawk as bizhawk
+from worlds._bizhawk import ConnectionStatus
 from worlds._bizhawk.client import BizHawkClient
-from NetUtils import ClientStatus, NetworkItem, add_json_text, JSONTypes
+from NetUtils import ClientStatus, NetworkItem
 from Utils import async_start
 
 from .constants import SAVE_DATA_POINTS_ALL, expand_inv_constants, ret_val_to_char
@@ -15,9 +15,9 @@ from .locations import LOCATION_ID_TO_NAME, LOCATION_NAME_TO_ID, REMOTE_SPAWN_ON
 from .ram import TJEGameController, SaveManager
 
 if TYPE_CHECKING:
-    from worlds._bizhawk.context import BizHawkClientContext
+    from worlds._bizhawk.context import BizHawkClientContext, BizHawkClientCommandProcessor
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("Client")
 
 class SpawnQueue():
     def __init__(self, cooldown: int = 0):
@@ -65,6 +65,38 @@ class SpawnQueue():
     def connect_save_manager(self, manager: SaveManager) -> None:
         self.save_manager = manager
 
+def cmd_unlock(self: "BizHawkClientCommandProcessor", level: str) -> None:
+    """
+    Force-unlocks elevators on levels <= the level specified.
+    The argument 'all' will unlock every elevator.
+    To be used as a failsafe in case of key count desync.
+    """
+    if self.ctx.game != "ToeJam and Earl":
+        logger.warning("This command is only for use with ToeJam and Earl.")
+        return
+    if self.ctx.bizhawk_ctx.connection_status != ConnectionStatus.CONNECTED:
+        logger.warning("Please connect to BizHawk before using this command.")
+        return
+    if self.ctx.on_menu:
+        logger.warning("Please use this command in a level, not on the menu, " \
+                       "as its effect is reset when you spawn into level 1.")
+        return
+
+    conversion_error = False
+    if level == "all":
+        level = 24
+    else:
+        try:
+            level = int(level)
+        except (ValueError, TypeError):
+            conversion_error = True
+
+    if conversion_error or not 2 <= level <= 24:
+        logger.warning("Invalid level. Please specify a whole number between 2 and 24, or the keyword 'all'.")
+        return
+    async_start(bizhawk.write(self.ctx.bizhawk_ctx, [(0xf458, level.to_bytes(1), "68K RAM")]))
+    logger.info(f"All elevators on levels <= {level} are now unlocked.")
+
 class TJEClient(BizHawkClient):
     game = "ToeJam and Earl"
     system = "GEN"
@@ -73,10 +105,6 @@ class TJEClient(BizHawkClient):
     save_manager = None
 
     queue = SpawnQueue()
-
-    on_menu = True
-
-    pending_deathlink = False
 
     def __init__(self):
         super().__init__()
@@ -110,6 +138,13 @@ class TJEClient(BizHawkClient):
         ctx.watcher_timeout = 0.125
         ctx.sent_death_time = None
         ctx.save_retrieved = False
+        ctx.on_menu = True
+        ctx.pending_deathlink = False
+
+        elev_keys = int.from_bytes(await self.peek_rom(ctx, 0x001f0000, 1)) != 0
+
+        if elev_keys and "unlock" not in ctx.command_processor.commands:
+            ctx.command_processor.commands["unlock"] = cmd_unlock
 
         death_link = bool(int.from_bytes(await self.peek_rom(ctx, 0x001f0001, 1)))
         await ctx.update_death_link(death_link)
@@ -170,7 +205,7 @@ class TJEClient(BizHawkClient):
             case "Bounced":
                 if "DeathLink" in args.get("tags", []) and \
                     args["data"]["time"] != ctx.sent_death_time:
-                        self.pending_deathlink = True
+                        ctx.pending_deathlink = True
             case "Retrieved":
                 if "awarded_count" in args["keys"]:
                     saved_ac = args["keys"].get("awarded_count")
@@ -242,19 +277,19 @@ class TJEClient(BizHawkClient):
         await self.queue.mark_awarded_multiple(number)
 
     async def handle_deathlink(self, ctx: "BizHawkClientContext") -> None:
-        if self.pending_deathlink:
-            self.pending_deathlink = False
+        if ctx.pending_deathlink:
+            ctx.pending_deathlink = False
             await self.game_controller.kill_player(ctx)
 
     async def game_watcher(self, ctx: "BizHawkClientContext") -> None:
         if await self.game_controller.check_if_on_menu(ctx):
-            if not self.on_menu:
+            if not ctx.on_menu:
                 self.game_controller.awaiting_load = True
                 ctx.save_retrieved = False
                 await self.retrieve_server_save(ctx)
-            self.on_menu = True
+            ctx.on_menu = True
         else:
-            self.on_menu = False
+            ctx.on_menu = False
             await self.game_controller.tick(ctx)
             if not ctx.finished_game:
                 await self.handle_queue(ctx)

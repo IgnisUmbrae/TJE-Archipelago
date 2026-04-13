@@ -16,6 +16,7 @@ DYNRP_player_char:
     clr.b (AP_NUM_KEYS).l
     clr.b (AP_NUM_MAP_REVS).l
     clr.b (AP_LAST_MAP_REV_LV).l
+    move.b #$1,(AP_KEY_OVERRIDE_LV).l
     
     clr.b (AP_LEVEL_ITEMS_SET).l
     clr.b (AP_DEATH_TRIGGERED).l
