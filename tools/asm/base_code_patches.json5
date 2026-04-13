@@ -283,6 +283,12 @@
 			]
 		},
 		{
+			filename: "elev_override_code",
+			addresses: [
+				0x0001de32
+			]
+		},
+		{
 			filename: "drop_present_add_retval",
 			addresses: [
 				0x00111200
