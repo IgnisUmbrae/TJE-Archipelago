@@ -417,12 +417,12 @@ class TJEGameController():
 
     #region Trap activation functions
 
-    async def receive_trap(self, ctx: "BizHawkClientContext", trap_id: int) -> bool:
+    async def receive_trap(self, ctx: "BizHawkClientContext", trap_id: int):
         if await self.is_trap_waiting(ctx):
-            return False
-        return (await self.poke_ram(ctx, get_ram_addr("AP_GIVE_TRAP", self.char), INSTATRAP_IDS.index(trap_id).to_bytes(1)))
+            return
+        await self.poke_ram(ctx, get_ram_addr("AP_GIVE_TRAP", self.char), INSTATRAP_IDS.index(trap_id).to_bytes(1))
 
-    async def is_trap_waiting(self, ctx: "BizHawkClientContext") -> bool:
+    async def is_trap_waiting(self, ctx: "BizHawkClientContext"):
         return (await self.peek_ram(ctx, get_ram_addr("AP_GIVE_TRAP", self.char), 1)) != b"\xFF"
 
     #endregion
@@ -438,9 +438,6 @@ class TJEGameController():
     # Safer than the game's checks; does not also check the unknown extra flag at DA6C in RAM
     async def is_in_elevator(self, ctx: "BizHawkClientContext") -> bool:
         return (await self.peek_ram(ctx, get_ram_addr("GLOBAL_ELEVATOR_STATE", self.char), 1)) != b"\x00"
-
-    async def is_safe_to_auto_open(self, ctx: "BizHawkClientContext") -> bool:
-        return not (await self.is_in_elevator(ctx) or await self.is_player_dead(ctx))
 
     async def should_auto_open_bad_pres(self, item_id: int) -> bool:
         return (self.auto_bad_presents > 0 and item_id in BAD_PRESENT_IDS and
@@ -461,10 +458,9 @@ class TJEGameController():
             await self.spawn_item(ctx, item_id)
 
     async def auto_open_present(self, ctx: "BizHawkClientContext", item_id: int) -> None:
-        if await self.is_safe_to_auto_open(ctx):
-            await self.poke_ram(ctx,
-                                get_ram_addr("AP_GIVE_PRESENT", self.char),
-                                ITEM_ID_TO_CODE[item_id].to_bytes(1))
+        await self.poke_ram(ctx,
+                            get_ram_addr("AP_OPEN_PRESENT", self.char),
+                            ITEM_ID_TO_CODE[item_id].to_bytes(1))
 
     async def spawn_item(self, ctx: "BizHawkClientContext", item_id: int) -> None:
         if item_id in SHIP_PIECE_IDS:

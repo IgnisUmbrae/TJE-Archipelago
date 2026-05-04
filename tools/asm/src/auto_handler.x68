@@ -51,7 +51,9 @@ OpenRandomizerPresent:
     addq.l     #$4,SP
 ResetFlagAndContinue:
     move.b     #-1,(AP_OPEN_PRES)
-    ; always assume present opened correctly (no logic issues if not)
+    ; *zero* return value indicates success
+    tst.b      D0
+    bne.b      CheckAutoTrap
     addi.w     #$1,(AP_ITEM_RECEIVED)
 
 CheckAutoTrap:
@@ -77,7 +79,7 @@ CheckAutoTrap:
     addq.l     #$8,SP
     ; reset activation flag
     move.b     #-1,(AP_GIVE_TRAP)
-    ; always assume trap is successfully received
+    ; always assume trap is successfully received (no logic issues if not)
     addi.w     #$1,(AP_ITEM_RECEIVED)
 
 CheckAutoDialogue:
@@ -123,9 +125,10 @@ CheckAutoGroundItem:
     ext.l      D0
     move.l     D0,-(SP)
     jsr        Fn_PickupItem
-    ; nonzero return value indicates success
-    tst.b      D0
-    beq.b      CheckAutoDropPres
+    ;tst.b      D0
+    ;beq.b      CheckAutoDropPres
+
+    ; these items are always successfully received
     addi.w     #$1,(AP_ITEM_RECEIVED)
 
 CheckAutoDropPres:

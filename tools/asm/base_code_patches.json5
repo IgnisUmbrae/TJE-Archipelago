@@ -247,6 +247,18 @@
 			]
 		},
 		{
+			filename: "pickup_item_skip_checks",
+			addresses: [
+				0x00111300
+			]
+		},
+		{
+			filename: "pickup_item_skip_checks_jump",
+			addresses: [
+				0x00015384
+			]
+		},
+		{
 			filename: "pickup_item_autoid",
 			addresses: [
 				0x0010a100
