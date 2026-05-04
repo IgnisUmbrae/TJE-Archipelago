@@ -23,7 +23,7 @@ GiveBurpTrap:
     move.b #$20,(A1,D2)
     movea.l #VAN_BURPS_REMAINING,A1
     move.b (A1,D2),D0
-    add.b #$0F,D0
+    add.b #$0f,D0
     move.b D0,(A1,D2)
     bra OutputDialogueAndReturn
 
@@ -124,7 +124,10 @@ OpenPresentAsTrap:
     jsr Fn_OpenPresent
     addq.l #$8,SP
 
-    ; immediately subtract the 2 points given by the open present function
+    ; immediately subtract the 2 points given by the open present function if it was successful (return value = 0)
+    tst.b D0
+    bne.b SkipPointSubtraction
     movea.l #VAN_PLAYER_POINTS,A1
     sub.w #$2,(A1,D2)
+SkipPointSubtraction:
     bra OutputDialogueAndReturn
