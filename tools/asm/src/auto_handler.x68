@@ -33,6 +33,17 @@ CheckAutoPresent:
     addq.l     #$8,SP
     bra.b      ResetFlagAndContinue
 OpenRandomizerPresent:
+    ; check if we can currently open presents, fail if not
+    movea.l    #AP_ACTIVE_CHAR,A1
+    move.b     (A1),D1
+    ext.w      D1
+    ext.l      D1
+    move.l     D1,-(SP)
+    jsr        AP_CAN_OPEN_PRESENT
+    addq.l     #$4,SP
+    tst.b      D0 ; zero indicates success
+    bne        ResetFlagAndContinue
+
     ; force-open inventory and then activate the randomizer
     pea        ($1).l
     movea.l    #AP_ACTIVE_CHAR,A1
@@ -49,6 +60,9 @@ OpenRandomizerPresent:
     move.l     D1,-(SP)
     jsr        Fn_OpenRandomizerPresent
     addq.l     #$4,SP
+
+    ; fake success return value to pass next check
+    moveq.l    #$0,D0
 ResetFlagAndContinue:
     move.b     #-1,(AP_OPEN_PRES)
     ; *zero* return value indicates success
