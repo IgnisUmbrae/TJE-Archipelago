@@ -3,9 +3,9 @@ import pkgutil
 import functools
 import re
 from typing import Optional, Any, ClassVar
-from itertools import takewhile, product
+from itertools import product
 
-from BaseClasses import CollectionState, ItemClassification
+from BaseClasses import CollectionState, ItemClassification, MultiWorld
 import settings
 from worlds.AutoWorld import World, WebWorld
 
@@ -16,7 +16,7 @@ from .generators import TJEGenerator, TJEInternalRNG, get_key_levels, item_total
 from .items import Item, TJEItem, ITEM_GROUPS, ITEM_ID_TO_CODE, ITEM_NAME_TO_ID, ITEM_NAME_TO_DATA, MASTER_ITEM_LIST, \
                    ExtraItemCode, TJEItemType, create_items, create_starting_presents, create_starting_bucks, NO_DEPRIORITIZE_ITEMS
 from .locations import FLOOR_ITEM_LOC_TEMPLATE, MAILBOX_LOC_TEMPLATE, LOCATION_GROUPS, LOCATION_NAME_TO_ID
-from .options import RankRescalingOption, EarthlingRandomizationOption, LocalShipPiecesOption, TJEOptions
+from .options import RankRescalingOption, EarthlingRandomizationOption, LocalShipPiecesOption, TJEOptions, GameVersionOption
 from .regions import create_regions
 from .rom import TJEProcedurePatch, write_tokens
 
@@ -83,6 +83,16 @@ class TJEWorld(World):
             if item.point_value > 0:
                 state.prog_items[item.player]["points"] -= item.point_value
         return change
+
+    @classmethod
+    def stage_assert_generate(cls, multiworld: MultiWorld):
+        require_rom = False
+        for player in multiworld.get_game_players(cls.game):
+            if multiworld.worlds[player].options.game_version == GameVersionOption.AUTO:
+                require_rom = True
+                break
+        if require_rom:
+            assert cls.settings.rom_file.exists()
 
     def generate_early(self) -> None:
         self.seeds = [self.random.getrandbits(16) for _ in range(26)]
@@ -228,11 +238,21 @@ class TJEWorld(World):
 
         patch = TJEProcedurePatch(player=self.player, player_name=self.multiworld.player_name[self.player])
         
-        if self.options.game_version.value == 0:
+        # Apply REV00 → REV02 upgrade patch if required (either manually set to or autodetected as REV00)
+        if self.options.game_version == GameVersionOption.AUTO:
+            with open(self.settings.rom_file, "rb") as f:
+                header_part = f.read(0x18e)
+                rev00 = (header_part[0x18c:0x18e].decode("ascii") == "00")
+        else:
+            rev00 = (self.options.game_version == GameVersionOption.REV00)
+
+        if rev00:
+            print("REV00")
             patch.hash = REV00_MD5
             patch.procedure.insert(0, ("apply_bsdiff4", ["00to02.bsdiff4"]))
             patch.write_file("00to02.bsdiff4", pkgutil.get_data(__name__, "data/00to02.bsdiff4"))
         else:
+            print("REV02")
             patch.hash = REV02_MD5
 
         patch.write_file("base_patch.bsdiff4", pkgutil.get_data(__name__, "data/base_patch.bsdiff4"))

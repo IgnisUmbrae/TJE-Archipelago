@@ -46,6 +46,7 @@ class RankRescalingOption(IntEnum):
     FUNK_LORD = 2
 
 class GameVersionOption(IntEnum):
+    AUTO = -1
     REV00 = 0
     REV02 = 2
 
@@ -160,6 +161,7 @@ class AutoOpenBadPresents(Choice):
 
     alias_disable = option_none
     alias_off = option_none
+    alias_yes = option_all
 
     default = option_no_randomizer
 
@@ -553,10 +555,14 @@ class FreeEarthlingServices(Toggle):
 
 class GameVersion(Choice):
     """
-    Which revision of the game your ROM is. Defaults to the more easily obtainable REV02.
+    Which revision of the game your ROM is.
+    'auto' (the default) will autodetect the version during output generation. This requires a ROM file.
+    ⚠ You *must* set the version manually if:
+       - You want to generate without a ROM file (e.g. when uploading a YAML to the AP server or a lobby)
+       - Your multiworld has several TJE players using a mix of different versions
     
     REV02 is the version that was available e.g. via Mega Drive/Genesis Classics on Steam.
-    You may have a REV00 ROM if you dumped your original cartridge.
+    You likely have a REV00 ROM if you dumped your original cartridge.
     
     If you aren't sure which version you have, open it in any editor (text or binary)
     and check the header. A date of 1991.JUL is REV00; a date of 1991.OCT is REV02.
@@ -564,13 +570,14 @@ class GameVersion(Choice):
 
     display_name = "Game Version"
 
+    option_auto = GameVersionOption.AUTO.value
     option_rev00 = GameVersionOption.REV00.value
     option_rev02 = GameVersionOption.REV02.value
 
     alias_00 = option_rev00
     alias_02 = option_rev02
 
-    default = option_rev02
+    default = option_auto
 
 
 class EarthlingRando(Choice):
