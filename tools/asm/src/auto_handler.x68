@@ -79,7 +79,9 @@ CheckAutoTrap:
     addq.l     #$8,SP
     ; reset activation flag
     move.b     #-1,(AP_GIVE_TRAP)
-    ; always assume trap is successfully received (no logic issues if not)
+    ; *zero* return value indicates success
+    tst.b      D0
+    bne.b      CheckAutoDialogue
     addi.w     #$1,(AP_ITEM_RECEIVED)
 
 CheckAutoDialogue:
@@ -125,9 +127,6 @@ CheckAutoGroundItem:
     ext.l      D0
     move.l     D0,-(SP)
     jsr        Fn_PickupItem
-    ;tst.b      D0
-    ;beq.b      CheckAutoDropPres
-
     ; these items are always successfully received
     addi.w     #$1,(AP_ITEM_RECEIVED)
 
@@ -187,7 +186,7 @@ CheckAutoShipPiece:
     addq.l     #$8,SP
     ; reset flag
     move.b     #-1,(AP_GIVE_SHIPPIECE)
-    ; this item is always successfully received
+    ; these items are always successfully received
     addi.w     #$1,(AP_ITEM_RECEIVED)
 
 Return:  

@@ -193,6 +193,12 @@
 			]
 		},
 		{
+			filename: "can_open_present_check",
+			addresses: [
+				0x00111500
+			]
+		},
+		{
 			filename: "open_point_present",
 			addresses: [
 				0x0010d400
